@@ -4,8 +4,8 @@
 
  1. Make sure, that Java (>= version 11) is installed and set up correctly (check with `javac -version` command)
     - If another version was installed previously and the environment variable is corrected, you may need to restart
+    - https://www.oracle.com/java/technologies/downloads/#jdk17-windows 
  2. Setup git hooks by executing the `setup_githooks` scripts in `tools`
-
 
 ## Git Hooks
 

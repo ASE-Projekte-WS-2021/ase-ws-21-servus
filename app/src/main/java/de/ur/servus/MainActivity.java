@@ -1,6 +1,5 @@
 package de.ur.servus;
 
-import android.graphics.Typeface;
 import android.os.Bundle;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
