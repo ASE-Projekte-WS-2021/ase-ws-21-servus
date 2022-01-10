@@ -31,4 +31,8 @@
         android:layout_marginBottom="16dp"
         app:srcCompat="@android:drawable/ic_dialog_email" />
 
+    <include layout="@layout/settings_bottomsheet" />
+    <include layout="@layout/creator_bottomsheet" />
+    <include layout="@layout/participant_bottomsheet" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
