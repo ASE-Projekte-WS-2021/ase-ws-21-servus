@@ -5,6 +5,10 @@ on:
     branches:
       - master
       - main
+      - develop
+      - feature/*
+      - hotfix/*
+      - release/*
     tags:
       - 'v*'
 
