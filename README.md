@@ -15,3 +15,8 @@ On every commit git automatically runs checkstyle before committing.
 
 On every push and merge the pipeline runs checkstyle, all tests and checks if the code builds.
 If a version tag (e.g. v1) was added, it will be released on the github project.
+
+## Branching
+
+TODO
+
