@@ -26,3 +26,4 @@ If a version tag (e.g. v1) was added, it will be released on the github project.
 - Quality gates, that need to be succeeded before a merge to develop is possible:
  - Reviewed by 1 peer 
  - Succeeded the build pipeline (includes style check, tests and possibly other gates)
+
