@@ -1,5 +1,7 @@
 # Servus
 
+**⚠️Description needs to be added⚠️**
+
 ## Development Setup
 
  1. Make sure, that Java (>= version 11) is installed and set up correctly (check with `javac -version` command)
@@ -27,3 +29,12 @@ If a version tag (e.g. v1) was added, it will be released on the github project.
  - Reviewed by 1 peer 
  - Succeeded the build pipeline (includes style check, tests and possibly other gates)
 
+## Development Workflow
+
+**Regularly check for PRs that need to be reviewed.**
+
+1. Choose an issue to work on (this issue should not be blocked by another issue)
+2. Create a new feature branch from `develop` for your issue (e.g. `feature/5-map-view` for issue #5)
+3. Work on your branch
+4. After your done developing, remerge `develop` into your branch to avoid merge conflicts
+5. Create a Pull Request to merge your branch into `develop`. After the quality checks suceeded and it is reviewed it can be merged.
