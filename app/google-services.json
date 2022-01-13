@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "864410198632",
+    "project_id": "servus-7806c",
+    "storage_bucket": "servus-7806c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:864410198632:android:678163f65e01c26d8111dd",
+        "android_client_info": {
+          "package_name": "de.ur.servus"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "864410198632-r6vgjm8hsthl7g0lsqn6ms0r0mupbaut.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCO8KY2dRPb9DfEu5KGQw2Soi8UKajynX8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "864410198632-r6vgjm8hsthl7g0lsqn6ms0r0mupbaut.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
