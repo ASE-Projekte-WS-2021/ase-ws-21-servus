@@ -1,5 +1,6 @@
 package de.ur.servus;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 
 import android.os.Bundle;
@@ -41,12 +42,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
      * installed Google Play services and returned to the app.
      */
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        LatLng uniRegensburg = new LatLng(48.996868, 12.095798);
+        mMap.addMarker(new MarkerOptions().position(uniRegensburg).title("Marker at Regensburg University"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(uniRegensburg));
     }
 }
