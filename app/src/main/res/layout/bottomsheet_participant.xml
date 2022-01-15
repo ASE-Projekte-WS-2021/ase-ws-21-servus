@@ -3,8 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     style="@style/mBottomSheets"
-    android:id="@+id/creator_bottomSheet">
+    android:id="@+id/participant_bottomSheet" >
 
-    <include layout="@layout/content_creator" />
+    <include layout="@layout/bottomsheet_participant_content" />
 
 </LinearLayout>
