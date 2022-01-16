@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -13,12 +14,23 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.imageview.ShapeableImageView;
+
+import de.ur.servus.core.BackendHandler;
+import de.ur.servus.core.Event;
+import de.ur.servus.core.EventListener;
+import de.ur.servus.core.FirestoreBackendHandler;
+import de.ur.servus.core.ListenerRegistration;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private ListenerRegistration listenerRegistration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +73,36 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         ShapeableImageView btn_filter = findViewById(R.id.btn_filter);
         btn_filter.setOnClickListener(v -> f_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
+    }
+
+    // TODO remove this message and example
+    // This is how to get Event data and react to it
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        BackendHandler bh = new FirestoreBackendHandler();
+        this.listenerRegistration = bh.subscribeEvents(new EventListener<>() {
+            @Override
+            public void onEvent(List<Event> events) {
+                // Log all event names to console
+                Log.d("Data", events.stream().map(event -> event.name).collect(Collectors.joining(", ")));
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e("Data", "E: " + e.getMessage());
+            }
+        });
+    }
+
+    // TODO remove this message
+    // When the activity is not running, we should not load data
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Stop loading events
+        this.listenerRegistration.unsubscribe();
     }
 
     /**
