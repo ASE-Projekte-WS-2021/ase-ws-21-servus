@@ -10,6 +10,7 @@ public class Event {
 
     public String name;
     public String description;
+    public String eventId;
     private Location location;
 
     public Location getLocation() {
