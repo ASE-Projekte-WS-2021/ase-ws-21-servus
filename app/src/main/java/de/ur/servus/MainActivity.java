@@ -26,7 +26,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -45,9 +45,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
+        // Add a marker in the Regensburg University and move the camera
         LatLng uniRegensburg = new LatLng(48.996868, 12.095798);
         mMap.addMarker(new MarkerOptions().position(uniRegensburg).title("Marker at Regensburg University"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(uniRegensburg));
+        // Setting the default location to the Regensburg University
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(uniRegensburg, 14.0f));
+
     }
 }
