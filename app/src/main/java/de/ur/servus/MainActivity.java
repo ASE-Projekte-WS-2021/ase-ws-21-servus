@@ -2,7 +2,6 @@ package de.ur.servus;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -21,16 +20,12 @@ import java.util.stream.Collectors;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.imageview.ShapeableImageView;
 
-import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
-import de.ur.servus.core.EventListener;
-import de.ur.servus.core.FirestoreBackendHandler;
-import de.ur.servus.core.ListenerRegistration;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    private ListenerRegistration listenerRegistration;
+    private EventBroadcaster eventBroadcaster;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,36 +68,36 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         ShapeableImageView btn_filter = findViewById(R.id.btn_filter);
         btn_filter.setOnClickListener(v -> f_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
-    }
 
-    // TODO remove this message and example
-    // This is how to get Event data and react to it
-    @Override
-    protected void onResume() {
-        super.onResume();
+        this.eventBroadcaster = new EventBroadcaster(this.getApplicationContext());
 
-        BackendHandler bh = new FirestoreBackendHandler();
-        this.listenerRegistration = bh.subscribeEvents(new EventListener<>() {
+        this.eventBroadcaster.startBroadcastReciever(new DataBroadcastReciever<>() {
             @Override
-            public void onEvent(List<Event> events) {
-                // Log all event names to console
+            public void onRecieve(List<Event> events) {
+                // TODO update markers here
                 Log.d("Data", events.stream().map(event -> event.name).collect(Collectors.joining(", ")));
             }
 
             @Override
-            public void onError(Exception e) {
-                Log.e("Data", "E: " + e.getMessage());
+            public void onError(String e) {
+                // TODO error handling here
+                Log.e("Data", e);
             }
         });
+
     }
 
-    // TODO remove this message
-    // When the activity is not running, we should not load data
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // This only needs to be called in the central Activity, as it is always active
+        this.eventBroadcaster.startListeningForEventUpdates();
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
-        // Stop loading events
-        this.listenerRegistration.unsubscribe();
+        this.eventBroadcaster.stopListeningForEventUpdates();
     }
 
     /**
