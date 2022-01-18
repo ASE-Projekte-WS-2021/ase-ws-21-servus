@@ -11,6 +11,7 @@ public class Event {
     private String description;
     private String id;
     private LatLng location;
+    private Long attendants;
 
     public Event() {
     }
@@ -50,5 +51,13 @@ public class Event {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public void setAttendants(Long attendants) {
+        this.attendants = attendants;
+    }
+
+    public Long getAttendants() {
+        return attendants;
     }
 }

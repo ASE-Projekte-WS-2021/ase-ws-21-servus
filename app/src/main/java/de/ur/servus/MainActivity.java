@@ -1,8 +1,12 @@
 package de.ur.servus;
 
 import androidx.annotation.NonNull;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.FragmentActivity;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -48,6 +52,10 @@ import java.io.IOException;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
 
+    Context context;
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
+
     private GoogleMap mMap;
     private ListenerRegistration listenerRegistration;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
@@ -68,7 +76,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     TextView details_eventname;
     TextView details_description;
     TextView details_attendees;
-    TextView details_creator;
+    //TextView details_creator; //Not part of MVP
+
+    Button attend_withdraw_meetup;
 
 
     @Override
@@ -76,11 +86,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        context = getApplicationContext();
+        sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
+        editor = sharedPreferences.edit();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
 
         /*
          * Initialize all Bottom Sheets, add a corresponding BottomSheetBehavior and referring Callbacks.
@@ -174,7 +186,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         details_eventname = findViewById(R.id.event_details_eventname);
         details_description = findViewById(R.id.event_details_description);
         details_attendees = findViewById(R.id.event_details_attendees);
-        details_creator = findViewById(R.id.event_details_creator);
+        //details_creator = findViewById(R.id.event_details_creator); //Not part of MVP
     }
 
     @Override
@@ -198,8 +210,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 mMap.setOnMarkerClickListener(marker -> {
-                    BackendHandler bh1 = FirestoreBackendHandler.getInstance();
-                    bh1.subscribeEvent(Objects.requireNonNull(marker.getTag()).toString(), new EventListener<>() {
+                    BackendHandler bh_marker = FirestoreBackendHandler.getInstance();
+
+                    bh_marker.subscribeEvent(Objects.requireNonNull(marker.getTag()).toString(), new EventListener<>() {
+                        @SuppressLint("SetTextI18n")
                         @Override
                         public void onEvent(Event event) {
                             //Log.d("Event", "EventID: " + event.getId());
@@ -212,9 +226,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             if (event.getDescription() != null){
                                 details_description.setText(event.getDescription());
                             }
-                            //details_attendees.setText(event.getName());
+                            if (event.getAttendants() != null){
+                                details_attendees.setText(Long.toString(event.getAttendants()));
+                            }
                             //details_creator.setText(event.getName());
 
+                            /*
+                             * Add Button click behavior to attend/withdraw button in participation bottom sheet
+                             */
+                            attend_withdraw_meetup = findViewById(R.id.event_details_button);
+                            attend_withdraw_meetup.setOnClickListener(v -> {
+                                // TODO: SharedPreference stuff
+
+                                BackendHandler bh_attend_withdraw = FirestoreBackendHandler.getInstance();
+                                bh_attend_withdraw.incrementEventAttendants(event.getId());
+                            });
                         }
 
                         @Override
@@ -225,7 +251,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     });
 
                     p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-
                     return true;
                 });
             }
@@ -415,5 +440,4 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
-
 }
