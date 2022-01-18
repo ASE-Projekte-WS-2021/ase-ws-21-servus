@@ -1,8 +1,11 @@
 package de.ur.servus.core;
 
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FirestoreBackendHandler implements BackendHandler {
 
@@ -27,9 +30,16 @@ public class FirestoreBackendHandler implements BackendHandler {
                 listener.onError(error);
             } else {
                 try {
-                    // TODO save event ids in Event objects
                     assert value != null;
-                    List<Event> events = value.toObjects(Event.class);
+
+                    List<Event> events = value.getDocuments().stream().map(doc -> {
+                        Event event = doc.toObject(Event.class);
+                        assert event != null;
+
+                        event.setId(doc.getId());
+                        return event;
+                    }).collect(Collectors.toList());
+
                     listener.onEvent(events);
                 } catch (Exception e) {
                     listener.onError(e);
@@ -40,17 +50,35 @@ public class FirestoreBackendHandler implements BackendHandler {
         return registration::remove;
     }
 
-    public Event fetchEvent(String eventId) {
-        // fetch a specific event document by its id
-        return new Event();
+    public ListenerRegistration subscribeEvent(String eventId, EventListener<Event> listener) {
+        var registration = db.collection(COLLECTION).document(eventId).addSnapshotListener((value, error) -> {
+            if (error != null) {
+                listener.onError(error);
+            } else {
+                try {
+                    assert value != null;
+
+                    Event event = value.toObject(Event.class);
+                    assert event != null;
+
+                    event.setId(value.getId());
+
+                    listener.onEvent(event);
+                } catch (Exception e) {
+                    listener.onError(e);
+                }
+            }
+        });
+
+        return registration::remove;
     }
 
-    public void incrementEventAttendants(String eventId) {
-        // increment attendant counter of event
+    public Task<Void> incrementEventAttendants(String eventId) {
+        return db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.increment(1));
     }
 
-    public void decrementEventAttendants(String eventId) {
-        // decrement attendant counter of event
+    public Task<Void> decrementEventAttendants(String eventId) {
+        return db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.increment(-1));
     }
 
 }

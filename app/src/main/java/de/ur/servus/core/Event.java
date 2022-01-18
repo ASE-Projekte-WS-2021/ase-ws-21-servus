@@ -1,23 +1,22 @@
 package de.ur.servus.core;
 
-import android.location.Location;
-import android.location.LocationManager;
-import android.os.Parcel;
-import android.os.Parcelable;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.List;
 
-public class Event implements Parcelable {
+public class Event {
     // TODO Find a way to force set these values. Currently they could be null.
 
-    // When adding properties, remember to add them to the parcel to
-    public String name;
-    public String description;
-    public String id;
-    private Location location;
+    private String name;
+    private String description;
+    private String id;
+    private LatLng latLng;
 
-    public Location getLocation() {
-        return location;
+    public Event() {
+    }
+
+    public LatLng getLatLng() {
+        return latLng;
     }
 
     /**
@@ -25,47 +24,31 @@ public class Event implements Parcelable {
      *
      * @param latlng List with two elements: Latitude and Longitude.
      */
-    public void setLocation(List<Double> latlng) {
-        var location = new Location(LocationManager.GPS_PROVIDER);
-        location.setLatitude(latlng.get(0));
-        location.setLongitude(latlng.get(1));
-        this.location = location;
+    public void setLatLng(List<Double> latlng) {
+        this.latLng = new LatLng(latlng.get(0), latlng.get(1));
     }
 
-    public Event() {
+    public String getName() {
+        return name;
     }
 
-
-    /* Below here is the implementation for Parcelable */
-    @Override
-    public void writeToParcel(Parcel out, int flags) {
-        // This order is important, the data needs to be unpacked in the same order as it was packed
-        out.writeString(name);
-        out.writeString(description);
-        out.writeString(id);
-        location.writeToParcel(out, flags);
+    public void setName(String name) {
+        this.name = name;
     }
 
-    private Event(Parcel in) {
-        // This order is important, the data needs to be unpacked in the same order as it was packed
-        this.name = in.readString();
-        this.description = in.readString();
-        this.id = in.readString();
-        this.location = Location.CREATOR.createFromParcel(in);
+    public String getDescription() {
+        return description;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public static final Parcelable.Creator<Event> CREATOR = new Parcelable.Creator<>() {
-        public Event createFromParcel(Parcel in) {
-            return new Event(in);
-        }
+    public String getId() {
+        return id;
+    }
 
-        public Event[] newArray(int size) {
-            return new Event[size];
-        }
-    };
+    public void setId(String id) {
+        this.id = id;
+    }
 }

@@ -162,14 +162,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onEvent(List<Event> events) {
                 // Log all event names to console
-                Log.d("Data", events.stream().map(event -> event.name).collect(Collectors.joining(", ")));
+                Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
                 mMap.clear();
                 // Load event data
                 for (Event event: events) {
-                    double latitude = event.getLocation().getLatitude();
-                    double longitude = event.getLocation().getLongitude();
-                    LatLng latLng = new LatLng(latitude, longitude);
-                    mMap.addMarker(new MarkerOptions().position(latLng).title(event.name));
+                    mMap.addMarker(new MarkerOptions().position(event.getLatLng()).title(event.getName()));
                 }
             }
 
