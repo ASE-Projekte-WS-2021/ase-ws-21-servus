@@ -16,5 +16,6 @@
     <string name="tmp_participant">TODO - Participant Section</string>
 
     <string name="content_create_meetup">Create a Meet-Up</string>
+    <string name="active_filter_indicator">0</string>
 
 </resources>

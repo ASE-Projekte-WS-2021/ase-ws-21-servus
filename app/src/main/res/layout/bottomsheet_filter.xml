@@ -4,8 +4,7 @@
     android:id="@+id/filter_bottomSheet">
 
     <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        style="@style/mScrollViews" >
 
         <include layout="@layout/bottomsheet_filter_content" />
     </ScrollView>

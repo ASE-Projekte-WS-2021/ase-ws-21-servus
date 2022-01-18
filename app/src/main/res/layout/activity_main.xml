@@ -27,26 +27,50 @@
             android:layout_margin="8dp"
             android:contentDescription="@string/descriptions_btn_settings"
             android:src="@drawable/img_placeholder_avatar"
-            android:background="@drawable/style_roundedcorners" />
+            android:background="@drawable/style_btn_roundedcorners"
+            android:elevation="2dp" />
 
         <Button
+            style="@style/mButtons"
             android:id="@+id/btn_meetup"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_margin="8dp"
             android:layout_weight="1"
             android:text="@string/content_create_meetup"
-            android:background="@drawable/style_roundedcorners" />
+            android:background="@drawable/style_btn_roundedcorners"
+            android:elevation="2dp" />
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/btn_filter"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_margin="8dp"
-            android:background="@drawable/style_roundedcorners"
-            android:contentDescription="@string/descriptions_btn_filter"
-            android:src="@drawable/ic_filter"
-            app:shapeAppearanceOverlay="@style/roundedImageView" />
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/btn_filter"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_margin="8dp"
+                android:background="@drawable/style_general_roundedcorners"
+                android:contentDescription="@string/descriptions_btn_filter"
+                android:src="@drawable/ic_filter"
+                app:shapeAppearanceOverlay="@style/roundedImageView"
+                android:elevation="2dp" />
+
+            <TextView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:text="@string/active_filter_indicator"
+                android:gravity="center"
+                android:textColor="@color/servus_white"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textAlignment="center"
+                android:background="@drawable/style_btn_roundedcorners"
+                android:layout_alignTop="@+id/btn_filter"
+                android:layout_alignEnd="@+id/btn_filter"
+                android:elevation="2dp"
+                android:visibility="invisible" />
+        </RelativeLayout>
 
     </LinearLayout>
 

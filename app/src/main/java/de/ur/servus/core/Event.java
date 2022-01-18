@@ -1,7 +1,6 @@
 package de.ur.servus.core;
 
-import android.location.Location;
-import android.location.LocationManager;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.List;
 
