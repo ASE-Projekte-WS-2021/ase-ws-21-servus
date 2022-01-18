@@ -13,7 +13,7 @@ public class Event implements Parcelable {
     // When adding properties, remember to add them to the parcel to
     public String name;
     public String description;
-    public String eventId;
+    public String id;
     private Location location;
 
     public Location getLocation() {
@@ -42,7 +42,7 @@ public class Event implements Parcelable {
         // This order is important, the data needs to be unpacked in the same order as it was packed
         out.writeString(name);
         out.writeString(description);
-        out.writeString(eventId);
+        out.writeString(id);
         location.writeToParcel(out, flags);
     }
 
@@ -50,7 +50,7 @@ public class Event implements Parcelable {
         // This order is important, the data needs to be unpacked in the same order as it was packed
         this.name = in.readString();
         this.description = in.readString();
-        this.eventId = in.readString();
+        this.id = in.readString();
         this.location = Location.CREATOR.createFromParcel(in);
     }
 

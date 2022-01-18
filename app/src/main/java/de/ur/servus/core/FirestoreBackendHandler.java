@@ -8,7 +8,18 @@ public class FirestoreBackendHandler implements BackendHandler {
 
     private static final String COLLECTION = "mvp";
 
+    private static BackendHandler instance = null;
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    public static BackendHandler getInstance() {
+        if (FirestoreBackendHandler.instance == null) {
+            FirestoreBackendHandler.instance = new FirestoreBackendHandler();
+        }
+        return FirestoreBackendHandler.instance;
+    }
+
+    private FirestoreBackendHandler() {
+    }
 
     public ListenerRegistration subscribeEvents(EventListener<List<Event>> listener) {
         var registration = db.collection(COLLECTION).addSnapshotListener((value, error) -> {
@@ -17,6 +28,7 @@ public class FirestoreBackendHandler implements BackendHandler {
             } else {
                 try {
                     // TODO save event ids in Event objects
+                    assert value != null;
                     List<Event> events = value.toObjects(Event.class);
                     listener.onEvent(events);
                 } catch (Exception e) {
