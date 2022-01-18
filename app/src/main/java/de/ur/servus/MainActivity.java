@@ -124,8 +124,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     if (marker != null) {
                         marker.remove();
                     }
-                    marker = mMap.addMarker(new MarkerOptions().position(latLng).title(adress));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
+                    //marker = mMap.addMarker(new MarkerOptions().position(latLng).title(adress));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13.0f));
+                    locationManager.removeUpdates(locationListener);
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -151,6 +152,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+
     }
 
     // TODO remove this message and example
@@ -163,8 +165,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         this.listenerRegistration = bh.subscribeEvents(new EventListener<>() {
             @Override
             public void onEvent(List<Event> events) {
+
                 // Log all event names to console
                 Log.d("Data", events.stream().map(event -> event.name).collect(Collectors.joining(", ")));
+                mMap.clear();
+                // Load event data
+                for (Event event: events) {
+                    double latitude = event.getLocation().getLatitude();
+                    double longitude = event.getLocation().getLongitude();
+                    LatLng latLng = new LatLng(latitude, longitude);
+                    mMap.addMarker(new MarkerOptions().position(latLng).title(event.name));
+                }
             }
 
             @Override
