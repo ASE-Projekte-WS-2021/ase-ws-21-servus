@@ -165,8 +165,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
                 mMap.clear();
                 // Load event data
-                for (Event event: events) {
-                    mMap.addMarker(new MarkerOptions().position(event.getLatLng()).title(event.getName()));
+                for (Event event : events) {
+                    mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
                 }
             }
 

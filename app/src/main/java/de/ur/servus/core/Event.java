@@ -10,13 +10,13 @@ public class Event {
     private String name;
     private String description;
     private String id;
-    private LatLng latLng;
+    private LatLng location;
 
     public Event() {
     }
 
-    public LatLng getLatLng() {
-        return latLng;
+    public LatLng getLocation() {
+        return location;
     }
 
     /**
@@ -24,8 +24,8 @@ public class Event {
      *
      * @param latlng List with two elements: Latitude and Longitude.
      */
-    public void setLatLng(List<Double> latlng) {
-        this.latLng = new LatLng(latlng.get(0), latlng.get(1));
+    public void setLocation(List<Double> latlng) {
+        this.location = new LatLng(latlng.get(0), latlng.get(1));
     }
 
     public String getName() {
