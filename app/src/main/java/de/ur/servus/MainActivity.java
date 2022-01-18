@@ -23,11 +23,13 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
@@ -54,6 +56,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     LocationListener locationListener;
     Marker marker;
 
+    View c_bottomSheet;
+    View p_bottomSheet;
+    View s_bottomSheet;
+    View f_bottomSheet;
+    BottomSheetBehavior<View> c_bottomSheetBehavior;
+    BottomSheetBehavior<View> p_bottomSheetBehavior;
+    BottomSheetBehavior<View> s_bottomSheetBehavior;
+    BottomSheetBehavior<View> f_bottomSheetBehavior;
+
+    TextView details_eventname;
+    TextView details_description;
+    TextView details_attendees;
+    TextView details_creator;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,14 +85,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         /*
          * Initialize all Bottom Sheets, add a corresponding BottomSheetBehavior and referring Callbacks.
          */
-        View c_bottomSheet = findViewById(R.id.creator_bottomSheet);
-        View p_bottomSheet = findViewById(R.id.participant_bottomSheet);
-        View s_bottomSheet = findViewById(R.id.settings_bottomSheet);
-        View f_bottomSheet = findViewById(R.id.filter_bottomSheet);
-        BottomSheetBehavior<View> c_bottomSheetBehavior = BottomSheetBehavior.from(c_bottomSheet);
-        BottomSheetBehavior<View> p_bottomSheetBehavior = BottomSheetBehavior.from(p_bottomSheet);
-        BottomSheetBehavior<View> s_bottomSheetBehavior = BottomSheetBehavior.from(s_bottomSheet);
-        BottomSheetBehavior<View> f_bottomSheetBehavior = BottomSheetBehavior.from(f_bottomSheet);
+        c_bottomSheet = findViewById(R.id.creator_bottomSheet);
+        p_bottomSheet = findViewById(R.id.participant_bottomSheet);
+        s_bottomSheet = findViewById(R.id.settings_bottomSheet);
+        f_bottomSheet = findViewById(R.id.filter_bottomSheet);
+        c_bottomSheetBehavior = BottomSheetBehavior.from(c_bottomSheet);
+        p_bottomSheetBehavior = BottomSheetBehavior.from(p_bottomSheet);
+        s_bottomSheetBehavior = BottomSheetBehavior.from(s_bottomSheet);
+        f_bottomSheetBehavior = BottomSheetBehavior.from(f_bottomSheet);
         addBottomSheetCallbacks(c_bottomSheetBehavior, p_bottomSheetBehavior, s_bottomSheetBehavior, f_bottomSheetBehavior);
 
         /*
@@ -151,6 +168,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 
+        /*
+         * Initialize all TextViews that will get manipulated by value within the Bottom Sheets
+         */
+        details_eventname = findViewById(R.id.event_details_eventname);
+        details_description = findViewById(R.id.event_details_description);
+        details_attendees = findViewById(R.id.event_details_attendees);
+        details_creator = findViewById(R.id.event_details_creator);
     }
 
     @Override
@@ -164,10 +188,46 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 // Log all event names to console
                 Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
                 mMap.clear();
+
                 // Load event data
                 for (Event event : events) {
-                    mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
+                    Marker marker = mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
+                    if (marker != null) {
+                        marker.setTag(event.getId());
+                    }
                 }
+
+                mMap.setOnMarkerClickListener(marker -> {
+                    BackendHandler bh1 = FirestoreBackendHandler.getInstance();
+                    bh1.subscribeEvent(Objects.requireNonNull(marker.getTag()).toString(), new EventListener<>() {
+                        @Override
+                        public void onEvent(Event event) {
+                            //Log.d("Event", "EventID: " + event.getId());
+                            //Log.d("Event", "Name: " + event.getName());
+                            //Log.d("Event", "Description: " + event.getDescription());
+
+                            if (event.getName() != null) {
+                                details_eventname.setText(event.getName());
+                            }
+                            if (event.getDescription() != null){
+                                details_description.setText(event.getDescription());
+                            }
+                            //details_attendees.setText(event.getName());
+                            //details_creator.setText(event.getName());
+
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            // TODO error handling here
+                            Log.e("Data", e.getMessage());
+                        }
+                    });
+
+                    p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+
+                    return true;
+                });
             }
 
             @Override

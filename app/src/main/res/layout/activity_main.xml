@@ -71,7 +71,6 @@
                 android:elevation="2dp"
                 android:visibility="invisible" />
         </RelativeLayout>
-
     </LinearLayout>
 
     <include layout="@layout/bottomsheet_settings" />

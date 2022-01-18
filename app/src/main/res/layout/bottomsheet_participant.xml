@@ -3,10 +3,10 @@
     style="@style/mBottomSheets"
     android:id="@+id/participant_bottomSheet" >
 
-    <ScrollView
-        style="@style/mScrollViews" >
+    <androidx.core.widget.NestedScrollView
+        style="@style/mScrollViews">
 
         <include layout="@layout/bottomsheet_participant_content" />
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

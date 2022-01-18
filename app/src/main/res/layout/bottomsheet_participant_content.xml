@@ -1,13 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/mBottomSheetsContents">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/mBottomSheetsContents"
+    android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        style="@style/mLabelContainer"
+        android:id="@+id/event_details_eventname_container" >
+
+        <TextView
+            style="@style/mLabels"
+            android:text="@string/event_details_label_eventname" />
+        
+        <TextView
+            style="@style/mLabelledTextViews"
+            android:id="@+id/event_details_eventname"
+            android:text="@string/event_details_default_eventname" />
+    </LinearLayout>
+
+    <LinearLayout
+        style="@style/mLabelContainer"
+        android:id="@+id/event_details_description_container" >
+
+        <TextView
+            style="@style/mLabels"
+            android:text="@string/event_details_label_description" />
+
+        <TextView
+            style="@style/mLabelledTextViews"
+            android:id="@+id/event_details_description"
+            android:text="@string/event_details_default_description" />
+    </LinearLayout>
+
+    <LinearLayout
+        style="@style/mLabelContainer"
+        android:id="@+id/event_details_attendees_container" >
+
+        <TextView
+            style="@style/mLabels"
+            android:text="@string/event_details_label_attendees" />
+
+        <TextView
+            style="@style/mLabelledTextViews"
+            android:id="@+id/event_details_attendees"
+            android:text="@string/event_details_default_attendees" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/event_details_creator_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/tmp_participant"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true" />
+        android:layout_marginBottom="32dp"
+        android:orientation="horizontal">
 
-</RelativeLayout>
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/event_details_creator_image"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:contentDescription="@string/descriptions_btn_settings"
+            android:elevation="2dp"
+            android:src="@drawable/img_placeholder_avatar"
+            app:shapeAppearanceOverlay="@style/roundedImageView" />
+
+        <LinearLayout
+            style="@style/mLabelContainer"
+            android:layout_marginBottom="0dp"
+            android:layout_marginStart="16dp">
+
+            <TextView
+                style="@style/mLabels"
+                android:text="@string/event_details_label_creator" />
+
+            <TextView
+                style="@style/mLabelledTextViews"
+                android:id="@+id/event_details_creator"
+                android:text="@string/event_details_default_creator" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        style="@style/mButtons"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/event_details_button_attend" />
+</LinearLayout>
