@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     style="@style/mBottomSheets"
     android:id="@+id/participant_bottomSheet" >
 
-    <include layout="@layout/content_participant" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <include layout="@layout/bottomsheet_participant_content" />
+    </ScrollView>
 
 </LinearLayout>
