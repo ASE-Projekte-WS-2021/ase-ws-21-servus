@@ -96,9 +96,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         ShapeableImageView btn_filter = findViewById(R.id.btn_filter);
         btn_filter.setOnClickListener(v -> f_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
 
-        locationManager = (LocationManager)
-
-                getSystemService(LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         //asking for the users permission to use the location
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -155,43 +153,40 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    // TODO remove this message and example
-    // This is how to get Event data and react to it
     @Override
     protected void onResume() {
         super.onResume();
 
-        BackendHandler bh = new FirestoreBackendHandler();
+        BackendHandler bh = FirestoreBackendHandler.getInstance();
         this.listenerRegistration = bh.subscribeEvents(new EventListener<>() {
             @Override
             public void onEvent(List<Event> events) {
-
                 // Log all event names to console
-                Log.d("Data", events.stream().map(event -> event.name).collect(Collectors.joining(", ")));
+                Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
                 mMap.clear();
                 // Load event data
                 for (Event event: events) {
-                    double latitude = event.getLocation().getLatitude();
-                    double longitude = event.getLocation().getLongitude();
-                    LatLng latLng = new LatLng(latitude, longitude);
-                    mMap.addMarker(new MarkerOptions().position(latLng).title(event.name));
+                    mMap.addMarker(new MarkerOptions().position(event.getLatLng()).title(event.getName()));
                 }
             }
 
             @Override
             public void onError(Exception e) {
-                Log.e("Data", "E: " + e.getMessage());
+                // TODO error handling here
+                Log.e("Data", e.getMessage());
             }
+
         });
     }
 
-    // TODO remove this message
-    // When the activity is not running, we should not load data
+
     @Override
     protected void onPause() {
         super.onPause();
-        // Stop loading events
-        this.listenerRegistration.unsubscribe();
+
+        if (this.listenerRegistration != null) {
+            this.listenerRegistration.unsubscribe();
+        }
     }
 
 
