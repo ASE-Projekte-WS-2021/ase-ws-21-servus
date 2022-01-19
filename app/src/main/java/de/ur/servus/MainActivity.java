@@ -5,8 +5,10 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,10 +30,12 @@ import android.location.Geocoder;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -55,6 +59,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     Context context;
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
+    private final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
 
     private GoogleMap mMap;
     private ListenerRegistration listenerRegistration;
@@ -73,12 +78,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     BottomSheetBehavior<View> s_bottomSheetBehavior;
     BottomSheetBehavior<View> f_bottomSheetBehavior;
 
+    ShapeableImageView btn_settings;
+    Button btn_creator;
+    ShapeableImageView btn_filter;
+
     TextView details_eventname;
     TextView details_description;
     TextView details_attendees;
     //TextView details_creator; //Not part of MVP
 
-    Button attend_withdraw_meetup;
+    Button btn_attend_withdraw;
 
 
     @Override
@@ -116,14 +125,27 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
          *
          * This will be added in a future release.
          */
-        ShapeableImageView btn_settings = findViewById(R.id.btn_settings);
+        btn_settings = findViewById(R.id.btn_settings);
         btn_settings.setOnClickListener(v -> s_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
 
-        Button btn_creator = findViewById(R.id.btn_meetup);
-        btn_creator.setOnClickListener(v -> c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
+        btn_creator = findViewById(R.id.btn_meetup);
+        btn_creator.setOnClickListener(v -> {
+            /*
+             * Add behavior for create button, if user is already subscribed to an event as attendant
+             */
+            String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
+            if (subscribed.equals("none")){
+                c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
+            else{
+                p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
+        });
 
-        ShapeableImageView btn_filter = findViewById(R.id.btn_filter);
+        btn_filter = findViewById(R.id.btn_filter);
         btn_filter.setOnClickListener(v -> f_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
+
+        btn_attend_withdraw = findViewById(R.id.event_details_button);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
@@ -187,6 +209,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         details_description = findViewById(R.id.event_details_description);
         details_attendees = findViewById(R.id.event_details_attendees);
         //details_creator = findViewById(R.id.event_details_creator); //Not part of MVP
+
+
+        /*
+         * Initialize Creator button based on an event subscription
+         */
+        String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
+        if (!subscribed.equals("none")){
+            loadDataForMarker(subscribed);
+            setStyleClicked();
+        }
     }
 
     @Override
@@ -201,55 +233,31 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
                 mMap.clear();
 
+                String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
+
                 // Load event data
-                for (Event event : events) {
-                    Marker marker = mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
-                    if (marker != null) {
-                        marker.setTag(event.getId());
+                if (subscribed.equals("none")){
+                    // Iterate through the whole list and add markers without limitation
+                    for (Event event : events) {
+                        Marker marker = mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
+                        if (marker != null) {
+                            marker.setTag(event.getId());
+                        }
+                    }
+                } else {
+                    // Iterate through the whole list and only add the event with the subscribed ID
+                    for (Event event : events) {
+                        if (event.getId().equals(subscribed)){
+                            Marker marker = mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
+                            if (marker != null) {
+                                marker.setTag(event.getId());
+                            }
+                        }
                     }
                 }
 
                 mMap.setOnMarkerClickListener(marker -> {
-                    BackendHandler bh_marker = FirestoreBackendHandler.getInstance();
-
-                    bh_marker.subscribeEvent(Objects.requireNonNull(marker.getTag()).toString(), new EventListener<>() {
-                        @SuppressLint("SetTextI18n")
-                        @Override
-                        public void onEvent(Event event) {
-                            //Log.d("Event", "EventID: " + event.getId());
-                            //Log.d("Event", "Name: " + event.getName());
-                            //Log.d("Event", "Description: " + event.getDescription());
-
-                            if (event.getName() != null) {
-                                details_eventname.setText(event.getName());
-                            }
-                            if (event.getDescription() != null){
-                                details_description.setText(event.getDescription());
-                            }
-                            if (event.getAttendants() != null){
-                                details_attendees.setText(Long.toString(event.getAttendants()));
-                            }
-                            //details_creator.setText(event.getName());
-
-                            /*
-                             * Add Button click behavior to attend/withdraw button in participation bottom sheet
-                             */
-                            attend_withdraw_meetup = findViewById(R.id.event_details_button);
-                            attend_withdraw_meetup.setOnClickListener(v -> {
-                                // TODO: SharedPreference stuff
-
-                                BackendHandler bh_attend_withdraw = FirestoreBackendHandler.getInstance();
-                                bh_attend_withdraw.incrementEventAttendants(event.getId());
-                            });
-                        }
-
-                        @Override
-                        public void onError(Exception e) {
-                            // TODO error handling here
-                            Log.e("Data", e.getMessage());
-                        }
-                    });
-
+                    loadDataForMarker(Objects.requireNonNull(marker.getTag()).toString());
                     p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
                     return true;
                 });
@@ -263,17 +271,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         });
     }
-
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        if (this.listenerRegistration != null) {
-            this.listenerRegistration.unsubscribe();
-        }
-    }
-
 
     @Override
     protected void onStop() {
@@ -439,5 +436,95 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 // potentially empty (?)
             }
         });
+    }
+
+    private void loadDataForMarker(String eventID) {
+        BackendHandler bh_marker = FirestoreBackendHandler.getInstance();
+        bh_marker.subscribeEvent(eventID, new EventListener<>() {
+            @SuppressLint("SetTextI18n")
+            @Override
+            public void onEvent(Event event) {
+                if (event.getName() != null) {
+                    details_eventname.setText(event.getName());
+                }
+                if (event.getDescription() != null){
+                    details_description.setText(event.getDescription());
+                }
+                if (event.getAttendants() != null){
+                    details_attendees.setText(Long.toString(event.getAttendants()));
+                }
+                //TODO details_creator.setText(event.getName());
+
+                /*
+                 * Add Button click behavior to attend/withdraw button in participation bottom sheet
+                 */
+                btn_attend_withdraw.setOnClickListener(v -> {
+                    String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
+                    if (subscribed.equals("none")) attendEvent(event.getId());
+                    else leaveEvent(event.getId());
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // TODO error handling here
+                Log.e("Data", e.getMessage());
+            }
+        });
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (this.listenerRegistration != null) {
+            this.listenerRegistration.unsubscribe();
+        }
+    }
+
+    private void attendEvent(String eventId) {
+        BackendHandler bh_attend_withdraw = FirestoreBackendHandler.getInstance();
+        bh_attend_withdraw.incrementEventAttendants(eventId);
+        setStyleClicked();
+        editor.putString(SUBSCRIBED_TO_EVENT, eventId);
+        editor.apply();
+
+    }
+
+    private void leaveEvent(String eventId) {
+        BackendHandler bh_attend_withdraw = FirestoreBackendHandler.getInstance();
+        bh_attend_withdraw.decrementEventAttendants(eventId);
+        setStyleDefault();
+        editor.putString(SUBSCRIBED_TO_EVENT, "none");
+        editor.apply();
+    }
+
+    private void setStyleClicked(){
+        if (btn_attend_withdraw != null) {
+            btn_attend_withdraw.setText(R.string.event_details_button_withdraw);
+            btn_attend_withdraw.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
+            btn_attend_withdraw.setTextColor(getResources().getColor(R.color.servus_pink, getTheme()));
+        }
+
+        if (btn_creator != null) {
+            btn_creator.setText(R.string.event_details_button_withdraw);
+            btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
+            btn_creator.setTextColor(getResources().getColor(R.color.servus_pink, getTheme()));
+        }
+    }
+
+    private void setStyleDefault(){
+        if (btn_attend_withdraw != null) {
+            btn_attend_withdraw.setText(R.string.event_details_button_attend);
+            btn_attend_withdraw.setBackgroundResource(R.drawable.style_btn_roundedcorners);
+            btn_attend_withdraw.setTextColor(getResources().getColor(R.color.servus_white, getTheme()));
+        }
+
+        if (btn_creator != null) {
+            btn_creator.setText(R.string.content_create_meetup);
+            btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners);
+            btn_creator.setTextColor(getResources().getColor(R.color.servus_white, getTheme()));
+        }
     }
 }
