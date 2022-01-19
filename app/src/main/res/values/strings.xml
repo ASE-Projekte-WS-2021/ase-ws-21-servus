@@ -16,5 +16,17 @@
     <string name="tmp_participant">TODO - Participant Section</string>
 
     <string name="content_create_meetup">Create a Meet-Up</string>
+    <string name="active_filter_indicator">0</string>
+
+    <string name="event_details_label_eventname">Name</string>
+    <string name="event_details_default_eventname">%eventname%</string>
+    <string name="event_details_label_description">Description</string>
+    <string name="event_details_default_description">%description%</string>
+    <string name="event_details_label_attendees">Attendees</string>
+    <string name="event_details_default_attendees">% X / Y %</string>
+    <string name="event_details_label_creator">Creator</string>
+    <string name="event_details_default_creator">%creator%</string>
+    <string name="event_details_button_attend">Attend to Meet-Up</string>
+    <string name="event_details_button_withdraw">Withdraw attendance</string>
 
 </resources>
