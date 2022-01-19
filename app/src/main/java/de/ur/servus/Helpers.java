@@ -1,13 +1,6 @@
 package de.ur.servus;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
-import android.widget.Button;
-
-import de.ur.servus.core.BackendHandler;
-import de.ur.servus.core.FirestoreBackendHandler;
 
 // TODO better name/structuring of this stuff
 public class Helpers {
