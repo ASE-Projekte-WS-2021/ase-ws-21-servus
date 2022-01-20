@@ -3,11 +3,10 @@
     style="@style/mBottomSheets"
     android:id="@+id/creator_bottomSheet">
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <androidx.core.widget.NestedScrollView
+        style="@style/mScrollViews" >
 
         <include layout="@layout/bottomsheet_creator_content" />
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>
