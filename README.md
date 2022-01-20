@@ -8,6 +8,7 @@
     - If another version was installed previously and the environment variable is corrected, you may need to restart
     - https://www.oracle.com/java/technologies/downloads/#jdk17-windows 
  2. Setup git hooks by executing the `setup_githooks` scripts in `tools`
+ 3. Copy the `.env.template` file, rename it to `.env` and fill in all necessary data 
 
 ## Git Hooks
 
