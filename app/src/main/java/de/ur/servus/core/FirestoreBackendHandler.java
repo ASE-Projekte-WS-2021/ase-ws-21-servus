@@ -81,4 +81,16 @@ public class FirestoreBackendHandler implements BackendHandler {
         return db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.increment(-1));
     }
 
+    public Task<String> createNewEvent(Event event) {
+        return db.collection(COLLECTION).add(event).continueWith(task -> {
+            var doc = task.getResult();
+            return doc.getId();
+        });
+    }
+
+    public Task<Void> updateEvent(String eventId, Event event) {
+        // FIXME Can create new event, if id does not exist. Add a check.
+        return db.collection(COLLECTION).document(eventId).set(event);
+    }
+
 }

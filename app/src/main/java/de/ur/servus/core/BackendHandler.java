@@ -27,7 +27,7 @@ public interface BackendHandler {
      * Increments the attendance counter of an Event in the database by 1.
      *
      * @param eventId The id of the Event.
-     * @return A Task to view the asynchronous operation.
+     * @return A Task to await the asynchronous operation.
      */
     Task<Void> incrementEventAttendants(String eventId);
 
@@ -35,7 +35,22 @@ public interface BackendHandler {
      * Decrements the attendance counter of an Event in the database by 1.
      *
      * @param eventId The id of the Event.
-     * @return A Task to view the asynchronous operation.
+     * @return A Task to await the asynchronous operation.
      */
     Task<Void> decrementEventAttendants(String eventId);
+
+    /**
+     * Saves a new event to the database and returns its ID.
+     * @param event The event to be saved.
+     * @return The event's ID.
+     */
+    Task<String> createNewEvent(Event event);
+
+    /**
+     * Updates a event in the database.
+     * @param eventId The ID of the event to update.
+     * @param event The event to be saved.
+     * @return A Task to await the asynchronous operation.
+     */
+    Task<Void> updateEvent(String eventId, Event event);
 }
