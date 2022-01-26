@@ -41,7 +41,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
 import de.ur.servus.core.EventListener;
-import de.ur.servus.core.FirestoreBackendHandler;
+import de.ur.servus.core.firebase.FirestoreBackendHandler;
 import de.ur.servus.core.ListenerRegistration;
 
 import java.io.IOException;
@@ -439,15 +439,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @SuppressLint("SetTextI18n")
             @Override
             public void onEvent(Event event) {
-                if (event.getName() != null) {
-                    details_eventname.setText(event.getName());
-                }
-                if (event.getDescription() != null){
-                    details_description.setText(event.getDescription());
-                }
-                if (event.getAttendants() != null){
-                    details_attendees.setText(Long.toString(event.getAttendants()));
-                }
+                details_eventname.setText(event.getName());
+                details_description.setText(event.getDescription());
+                details_attendees.setText(Long.toString(event.getAttendants()));
                 //TODO details_creator.setText(event.getName());
 
                 /*

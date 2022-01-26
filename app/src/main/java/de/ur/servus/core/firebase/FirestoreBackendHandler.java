@@ -1,4 +1,4 @@
-package de.ur.servus.core;
+package de.ur.servus.core.firebase;
 
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FieldValue;
@@ -6,6 +6,11 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import de.ur.servus.core.BackendHandler;
+import de.ur.servus.core.Event;
+import de.ur.servus.core.EventListener;
+import de.ur.servus.core.ListenerRegistration;
 
 public class FirestoreBackendHandler implements BackendHandler {
 
@@ -33,11 +38,11 @@ public class FirestoreBackendHandler implements BackendHandler {
                     assert value != null;
 
                     List<Event> events = value.getDocuments().stream().map(doc -> {
-                        Event event = doc.toObject(Event.class);
-                        assert event != null;
+                        EventPOJO eventPOJO = doc.toObject(EventPOJO.class);
+                        assert eventPOJO != null;
 
-                        event.setId(doc.getId());
-                        return event;
+                        eventPOJO.setId(doc.getId());
+                        return eventPOJO.toEvent();
                     }).collect(Collectors.toList());
 
                     listener.onEvent(events);
@@ -58,12 +63,12 @@ public class FirestoreBackendHandler implements BackendHandler {
                 try {
                     assert value != null;
 
-                    Event event = value.toObject(Event.class);
-                    assert event != null;
+                    EventPOJO eventPOJO = value.toObject(EventPOJO.class);
+                    assert eventPOJO != null;
 
-                    event.setId(value.getId());
+                    eventPOJO.setId(value.getId());
 
-                    listener.onEvent(event);
+                    listener.onEvent(eventPOJO.toEvent());
                 } catch (Exception e) {
                     listener.onError(e);
                 }
@@ -82,7 +87,8 @@ public class FirestoreBackendHandler implements BackendHandler {
     }
 
     public Task<String> createNewEvent(Event event) {
-        return db.collection(COLLECTION).add(event).continueWith(task -> {
+        EventPOJO pojo = new EventPOJO(event);
+        return db.collection(COLLECTION).add(pojo).continueWith(task -> {
             var doc = task.getResult();
             return doc.getId();
         });
