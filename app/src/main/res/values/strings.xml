@@ -12,12 +12,16 @@
     <string name="descriptions_btn_participant">MapMarker to access the participant section.</string>
 
     <string name="tmp_settings">TODO - Settings / Profile Section</string>
-    <string name="tmp_creator">TODO - Creator Section</string>
+    <string name="tmp_creator">Create Event</string>
     <string name="tmp_filter">TODO - Filter Section</string>
     <string name="tmp_participant">TODO - Participant Section</string>
 
     <string name="content_create_meetup">Create a Meet-Up</string>
     <string name="active_filter_indicator">0</string>
+
+    <string name = "event_creation_label_eventname">Name</string>
+    <string name = "event_creation_label_description">Description</string>
+    <string name = "event_creation_button_create">Create</string>
 
     <string name="event_details_label_eventname">Name</string>
     <string name="event_details_default_eventname">%eventname%</string>
@@ -29,5 +33,6 @@
     <string name="event_details_default_creator">%creator%</string>
     <string name="event_details_button_attend">Attend to Meet-Up</string>
     <string name="event_details_button_withdraw">Withdraw attendance</string>
+
 
 </resources>

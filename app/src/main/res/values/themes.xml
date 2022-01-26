@@ -99,6 +99,18 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
+    <style name="mEditTexts">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:scrollHorizontally">false</item>
+        <item name="android:overScrollMode">always</item>
+        <item name="android:scrollbarStyle">insideInset</item>
+        <item name="android:scrollbars">vertical</item>
+        <item name="android:inputType">textMultiLine</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:gravity">top|left</item>
+    </style>
+
     <style name="Theme.MyApplication.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.MyApplication.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
