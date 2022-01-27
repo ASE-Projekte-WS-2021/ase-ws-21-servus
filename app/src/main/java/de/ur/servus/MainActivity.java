@@ -452,14 +452,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                  */
                 btn_attend_withdraw.setOnClickListener(v -> {
                     String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
-                    var bh = FirestoreBackendHandler.getInstance();
 
                     if (subscribed.equals("none")) {
                         attendEvent(event.getId());
-                        bh.incrementEventAttendants(event.getId());
                     } else {
                         leaveEvent(event.getId());
-                        bh.decrementEventAttendants(event.getId());
                     }
                 });
 
@@ -493,6 +490,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         editor.putString(SUBSCRIBED_TO_EVENT, eventId);
         editor.apply();
         markerManager.showSingleMarker(eventId);
+        FirestoreBackendHandler.getInstance().incrementEventAttendants(eventId, null);
     }
 
     private void leaveEvent(String eventId) {
@@ -500,6 +498,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         editor.putString(SUBSCRIBED_TO_EVENT, "none");
         editor.apply();
         markerManager.showAllMarkers();
+        FirestoreBackendHandler.getInstance().decrementEventAttendants(eventId, null);
     }
 
     private void setStyleClicked() {
@@ -537,25 +536,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         EditText et_event_description = findViewById(R.id.event_creation_description);
         String event_description = et_event_description.getText().toString();
-        int attendants = 1;
+        int attendants = 0;
 
         //we assume that the user doesn't move to much, the latLon of the user updates ONCE on startup of app
 
 
         Event event = new Event(event_name, event_description, new LatLng(latitude, longitude), attendants);
         var bh = FirestoreBackendHandler.getInstance();
-        bh.createNewEvent(event).addOnSuccessListener(id ->
-                bh.subscribeEvent(id, new EventListener<>() {
-                    @Override
-                    public void onEvent(Event event) {
-                        attendEvent(id);
-                    }
+        bh.createNewEvent(event, new EventListener<>() {
+            @Override
+            public void onEvent(String id) {
+                attendEvent(id);
+            }
 
-                    @Override
-                    public void onError(Exception e) {
-                        // TODO handle errors
-                    }
-                }));
+            @Override
+            public void onError(Exception e) {
+                // TODO handle errors
+            }
+        });
 
         //close bottomsheet
         c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
