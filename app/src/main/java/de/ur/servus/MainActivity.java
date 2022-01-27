@@ -26,6 +26,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -41,7 +42,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
 import de.ur.servus.core.EventListener;
-import de.ur.servus.core.FirestoreBackendHandler;
+import de.ur.servus.core.firebase.FirestoreBackendHandler;
 import de.ur.servus.core.ListenerRegistration;
 
 import java.io.IOException;
@@ -64,6 +65,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     LocationListener locationListener;
     Marker marker;
 
+    double latitude;
+    double longitude;
+
     View c_bottomSheet;
     View p_bottomSheet;
     View s_bottomSheet;
@@ -83,6 +87,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //TextView details_creator; //Not part of MVP
 
     Button btn_attend_withdraw;
+    Button btn_create_event;
 
 
     @Override
@@ -142,6 +147,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         btn_attend_withdraw = findViewById(R.id.event_details_button);
 
+        btn_create_event = findViewById(R.id.event_create_button);
+        btn_create_event.setOnClickListener(v->createEvent());
+
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         //asking for the users permission to use the location
@@ -155,8 +163,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onLocationChanged(Location location) {
                 //getting the latitude and longitude of the user's position
-                double latitude = location.getLatitude();
-                double longitude = location.getLongitude();
+                latitude = location.getLatitude();
+                longitude = location.getLongitude();
 
                 Geocoder geocoder = new Geocoder(getApplicationContext());
                 try {
@@ -439,15 +447,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @SuppressLint("SetTextI18n")
             @Override
             public void onEvent(Event event) {
-                if (event.getName() != null) {
-                    details_eventname.setText(event.getName());
-                }
-                if (event.getDescription() != null){
-                    details_description.setText(event.getDescription());
-                }
-                if (event.getAttendants() != null){
-                    details_attendees.setText(Long.toString(event.getAttendants()));
-                }
+                details_eventname.setText(event.getName());
+                details_description.setText(event.getDescription());
+                details_attendees.setText(Long.toString(event.getAttendants()));
                 //TODO details_creator.setText(event.getName());
 
                 /*
@@ -521,5 +523,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_white, getTheme()));
         }
+    }
+
+    private void createEvent(){
+        //MVP: create POJO for firebase backend handler and use corresponding method
+        EditText et_event_name = findViewById(R.id.event_creation_eventname);
+        String event_name = et_event_name.getText().toString();
+
+        EditText et_event_description = findViewById(R.id.event_creation_description);
+        String event_description = et_event_description.getText().toString();
+        int attendants = 1;
+
+        //we assume that the user doesn't move to much, the latLon of the user updates ONCE on startup of app
+
+
+        Event event = new Event(event_name,event_description,new LatLng(latitude,longitude),attendants);
+        FirestoreBackendHandler.getInstance().createNewEvent(event);
+
+        //close bottomsheet
+        c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 }
