@@ -4,6 +4,8 @@ import com.google.android.gms.tasks.Task;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 public interface BackendHandler {
 
     /**
@@ -27,24 +29,24 @@ public interface BackendHandler {
      * Increments the attendance counter of an Event in the database by 1.
      *
      * @param eventId The id of the Event.
-     * @return A Task to await the asynchronous operation.
+     * @param listener A listener to react, when the server has finished.
      */
-    Task<Void> incrementEventAttendants(String eventId);
+    void incrementEventAttendants(String eventId, @Nullable EventListener<Void> listener);
 
     /**
      * Decrements the attendance counter of an Event in the database by 1.
      *
      * @param eventId The id of the Event.
-     * @return A Task to await the asynchronous operation.
+     * @param listener A listener to react, when the server has finished.
      */
-    Task<Void> decrementEventAttendants(String eventId);
+    void decrementEventAttendants(String eventId, @Nullable EventListener<Void> listener);
 
     /**
      * Saves a new event to the database and returns its ID.
      * @param event The event to be saved.
-     * @return The event's ID.
+     * @param eventListener A listener to get the Event's ID when it is created.
      */
-    Task<String> createNewEvent(Event event);
+    void createNewEvent(Event event, EventListener<String> eventListener);
 
     /**
      * Updates a event in the database.

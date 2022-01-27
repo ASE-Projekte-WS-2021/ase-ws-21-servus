@@ -7,6 +7,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
 import de.ur.servus.core.EventListener;
@@ -65,7 +67,7 @@ public class FirestoreBackendHandler implements BackendHandler {
 
                     EventPOJO eventPOJO = value.toObject(EventPOJO.class);
 
-                    if(eventPOJO == null) {
+                    if (eventPOJO == null) {
                         throw new Exception("Event not found");
                     }
 
@@ -81,20 +83,27 @@ public class FirestoreBackendHandler implements BackendHandler {
         return registration::remove;
     }
 
-    public Task<Void> incrementEventAttendants(String eventId) {
-        return db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.increment(1));
+    public void incrementEventAttendants(String eventId, @Nullable EventListener<Void> listener) {
+        var task = db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.increment(1));
+        if (listener != null) {
+            task.addOnSuccessListener(listener::onEvent)
+                    .addOnFailureListener(listener::onError);
+        }
     }
 
-    public Task<Void> decrementEventAttendants(String eventId) {
-        return db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.increment(-1));
+    public void decrementEventAttendants(String eventId, @Nullable EventListener<Void> listener) {
+        var task = db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.increment(-1));
+        if (listener != null) {
+            task.addOnSuccessListener(listener::onEvent)
+                    .addOnFailureListener(listener::onError);
+        }
     }
 
-    public Task<String> createNewEvent(Event event) {
+    public void createNewEvent(Event event, EventListener<String> listener) {
         EventPOJO pojo = new EventPOJO(event);
-        return db.collection(COLLECTION).add(pojo).continueWith(task -> {
-            var doc = task.getResult();
-            return doc.getId();
-        });
+        db.collection(COLLECTION).add(pojo)
+                .addOnSuccessListener(doc -> listener.onEvent(doc.getId()))
+                .addOnFailureListener(listener::onError);
     }
 
     public Task<Void> updateEvent(String eventId, Event event) {
