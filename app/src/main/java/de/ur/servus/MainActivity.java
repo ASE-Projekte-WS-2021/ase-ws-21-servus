@@ -1,11 +1,12 @@
 package de.ur.servus;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentActivity;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,9 +17,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -225,6 +228,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
 
+        try {
+            googleMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_light_mode)));
+        } catch (Resources.NotFoundException e) {
+            Log.e("Debug: ", "Can't find style. Error: ", e);
+        }
+
         // on marker click load/show event
         mMap.setOnMarkerClickListener(marker -> {
             loadDataForEvent(Objects.requireNonNull(marker.getTag()).toString());
@@ -279,6 +288,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+
+        int presetNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        changeMapStyle(presetNightMode);
     }
 
     /*
@@ -557,5 +569,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //close bottomsheet
         c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+    }
+
+    private void changeMapStyle(int currentNightMode){
+        switch (currentNightMode) {
+            case Configuration.UI_MODE_NIGHT_NO:
+                Log.d("Debug: ", "Light Mode");
+                mMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_light_mode)));
+                break;
+
+            case Configuration.UI_MODE_NIGHT_YES:
+                Log.d("Debug: ", "Dark Mode");
+                mMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_dark_mode)));
+                break;
+        }
     }
 }
