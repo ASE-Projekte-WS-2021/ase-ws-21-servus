@@ -64,7 +64,10 @@ public class FirestoreBackendHandler implements BackendHandler {
                     assert value != null;
 
                     EventPOJO eventPOJO = value.toObject(EventPOJO.class);
-                    assert eventPOJO != null;
+
+                    if(eventPOJO == null) {
+                        throw new Exception("Event not found");
+                    }
 
                     eventPOJO.setId(value.getId());
 
@@ -98,5 +101,7 @@ public class FirestoreBackendHandler implements BackendHandler {
         // FIXME Can create new event, if id does not exist. Add a check.
         return db.collection(COLLECTION).document(eventId).set(event);
     }
+
+    // TODO delete event
 
 }

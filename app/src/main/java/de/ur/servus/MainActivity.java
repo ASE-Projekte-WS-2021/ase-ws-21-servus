@@ -63,7 +63,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     LocationManager locationManager;
     LocationListener locationListener;
-    Marker marker;
+
+    MarkerManager markerManager;
 
     double latitude;
     double longitude;
@@ -98,6 +99,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         context = getApplicationContext();
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
+        markerManager = new MarkerManager();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -134,10 +136,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
              * Add behavior for create button, if user is already subscribed to an event as attendant
              */
             String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
-            if (subscribed.equals("none")){
+            if (subscribed.equals("none")) {
                 c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-            }
-            else{
+            } else {
                 p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             }
         });
@@ -148,17 +149,90 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         btn_attend_withdraw = findViewById(R.id.event_details_button);
 
         btn_create_event = findViewById(R.id.event_create_button);
-        btn_create_event.setOnClickListener(v->createEvent());
+        btn_create_event.setOnClickListener(v -> createEvent());
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        //asking for the users permission to use the location
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]
-                            {Manifest.permission.ACCESS_FINE_LOCATION},
-                    REQUEST_LOCATION_PERMISSION);
-        }
+        /*
+         * Initialize all TextViews that will get manipulated by value within the Bottom Sheets
+         */
+        details_eventname = findViewById(R.id.event_details_eventname);
+        details_description = findViewById(R.id.event_details_description);
+        details_attendees = findViewById(R.id.event_details_attendees);
+        //details_creator = findViewById(R.id.event_details_creator); //Not part of MVP
 
+
+        /*
+         * Initialize Creator button based on an event subscription
+         */
+        String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
+        if (!subscribed.equals("none")) {
+            loadDataForEvent(subscribed);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        BackendHandler bh = FirestoreBackendHandler.getInstance();
+        this.listenerRegistration = bh.subscribeEvents(new EventListener<>() {
+            @Override
+            public void onEvent(List<Event> events) {
+                // Log all event names to console
+                Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
+                mMap.clear();
+
+                // save new markers
+                var markers = events.stream().map(event -> {
+                    Marker marker = mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
+                    if (marker != null) {
+                        marker.setTag(event.getId());
+                    }
+                    return marker;
+                }).filter(Objects::nonNull).collect(Collectors.toList());
+                markerManager.setMarkers(markers);
+
+                // show relevant markers
+                String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
+
+                if (subscribed.equals("none")) {
+                    markerManager.showAllMarkers();
+                    setStyleDefault();
+                } else {
+                    // TODO check if event really exists...
+                    markerManager.showSingleMarker(subscribed);
+                    setStyleClicked();
+                }
+
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // TODO error handling here
+                Log.e("Data", e.getMessage());
+            }
+
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        mMap = googleMap;
+
+        // on marker click load/show event
+        mMap.setOnMarkerClickListener(marker -> {
+            loadDataForEvent(Objects.requireNonNull(marker.getTag()).toString());
+            p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            return true;
+        });
+
+        // get inital position and move camera
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -169,14 +243,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Geocoder geocoder = new Geocoder(getApplicationContext());
                 try {
                     List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
-                    String adress = addresses.get(0).getLocality() + ":";
-                    adress += addresses.get(0).getCountryName();
-
                     LatLng latLng = new LatLng(latitude, longitude);
-                    if (marker != null) {
-                        marker.remove();
-                    }
-                    //marker = mMap.addMarker(new MarkerOptions().position(latLng).title(adress));
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13.0f));
                     locationManager.removeUpdates(locationListener);
 
@@ -202,88 +269,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
+        //asking for the users permission to use the location
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION_PERMISSION
+            );
+        }
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-
-        /*
-         * Initialize all TextViews that will get manipulated by value within the Bottom Sheets
-         */
-        details_eventname = findViewById(R.id.event_details_eventname);
-        details_description = findViewById(R.id.event_details_description);
-        details_attendees = findViewById(R.id.event_details_attendees);
-        //details_creator = findViewById(R.id.event_details_creator); //Not part of MVP
-
-
-        /*
-         * Initialize Creator button based on an event subscription
-         */
-        String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
-        if (!subscribed.equals("none")){
-            loadDataForMarker(subscribed);
-            setStyleClicked();
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        BackendHandler bh = FirestoreBackendHandler.getInstance();
-        this.listenerRegistration = bh.subscribeEvents(new EventListener<>() {
-            @Override
-            public void onEvent(List<Event> events) {
-                // Log all event names to console
-                Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
-                mMap.clear();
-
-                String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
-
-                // Load event data
-                if (subscribed.equals("none")){
-                    // Iterate through the whole list and add markers without limitation
-                    for (Event event : events) {
-                        Marker marker = mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
-                        if (marker != null) {
-                            marker.setTag(event.getId());
-                        }
-                    }
-                } else {
-                    // Iterate through the whole list and only add the event with the subscribed ID
-                    for (Event event : events) {
-                        if (event.getId().equals(subscribed)){
-                            Marker marker = mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
-                            if (marker != null) {
-                                marker.setTag(event.getId());
-                            }
-                        }
-                    }
-                }
-
-                mMap.setOnMarkerClickListener(marker -> {
-                    loadDataForMarker(Objects.requireNonNull(marker.getTag()).toString());
-                    p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-                    return true;
-                });
-            }
-
-            @Override
-            public void onError(Exception e) {
-                // TODO error handling here
-                Log.e("Data", e.getMessage());
-            }
-
-        });
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        locationManager.removeUpdates(locationListener);
-    }
-
-    @Override
-    public void onMapReady(@NonNull GoogleMap googleMap) {
-        mMap = googleMap;
     }
 
     /*
@@ -441,7 +436,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    private void loadDataForMarker(String eventID) {
+    private void loadDataForEvent(String eventID) {
         BackendHandler bh_marker = FirestoreBackendHandler.getInstance();
         bh_marker.subscribeEvent(eventID, new EventListener<>() {
             @SuppressLint("SetTextI18n")
@@ -457,15 +452,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                  */
                 btn_attend_withdraw.setOnClickListener(v -> {
                     String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
-                    if (subscribed.equals("none")) attendEvent(event.getId());
-                    else leaveEvent(event.getId());
+                    var bh = FirestoreBackendHandler.getInstance();
+
+                    if (subscribed.equals("none")) {
+                        attendEvent(event.getId());
+                        bh.incrementEventAttendants(event.getId());
+                    } else {
+                        leaveEvent(event.getId());
+                        bh.decrementEventAttendants(event.getId());
+                    }
                 });
+
             }
 
             @Override
             public void onError(Exception e) {
                 // TODO error handling here
                 Log.e("Data", e.getMessage());
+
+                editor.putString(SUBSCRIBED_TO_EVENT, "none");
+                editor.apply();
+
+                setStyleDefault();
             }
         });
     }
@@ -481,23 +489,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void attendEvent(String eventId) {
-        BackendHandler bh_attend_withdraw = FirestoreBackendHandler.getInstance();
-        bh_attend_withdraw.incrementEventAttendants(eventId);
         setStyleClicked();
         editor.putString(SUBSCRIBED_TO_EVENT, eventId);
         editor.apply();
-
+        markerManager.showSingleMarker(eventId);
     }
 
     private void leaveEvent(String eventId) {
-        BackendHandler bh_attend_withdraw = FirestoreBackendHandler.getInstance();
-        bh_attend_withdraw.decrementEventAttendants(eventId);
         setStyleDefault();
         editor.putString(SUBSCRIBED_TO_EVENT, "none");
         editor.apply();
+        markerManager.showAllMarkers();
     }
 
-    private void setStyleClicked(){
+    private void setStyleClicked() {
         if (btn_attend_withdraw != null) {
             btn_attend_withdraw.setText(R.string.event_details_button_withdraw);
             btn_attend_withdraw.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
@@ -511,7 +516,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void setStyleDefault(){
+    private void setStyleDefault() {
         if (btn_attend_withdraw != null) {
             btn_attend_withdraw.setText(R.string.event_details_button_attend);
             btn_attend_withdraw.setBackgroundResource(R.drawable.style_btn_roundedcorners);
@@ -525,7 +530,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void createEvent(){
+    private void createEvent() {
         //MVP: create POJO for firebase backend handler and use corresponding method
         EditText et_event_name = findViewById(R.id.event_creation_eventname);
         String event_name = et_event_name.getText().toString();
@@ -537,8 +542,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //we assume that the user doesn't move to much, the latLon of the user updates ONCE on startup of app
 
 
-        Event event = new Event(event_name,event_description,new LatLng(latitude,longitude),attendants);
-        FirestoreBackendHandler.getInstance().createNewEvent(event);
+        Event event = new Event(event_name, event_description, new LatLng(latitude, longitude), attendants);
+        var bh = FirestoreBackendHandler.getInstance();
+        bh.createNewEvent(event).addOnSuccessListener(id ->
+                bh.subscribeEvent(id, new EventListener<>() {
+                    @Override
+                    public void onEvent(Event event) {
+                        attendEvent(id);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        // TODO handle errors
+                    }
+                }));
 
         //close bottomsheet
         c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
