@@ -17,7 +17,7 @@
         android:top="16dp"
         android:bottom="0dp">
         <shape>
-            <solid android:color="@color/servus_white"/>
+            <solid android:color="?android:colorBackground"/>
             <corners android:topLeftRadius="24dp" android:topRightRadius="24dp"
                 android:bottomLeftRadius="0dp" android:bottomRightRadius="0dp"/>
         </shape>

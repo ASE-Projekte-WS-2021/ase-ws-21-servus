@@ -15,8 +15,7 @@
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimary</item>
 
         <!-- Customize your theme here. -->
-        <item name="android:colorBackground">@color/servus_black</item>
-        <item name="android:colorForeground">@color/servus_white</item>
+        <item name="android:colorBackground">@color/servus_white</item>
         <item name="android:colorControlHighlight">@color/servus_pink</item>
         <item name="android:colorControlActivated">@color/servus_pink</item>
         <item name="android:colorControlNormal">@color/servus_blue</item>
@@ -54,12 +53,13 @@
         <item name="layout_behavior">com.google.android.material.bottomsheet.BottomSheetBehavior</item>
         <item name="android:background">@drawable/style_bottomsheet_background</item>
         <item name="android:elevation">2dp</item>
-        <item name="android:layout_marginTop">128dp</item>
         <item name="android:paddingTop">32dp</item>
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingRight">16dp</item>
         <item name="android:paddingEnd">16dp</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+        <item name="android:windowIsFloating">false</item>
     </style>
 
     <style name="mBottomSheetsContents">

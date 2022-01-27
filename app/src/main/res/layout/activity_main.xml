@@ -26,9 +26,11 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_margin="8dp"
+            android:adjustViewBounds="true"
+            android:scaleType="centerInside"
             android:contentDescription="@string/descriptions_btn_settings"
             android:src="@drawable/img_placeholder_avatar"
-            android:background="@drawable/style_btn_roundedcorners"
+            android:background="@drawable/style_imageview_roundedcorners"
             android:elevation="2dp" />
 
         <Button
