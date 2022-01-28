@@ -237,6 +237,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // on marker click load/show event
         mMap.setOnMarkerClickListener(marker -> {
             loadDataForEvent(Objects.requireNonNull(marker.getTag()).toString());
+            //Log.d("Debug: ", marker.getPosition().toString());
+            CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 3.0f);
             p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             return true;
         });

@@ -10,15 +10,6 @@
     ]
   },
   {
-    \"featureType\": \"administrative\",
-    \"elementType\": \"geometry\",
-    \"stylers\": [
-      {
-        \"visibility\": \"off\"
-      }
-    ]
-  },
-  {
     \"featureType\": \"administrative.land_parcel\",
     \"elementType\": \"labels\",
     \"stylers\": [
@@ -37,7 +28,23 @@
     ]
   },
   {
+    \"featureType\": \"landscape.man_made\",
+    \"elementType\": \"geometry.fill\",
+    \"stylers\": [
+      {
+        \"color\": \"#f67280\"
+      },
+      {
+        \"saturation\": -45
+      },
+      {
+        \"lightness\": 90
+      }
+    ]
+  },
+  {
     \"featureType\": \"poi\",
+    \"elementType\": \"labels\",
     \"stylers\": [
       {
         \"visibility\": \"off\"
@@ -63,11 +70,19 @@
     ]
   },
   {
+    \"featureType\": \"poi.business\",
+    \"stylers\": [
+      {
+        \"visibility\": \"off\"
+      }
+    ]
+  },
+  {
     \"featureType\": \"poi.park\",
     \"elementType\": \"geometry\",
     \"stylers\": [
       {
-        \"visibility\": \"off\"
+        \"lightness\": -5
       }
     ]
   },
@@ -85,7 +100,10 @@
     \"elementType\": \"geometry.fill\",
     \"stylers\": [
       {
-        \"color\": \"#f67280\"
+        \"color\": \"#6c5b7b\"
+      },
+      {
+        \"lightness\": 60
       },
       {
         \"visibility\": \"on\"
@@ -135,9 +153,33 @@
         \"color\": \"#f67280\"
       }
     ]
+  },
+  {
+    \"featureType\": \"water\",
+    \"elementType\": \"geometry.fill\",
+    \"stylers\": [
+      {
+        \"color\": \"#355c7d\"
+      },
+      {
+        \"saturation\": -35
+      },
+      {
+        \"lightness\": 50
+      }
+    ]
+  },
+  {
+    \"featureType\": \"water\",
+    \"elementType\": \"labels.text\",
+    \"stylers\": [
+      {
+        \"color\": \"#f5f5f5\"
+      }
+    ]
   }
 ]
-    </string>
+  </string>
 
     <string name="map_dark_mode">
 [
@@ -290,6 +332,9 @@
     \"stylers\": [
       {
         \"color\": \"#f67280\"
+      },
+      {
+        \"lightness\": 30
       },
       {
         \"visibility\": \"on\"
