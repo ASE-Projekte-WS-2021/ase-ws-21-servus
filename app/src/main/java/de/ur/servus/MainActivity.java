@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -20,15 +19,12 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -48,29 +44,22 @@ import de.ur.servus.core.EventListener;
 import de.ur.servus.core.firebase.FirestoreBackendHandler;
 import de.ur.servus.core.ListenerRegistration;
 
-import java.io.IOException;
 
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
-// Tutorial on how to set a marker on the user's current location from: https://github.com/mohsinulkabir14/An-Android-Application-to-Show-Your-Position-On-The-Map-Using-Google-Maps-API
-
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
+    private static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
 
     Context context;
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
-    private final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
+    CustomLocationManager customLocationManager;
 
+    @Nullable
     private GoogleMap mMap;
     private ListenerRegistration listenerRegistration;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
 
-    LocationManager locationManager;
-    LocationListener locationListener;
-
     MarkerManager markerManager;
-
-    double latitude;
-    double longitude;
 
     View c_bottomSheet;
     View p_bottomSheet;
@@ -99,10 +88,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        checkAndAskPermissions();
+
         context = getApplicationContext();
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
         markerManager = new MarkerManager();
+        customLocationManager = new CustomLocationManager(this);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -119,7 +111,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         p_bottomSheetBehavior = BottomSheetBehavior.from(p_bottomSheet);
         s_bottomSheetBehavior = BottomSheetBehavior.from(s_bottomSheet);
         f_bottomSheetBehavior = BottomSheetBehavior.from(f_bottomSheet);
-        addBottomSheetCallbacks(c_bottomSheetBehavior, p_bottomSheetBehavior, s_bottomSheetBehavior, f_bottomSheetBehavior);
 
         /*
          * Add functionality to the BottomNav buttons.
@@ -153,8 +144,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         btn_create_event = findViewById(R.id.event_create_button);
         btn_create_event.setOnClickListener(v -> createEvent());
-
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         /*
          * Initialize all TextViews that will get manipulated by value within the Bottom Sheets
@@ -237,217 +226,44 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // on marker click load/show event
         mMap.setOnMarkerClickListener(marker -> {
             loadDataForEvent(Objects.requireNonNull(marker.getTag()).toString());
-            //Log.d("Debug: ", marker.getPosition().toString());
-            //CameraUpdateFactory.newLatLngZoom(marker.getPosition(), 3.0f);
             p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             return true;
         });
 
-        // get inital position and move camera
-        locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                //getting the latitude and longitude of the user's position
-                latitude = location.getLatitude();
-                longitude = location.getLongitude();
+        // This can fail on first run, because permission is not granted. (onRequestPermissionsResult handles this case)
+        centerCamera(mMap);
 
-                Geocoder geocoder = new Geocoder(getApplicationContext());
-                try {
-                    List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
-                    LatLng latLng = new LatLng(latitude, longitude);
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13.0f));
-                    locationManager.removeUpdates(locationListener);
+        int presetNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        changeMapStyle(presetNightMode);
+    }
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-            }
+        // If location permission was granted center camera
+        if (requestCode == REQUEST_LOCATION_PERMISSION && mMap != null) {
+            centerCamera(mMap);
+        }
+    }
 
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) {
+    private void centerCamera(@NonNull GoogleMap mMap) {
+        final float ZOOM_FACTOR = 13.0f;
 
-            }
+        var latLng = customLocationManager.getLastObservedLocation(this);
+        if (latLng != null) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, ZOOM_FACTOR));
+        }
+    }
 
-            @Override
-            public void onProviderEnabled(String s) {
-
-            }
-
-            @Override
-            public void onProviderDisabled(String s) {
-
-            }
-        };
-
-        //asking for the users permission to use the location
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+    private void checkAndAskPermissions() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Handle case, where user wont give permission. Ask again?
             ActivityCompat.requestPermissions(
                     this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_LOCATION_PERMISSION
             );
         }
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-
-        int presetNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-        changeMapStyle(presetNightMode);
-    }
-
-    /*
-     * Initialize all BottomSheetBehaviors.
-     * This adds functionality to trigger any time a specific state of the BottomSheet was triggered.
-     *   -> Code will be extended and cleaned once all specifications are clear to the core.
-     */
-    private void addBottomSheetCallbacks(BottomSheetBehavior<View> c, BottomSheetBehavior<View> p, BottomSheetBehavior<View> s, BottomSheetBehavior<View> f) {
-        c.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                    case BottomSheetBehavior.STATE_COLLAPSED:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_EXPANDED:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_DRAGGING:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_HIDDEN:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_SETTLING:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_HALF_EXPANDED:
-                        //tbd
-                        break;
-                }
-            }
-
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                //tbd
-                // potentially empty (?)
-            }
-        });
-
-        p.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                    case BottomSheetBehavior.STATE_COLLAPSED:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_EXPANDED:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_DRAGGING:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_HIDDEN:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_SETTLING:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_HALF_EXPANDED:
-                        //tbd
-                        break;
-                }
-            }
-
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                //tbd
-                // potentially empty (?)
-            }
-        });
-
-        s.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                    case BottomSheetBehavior.STATE_COLLAPSED:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_EXPANDED:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_DRAGGING:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_HIDDEN:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_SETTLING:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_HALF_EXPANDED:
-                        //tbd
-                        break;
-                }
-            }
-
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                //tbd
-                // potentially empty (?)
-            }
-        });
-
-        f.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                    case BottomSheetBehavior.STATE_COLLAPSED:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_EXPANDED:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_DRAGGING:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_HIDDEN:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_SETTLING:
-                        //tbd
-                        break;
-
-                    case BottomSheetBehavior.STATE_HALF_EXPANDED:
-                        //tbd
-                        break;
-                }
-            }
-
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                //tbd
-                // potentially empty (?)
-            }
-        });
     }
 
     private void loadDataForEvent(String eventID) {
@@ -551,12 +367,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         EditText et_event_description = findViewById(R.id.event_creation_description);
         String event_description = et_event_description.getText().toString();
         int attendants = 0;
+        LatLng location = customLocationManager.getLastObservedLocation(this);
 
-        //we assume that the user doesn't move to much, the latLon of the user updates ONCE on startup of app
-
-
-        Event event = new Event(event_name, event_description, new LatLng(latitude, longitude), attendants);
+        Event event = new Event(event_name, event_description, location, attendants);
         var bh = FirestoreBackendHandler.getInstance();
+
         bh.createNewEvent(event, new EventListener<>() {
             @Override
             public void onEvent(String id) {
@@ -573,7 +388,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 
-    private void changeMapStyle(int currentNightMode){
+    private void changeMapStyle(int currentNightMode) {
         switch (currentNightMode) {
             case Configuration.UI_MODE_NIGHT_NO:
                 Log.d("Debug: ", "Light Mode");
