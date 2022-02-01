@@ -43,6 +43,17 @@
         <item name="android:textColor">@color/servus_white</item>
     </style>
 
+    <style name="mButtonsPlain">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:background">@color/servus_white_transparent</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/servus_black</item>
+    </style>
+
     <style name="mBottomSheets">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
@@ -53,7 +64,7 @@
         <item name="layout_behavior">com.google.android.material.bottomsheet.BottomSheetBehavior</item>
         <item name="android:background">@drawable/style_bottomsheet_background</item>
         <item name="android:elevation">2dp</item>
-        <item name="android:paddingTop">32dp</item>
+        <item name="android:paddingTop">144dp</item>
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingRight">16dp</item>
@@ -99,6 +110,20 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
+    <style name="mTutorialLabels" parent="mLabels">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_marginEnd">16dp</item>
+        <item name="android:textSize">28sp</item>
+    </style>
+
+    <style name="mTutorialSublabels" parent="mTutorialLabels">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:fontFamily">@font/montserrat</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:translationY">1dp</item>
+    </style>
+
     <style name="mEditTexts">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -109,6 +134,14 @@
         <item name="android:inputType">textMultiLine</item>
         <item name="android:textColor">@color/servus_black</item>
         <item name="android:gravity">top|left</item>
+    </style>
+
+    <style name="mSlideIndicator">
+        <item name="android:layout_width">16dp</item>
+        <item name="android:layout_height">16dp</item>
+        <item name="android:layout_marginStart">4dp</item>
+        <item name="android:layout_marginEnd">4dp</item>
+        <item name="android:elevation">2dp</item>
     </style>
 
     <style name="Theme.MyApplication.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />

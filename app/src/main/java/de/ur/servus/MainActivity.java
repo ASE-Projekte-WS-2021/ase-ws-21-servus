@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -48,6 +49,7 @@ import de.ur.servus.core.ListenerRegistration;
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
+    private static final String TUTORIAL_PREFS_ITEM = "tutorialSeen";
 
     Context context;
     SharedPreferences sharedPreferences;
@@ -82,19 +84,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     Button btn_attend_withdraw;
     Button btn_create_event;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        checkAndAskPermissions();
 
         context = getApplicationContext();
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
+
+        if (!sharedPreferences.getBoolean(TUTORIAL_PREFS_ITEM, false)){
+            editor.putBoolean(TUTORIAL_PREFS_ITEM, true).apply();
+
+            Intent intent = new Intent(MainActivity.this, TutorialActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
+
+        checkAndAskPermissions();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -151,7 +160,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         details_eventname = findViewById(R.id.event_details_eventname);
         details_description = findViewById(R.id.event_details_description);
         details_attendees = findViewById(R.id.event_details_attendees);
-        //details_creator = findViewById(R.id.event_details_creator); //Not part of MVP
+        //details_creator = findViewById(R.id.event_details_creator); //TODO: Not part of MVP
 
 
         /*
@@ -392,12 +401,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         switch (currentNightMode) {
             case Configuration.UI_MODE_NIGHT_NO:
                 Log.d("Debug: ", "Light Mode");
-                mMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_light_mode)));
+                Objects.requireNonNull(mMap).setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_light_mode)));
                 break;
 
             case Configuration.UI_MODE_NIGHT_YES:
                 Log.d("Debug: ", "Dark Mode");
-                mMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_dark_mode)));
+                Objects.requireNonNull(mMap).setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_dark_mode)));
                 break;
         }
     }
