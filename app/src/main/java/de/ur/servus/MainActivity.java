@@ -1,5 +1,7 @@
 package de.ur.servus;
 
+import static de.ur.servus.CustomLocationManager.REQUEST_LOCATION_PERMISSION;
+
 import androidx.annotation.NonNull;
 
 import android.annotation.SuppressLint;
@@ -28,7 +30,6 @@ import android.content.pm.PackageManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
@@ -57,7 +58,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     @Nullable
     private GoogleMap mMap;
     private ListenerRegistration listenerRegistration;
-    private static final int REQUEST_LOCATION_PERMISSION = 1;
 
     MarkerManager markerManager;
 
@@ -77,7 +77,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     TextView details_eventname;
     TextView details_description;
     TextView details_attendees;
-    //TextView details_creator; //Not part of MVP
 
     Button btn_attend_withdraw;
     Button btn_create_event;
@@ -96,9 +95,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
 
+        // TODO this will be done in tutorial
+        checkAndAskPermissions();
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        if(mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        }
 
         /*
          * Initialize all Bottom Sheets, add a corresponding BottomSheetBehavior and referring Callbacks.
@@ -161,11 +165,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if (!subscribed.equals("none")) {
             loadDataForEvent(subscribed);
         }
+
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        customLocationManager.startListeningForLocationUpdates();
 
         BackendHandler bh = FirestoreBackendHandler.getInstance();
         this.listenerRegistration = bh.subscribeEvents(new EventListener<>() {
@@ -173,6 +181,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onEvent(List<Event> events) {
                 // Log all event names to console
                 Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
+
+                if(mMap == null){
+                    return;
+                }
+
                 mMap.clear();
 
                 // save new markers
@@ -206,11 +219,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
         });
-    }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
+        // Ask user to enable GPS, if it's disabled
+        customLocationManager.showEnableGpsDialogIfNecessary();
+
+        if(mMap != null) {
+            centerCamera(mMap);
+        }
     }
 
     @Override
@@ -237,6 +252,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         changeMapStyle(presetNightMode);
     }
 
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
@@ -249,10 +265,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void centerCamera(@NonNull GoogleMap mMap) {
         final float ZOOM_FACTOR = 13.0f;
 
-        var latLng = customLocationManager.getLastObservedLocation(this);
-        if (latLng != null) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, ZOOM_FACTOR));
-        }
+        customLocationManager.getLastObservedLocation(latLng -> latLng.ifPresent(lng -> mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lng, ZOOM_FACTOR))));
     }
 
     private void checkAndAskPermissions() {
@@ -313,6 +326,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if (this.listenerRegistration != null) {
             this.listenerRegistration.unsubscribe();
         }
+
+        customLocationManager.stopListeningForLocationUpdates();
     }
 
     private void attendEvent(String eventId) {
@@ -367,28 +382,41 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         EditText et_event_description = findViewById(R.id.event_creation_description);
         String event_description = et_event_description.getText().toString();
         int attendants = 0;
-        LatLng location = customLocationManager.getLastObservedLocation(this);
 
-        Event event = new Event(event_name, event_description, location, attendants);
-        var bh = FirestoreBackendHandler.getInstance();
-
-        bh.createNewEvent(event, new EventListener<>() {
-            @Override
-            public void onEvent(String id) {
-                attendEvent(id);
+        customLocationManager.getLastObservedLocation(latLng -> {
+            if(!latLng.isPresent()){
+                // TODO got no location. What should we do? Check before and disable create button?
+                Log.e("EventCreation", "Got no location. Not creating event.");
+                return;
             }
 
-            @Override
-            public void onError(Exception e) {
-                // TODO handle errors
-            }
+            Event event = new Event(event_name, event_description, latLng.get(), attendants);
+            var bh = FirestoreBackendHandler.getInstance();
+
+            bh.createNewEvent(event, new EventListener<>() {
+                @Override
+                public void onEvent(String id) {
+                    attendEvent(id);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    // TODO handle errors
+                }
+            });
+
+            //close bottomsheet
+            c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         });
 
-        //close bottomsheet
-        c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 
     private void changeMapStyle(int currentNightMode) {
+        if(mMap == null){
+            Log.e("mapStyle", "Map was not initialized.");
+            return;
+        }
+
         switch (currentNightMode) {
             case Configuration.UI_MODE_NIGHT_NO:
                 Log.d("Debug: ", "Light Mode");
