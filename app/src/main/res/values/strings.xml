@@ -60,4 +60,8 @@
     <string name="location_404_dialog_content">To ensure full functionality, this app needs to access your location via your phones location settings. Please ensure that your systems location services are enabled.</string>
     <string name="btn_alertDialog">Go to settings</string>
 
+    <string name="permission_denied_title">&#160;Location</string>
+    <string name="permission_denied_subtitle">Permission required.</string>
+    <string name="permission_denied_content">We are sorry! Without your permission to access your current phone location we can\'t offer you our most valuable benefits: create or participate at meetups. We would gladly appreciate if you would reconsider an authorization. Thank you!</string>
+    <string name="permission_denied_link">Go to permission settings</string>
 </resources>
