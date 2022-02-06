@@ -53,4 +53,11 @@
     <string name="tutorial_location_content">Unfortunately, as this service works with the location signals of every user, we will ask you from time to time to grant permission for us to access your devices location services.</string>
     <string name="tutorial_finalize_account_creation">Finalize account creation</string>
 
+    <string name="location_404">No location found</string>
+    <string name="network_404">No network connection</string>
+
+    <string name="location_404_dialog_title">Enable GPS</string>
+    <string name="location_404_dialog_content">To ensure full functionality, this app needs to access your location via your phones location settings. Please ensure that your systems location services are enabled.</string>
+    <string name="btn_alertDialog">Go to settings</string>
+
 </resources>

@@ -144,6 +144,14 @@
         <item name="android:elevation">2dp</item>
     </style>
 
+    <style name="mAlertDialogButton">
+        <item name="android:buttonBarButtonStyle">@style/mAlertDialogButton</item>
+    </style>
+
+    <style name="mAlertDialogTheme">
+        <item name="android:buttonBarButtonStyle">@style/mAlertDialogButton</item>
+    </style>
+
     <style name="Theme.MyApplication.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.MyApplication.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />

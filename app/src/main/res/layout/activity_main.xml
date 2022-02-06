@@ -6,6 +6,42 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root_layout">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/servus_background_transparent"
+        android:elevation="4dp"
+        android:id="@+id/container_404"
+        android:visibility="gone" >
+        <!-- Visibility will be triggered by network change receiver -->
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:background="@drawable/style_error_roundedcorners_right"
+            android:paddingVertical="5dp"
+            android:paddingHorizontal="20dp"
+            android:layout_marginTop="40dp"
+            android:gravity="center" >
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/ic_placeholder"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnPrimary"
+                android:textAllCaps="true"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:text="@string/network_404" />
+        </LinearLayout>
+    </LinearLayout>
+
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
