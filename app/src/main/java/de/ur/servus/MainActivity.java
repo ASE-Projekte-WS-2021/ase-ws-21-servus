@@ -1,61 +1,62 @@
 package de.ur.servus;
 
-import androidx.annotation.NonNull;
+import static de.ur.servus.Helpers.ifSubscribedToEvent;
+import static de.ur.servus.Helpers.removeAttendingEvent;
+import static de.ur.servus.Helpers.saveAttendingEvent;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
-
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.FragmentActivity;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.widget.EditText;
-
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.imageview.ShapeableImageView;
-
 import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
 import de.ur.servus.core.EventListener;
-import de.ur.servus.core.firebase.FirestoreBackendHandler;
 import de.ur.servus.core.ListenerRegistration;
+import de.ur.servus.core.firebase.FirestoreBackendHandler;
 
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
-
-    SharedPreferences sharedPreferences;
-    SharedPreferences.Editor editor;
-    CustomLocationManager customLocationManager;
-
-    @Nullable
-    private GoogleMap mMap;
-    private ListenerRegistration listenerRegistration;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
 
+    private final BackendHandler backendHandler = FirestoreBackendHandler.getInstance();
+    private SharedPreferences sharedPreferences;
+    private CustomLocationManager customLocationManager;
+    @Nullable
+    private GoogleMap mMap;
+    @Nullable
+    private ListenerRegistration allEventsListenerRegistration;
+    @Nullable
+    private ListenerRegistration singleEventListenerRegistration;
     MarkerManager markerManager;
 
     @Nullable
@@ -82,24 +83,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         checkAndAskPermissions();
 
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
         detailsBottomSheetFragment = new DetailsBottomSheetFragment(sharedPreferences, this);
-
-        detailsBottomSheetFragment.setOnClickListener(event -> {
-            String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
-            if (subscribed.equals("none")) {
-                attendEvent(event.getId());
-            } else {
-                leaveEvent(event.getId());
-            }
-        });
-
-        detailsBottomSheetFragment.setOnEventNotFoundListener(eventId -> {
-            Log.d("loc", "dafasdfsadf");
-            setStyleDefault();
-        });
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -132,29 +118,66 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             /*
              * Add behavior for create button, if user is already subscribed to an event as attendant
              */
-            String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
-            if (subscribed.equals("none")) {
-                c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-            } else {
-                showDetailsBottomSheet(subscribed);
-//                p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-            }
+            ifSubscribedToEvent(sharedPreferences,
+                    eventId -> showDetailsBottomSheet(),
+                    () -> c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED)
+            );
         });
 
         btn_filter = findViewById(R.id.btn_filter);
         btn_filter.setOnClickListener(v -> f_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
 
-
         btn_create_event = findViewById(R.id.event_create_button);
         btn_create_event.setOnClickListener(v -> createEvent());
+
+        ifSubscribedToEvent(sharedPreferences,
+                this::subscribeEvent,
+                null
+        );
+
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        mMap = googleMap;
 
-        BackendHandler bh = FirestoreBackendHandler.getInstance();
-        this.listenerRegistration = bh.subscribeEvents(new EventListener<>() {
+        try {
+            googleMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_light_mode)));
+        } catch (Resources.NotFoundException e) {
+            Log.e("Debug: ", "Can't find style. Error: ", e);
+        }
+
+        // on marker click load/show event
+        mMap.setOnMarkerClickListener(marker -> {
+            var eventId = Objects.requireNonNull(marker.getTag()).toString();
+            subscribeEvent(eventId);
+            showDetailsBottomSheet();
+            return true;
+        });
+
+        // This can fail on first run, because permission is not granted. (onRequestPermissionsResult handles this case)
+        centerCamera(mMap);
+
+        int presetNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        changeMapStyle(presetNightMode);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // If location permission was granted center camera
+        if (requestCode == REQUEST_LOCATION_PERMISSION && mMap != null) {
+            centerCamera(mMap);
+        }
+    }
+
+    public void subscribeAllEvents() {
+        if (allEventsListenerRegistration != null) {
+            allEventsListenerRegistration.unsubscribe();
+        }
+
+        this.allEventsListenerRegistration = backendHandler.subscribeEvents(new EventListener<>() {
             @Override
             public void onEvent(List<Event> events) {
                 // Log all event names to console
@@ -172,17 +195,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 markerManager.setMarkers(markers);
 
                 // show relevant markers
-                String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
-
-                if (subscribed.equals("none")) {
-                    markerManager.showAllMarkers();
-                    setStyleDefault();
-                } else {
-                    // TODO check if event really exists...
-                    markerManager.showSingleMarker(subscribed);
-                    setStyleClicked();
-                }
-
+                ifSubscribedToEvent(sharedPreferences,
+                        eventId -> {
+                            markerManager.showSingleMarker(eventId);
+                            setStyleClicked();
+                        }, () -> {
+                            markerManager.showAllMarkers();
+                            setStyleDefault();
+                        }
+                );
             }
 
             @Override
@@ -194,42 +215,34 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
-    public void onMapReady(@NonNull GoogleMap googleMap) {
-        mMap = googleMap;
-
-        try {
-            googleMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_light_mode)));
-        } catch (Resources.NotFoundException e) {
-            Log.e("Debug: ", "Can't find style. Error: ", e);
+    public void subscribeEvent(String eventId) {
+        if (singleEventListenerRegistration != null) {
+            singleEventListenerRegistration.unsubscribe();
         }
 
-        // on marker click load/show event
-        mMap.setOnMarkerClickListener(marker -> {
-            var eventId = Objects.requireNonNull(marker.getTag()).toString();
-            showDetailsBottomSheet(eventId);
-            return true;
+        singleEventListenerRegistration = backendHandler.subscribeEvent(eventId, new EventListener<>() {
+            @SuppressLint("SetTextI18n")
+            @Override
+            public void onEvent(Event e) {
+                if (detailsBottomSheetFragment != null) {
+                    detailsBottomSheetFragment.setEvent(e);
+
+                    detailsBottomSheetFragment.setOnClickListener(event -> {
+                        ifSubscribedToEvent(sharedPreferences,
+                                eventId -> leaveEvent(eventId), // leave current event (not necessarily event in bottom sheet)
+                                () -> attendEvent(event.getId())
+                        );
+                    });
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e("Data", e.getMessage());
+                removeAttendingEvent(sharedPreferences);
+                setStyleDefault();
+            }
         });
-
-        // This can fail on first run, because permission is not granted. (onRequestPermissionsResult handles this case)
-        centerCamera(mMap);
-
-        int presetNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-        changeMapStyle(presetNightMode);
-    }
-
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        // If location permission was granted center camera
-        if (requestCode == REQUEST_LOCATION_PERMISSION && mMap != null) {
-            centerCamera(mMap);
-        }
     }
 
     private void centerCamera(@NonNull GoogleMap mMap) {
@@ -252,9 +265,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void showDetailsBottomSheet(String eventId) {
+    private void showDetailsBottomSheet() {
         if (detailsBottomSheetFragment != null) {
-            detailsBottomSheetFragment.subscribeEvent(eventId, () -> detailsBottomSheetFragment.show(getSupportFragmentManager(), detailsBottomSheetFragment.getTag()));
+            detailsBottomSheetFragment.show(getSupportFragmentManager(), detailsBottomSheetFragment.getTag());
         }
     }
 
@@ -262,25 +275,33 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onPause() {
         super.onPause();
 
-        if (this.listenerRegistration != null) {
-            this.listenerRegistration.unsubscribe();
+        if (this.allEventsListenerRegistration != null) {
+            this.allEventsListenerRegistration.unsubscribe();
         }
+
+        // TODO unsubscribe single event
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        subscribeAllEvents();
+        // TODO subscribe single event again (which event id?)
     }
 
     private void attendEvent(String eventId) {
         setStyleClicked();
-        editor.putString(SUBSCRIBED_TO_EVENT, eventId);
-        editor.apply();
+        saveAttendingEvent(sharedPreferences, eventId);
         markerManager.showSingleMarker(eventId);
-        FirestoreBackendHandler.getInstance().incrementEventAttendants(eventId, null);
+        backendHandler.incrementEventAttendants(eventId, null);
     }
 
     private void leaveEvent(String eventId) {
         setStyleDefault();
-        editor.putString(SUBSCRIBED_TO_EVENT, "none");
-        editor.apply();
+        removeAttendingEvent(sharedPreferences);
         markerManager.showAllMarkers();
-        FirestoreBackendHandler.getInstance().decrementEventAttendants(eventId, null);
+        backendHandler.decrementEventAttendants(eventId, null);
     }
 
     private void setStyleClicked() {
@@ -310,9 +331,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng location = customLocationManager.getLastObservedLocation(this);
 
         Event event = new Event(event_name, event_description, location, attendants);
-        var bh = FirestoreBackendHandler.getInstance();
 
-        bh.createNewEvent(event, new EventListener<>() {
+        backendHandler.createNewEvent(event, new EventListener<>() {
             @Override
             public void onEvent(String id) {
                 attendEvent(id);

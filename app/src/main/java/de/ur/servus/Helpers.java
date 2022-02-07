@@ -1,12 +1,79 @@
 package de.ur.servus;
 
+
 import android.app.Activity;
+import android.content.SharedPreferences;
+
+import androidx.annotation.Nullable;
+
+import java.util.Optional;
+import java.util.function.Consumer;
 
 // TODO better name/structuring of this stuff
 public class Helpers {
+    public static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
+
+    /**
+     * Helper, to check, if a event is saved in preferences and react to it.
+     *
+     * @param then Consumer, that gets an event id. Can be null.
+     * @param els  Runnable, that is called when no subscribed to an event. Can be null.
+     */
+    public static void ifSubscribedToEvent(SharedPreferences sharedPreferences, @Nullable Consumer<String> then, @Nullable Runnable els) {
+        var subscribed = tryGetSubscribedEvent(sharedPreferences);
+
+        if (subscribed.isPresent()) {
+            if (then != null) {
+                then.accept(subscribed.get());
+            }
+        } else {
+            if (els != null) {
+                els.run();
+            }
+        }
+    }
+
+    /**
+     * Tries to get the currently attending event from shared preferences.
+     * @param sharedPreferences
+     * @return An object, that may be an event id, or may be null. Needs to be checked before using.
+     */
+    public static Optional<String> tryGetSubscribedEvent(SharedPreferences sharedPreferences) {
+        final String NONE = "none";
+        String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, NONE);
+
+        if (!subscribed.equals(NONE) ) {
+            return Optional.of(subscribed);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Saves event to shared preferences as currently attending event.
+     *
+     * @param sharedPreferences
+     */
+    public static void saveAttendingEvent(SharedPreferences sharedPreferences, String eventId) {
+        var editor = sharedPreferences.edit();
+        editor.putString(SUBSCRIBED_TO_EVENT, eventId);
+        editor.apply();
+    }
+
+    /**
+     * Removes currently attending event from shared preferences.
+     *
+     * @param sharedPreferences
+     */
+    public static void removeAttendingEvent(SharedPreferences sharedPreferences) {
+        var editor = sharedPreferences.edit();
+        editor.putString(SUBSCRIBED_TO_EVENT, "none");
+        editor.apply();
+    }
 
     /**
      * Informs the backend about the attendance of an Event and saves its id in the SharedPreferences.
+     *
      * @param eventId The ID of the Event to attend to.
      */
     public static void attendEvent(Activity activity, String eventId) {

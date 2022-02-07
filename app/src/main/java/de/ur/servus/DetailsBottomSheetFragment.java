@@ -1,12 +1,11 @@
 package de.ur.servus;
 
-import static de.ur.servus.MainActivity.SUBSCRIBED_TO_EVENT;
+import static de.ur.servus.Helpers.tryGetSubscribedEvent;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,11 +18,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
-import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
-import de.ur.servus.core.EventListener;
-import de.ur.servus.core.ListenerRegistration;
-import de.ur.servus.core.firebase.FirestoreBackendHandler;
 
 public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     @Nullable
@@ -40,11 +35,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     private final SharedPreferences sharedPreferences;
     private final Context context;
     @Nullable
-    private ListenerRegistration listenerRegistration;
-    @Nullable
     private Consumer<Event> onClickListener;
-    @Nullable
-    private Consumer<String> onEventNotFoundListener;
     @Nullable
     private Event event;
     private boolean attending = false;
@@ -79,52 +70,18 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
     public void setOnClickListener(Consumer<Event> onClickListener) {
         this.onClickListener = onClickListener;
+
+        trySetOnClickListener();
     }
 
-    public void setOnEventNotFoundListener(Consumer<String> onEventNotFoundListener) {
-        this.onEventNotFoundListener = onEventNotFoundListener;
-    }
+    public void setEvent(Event event) {
+        this.event = event;
+        attending = tryGetSubscribedEvent(sharedPreferences)
+                .map(eventId -> eventId.equals(event.getId()))
+                .orElse(false);
 
-    public void subscribeEvent(String eventId, Runnable onFirstFetch) {
-        if (listenerRegistration != null) {
-            listenerRegistration.unsubscribe();
-        }
-
-        BackendHandler bh_marker = FirestoreBackendHandler.getInstance();
-        listenerRegistration = bh_marker.subscribeEvent(eventId, new EventListener<>() {
-            boolean firstFetch = true;
-
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void onEvent(Event e) {
-                attending = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none").equals(e.getId());
-                event = e;
-
-                tryFillViews();
-                tryStyleButton();
-                trySetOnClickListener();
-
-                if (firstFetch) {
-                    firstFetch = false;
-                    onFirstFetch.run();
-                }
-            }
-
-            @Override
-            public void onError(Exception e) {
-                Log.e("Data", e.getMessage());
-
-                var editor = sharedPreferences.edit();
-                editor.putString(SUBSCRIBED_TO_EVENT, "none");
-                editor.apply();
-
-                if (onEventNotFoundListener != null) {
-                    onEventNotFoundListener.accept(eventId);
-                }
-
-                dismiss();
-            }
-        });
+        tryFillViews();
+        tryStyleButton();
     }
 
     /*
