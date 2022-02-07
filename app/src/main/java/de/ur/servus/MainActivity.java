@@ -2,7 +2,6 @@ package de.ur.servus;
 
 import androidx.annotation.NonNull;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -26,7 +25,6 @@ import androidx.fragment.app.FragmentActivity;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -47,9 +45,8 @@ import de.ur.servus.core.ListenerRegistration;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    private static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
+    public static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
 
-    Context context;
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
     CustomLocationManager customLocationManager;
@@ -61,12 +58,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     MarkerManager markerManager;
 
+    @Nullable
+    DetailsBottomSheetFragment detailsBottomSheetFragment;
+
     View c_bottomSheet;
-    View p_bottomSheet;
     View s_bottomSheet;
     View f_bottomSheet;
     BottomSheetBehavior<View> c_bottomSheetBehavior;
-    BottomSheetBehavior<View> p_bottomSheetBehavior;
     BottomSheetBehavior<View> s_bottomSheetBehavior;
     BottomSheetBehavior<View> f_bottomSheetBehavior;
 
@@ -74,14 +72,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     Button btn_creator;
     ShapeableImageView btn_filter;
 
-    TextView details_eventname;
-    TextView details_description;
-    TextView details_attendees;
-    //TextView details_creator; //Not part of MVP
-
-    Button btn_attend_withdraw;
     Button btn_create_event;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,11 +81,25 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         checkAndAskPermissions();
 
-        context = getApplicationContext();
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
+        detailsBottomSheetFragment = new DetailsBottomSheetFragment(sharedPreferences, this);
+
+        detailsBottomSheetFragment.setOnClickListener(event -> {
+            String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
+            if (subscribed.equals("none")) {
+                attendEvent(event.getId());
+            } else {
+                leaveEvent(event.getId());
+            }
+        });
+
+        detailsBottomSheetFragment.setOnEventNotFoundListener(eventId -> {
+            Log.d("loc", "dafasdfsadf");
+            setStyleDefault();
+        });
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -104,11 +109,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
          * Initialize all Bottom Sheets, add a corresponding BottomSheetBehavior and referring Callbacks.
          */
         c_bottomSheet = findViewById(R.id.creator_bottomSheet);
-        p_bottomSheet = findViewById(R.id.participant_bottomSheet);
         s_bottomSheet = findViewById(R.id.settings_bottomSheet);
         f_bottomSheet = findViewById(R.id.filter_bottomSheet);
         c_bottomSheetBehavior = BottomSheetBehavior.from(c_bottomSheet);
-        p_bottomSheetBehavior = BottomSheetBehavior.from(p_bottomSheet);
         s_bottomSheetBehavior = BottomSheetBehavior.from(s_bottomSheet);
         f_bottomSheetBehavior = BottomSheetBehavior.from(f_bottomSheet);
 
@@ -133,34 +136,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             if (subscribed.equals("none")) {
                 c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             } else {
-                p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                showDetailsBottomSheet(subscribed);
+//                p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             }
         });
 
         btn_filter = findViewById(R.id.btn_filter);
         btn_filter.setOnClickListener(v -> f_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
 
-        btn_attend_withdraw = findViewById(R.id.event_details_button);
 
         btn_create_event = findViewById(R.id.event_create_button);
         btn_create_event.setOnClickListener(v -> createEvent());
-
-        /*
-         * Initialize all TextViews that will get manipulated by value within the Bottom Sheets
-         */
-        details_eventname = findViewById(R.id.event_details_eventname);
-        details_description = findViewById(R.id.event_details_description);
-        details_attendees = findViewById(R.id.event_details_attendees);
-        //details_creator = findViewById(R.id.event_details_creator); //Not part of MVP
-
-
-        /*
-         * Initialize Creator button based on an event subscription
-         */
-        String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
-        if (!subscribed.equals("none")) {
-            loadDataForEvent(subscribed);
-        }
     }
 
     @Override
@@ -225,8 +211,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         // on marker click load/show event
         mMap.setOnMarkerClickListener(marker -> {
-            loadDataForEvent(Objects.requireNonNull(marker.getTag()).toString());
-            p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            var eventId = Objects.requireNonNull(marker.getTag()).toString();
+            showDetailsBottomSheet(eventId);
             return true;
         });
 
@@ -266,45 +252,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void loadDataForEvent(String eventID) {
-        BackendHandler bh_marker = FirestoreBackendHandler.getInstance();
-        bh_marker.subscribeEvent(eventID, new EventListener<>() {
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void onEvent(Event event) {
-                details_eventname.setText(event.getName());
-                details_description.setText(event.getDescription());
-                details_attendees.setText(Long.toString(event.getAttendants()));
-                //TODO details_creator.setText(event.getName());
-
-                /*
-                 * Add Button click behavior to attend/withdraw button in participation bottom sheet
-                 */
-                btn_attend_withdraw.setOnClickListener(v -> {
-                    String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
-
-                    if (subscribed.equals("none")) {
-                        attendEvent(event.getId());
-                    } else {
-                        leaveEvent(event.getId());
-                    }
-                });
-
-            }
-
-            @Override
-            public void onError(Exception e) {
-                // TODO error handling here
-                Log.e("Data", e.getMessage());
-
-                editor.putString(SUBSCRIBED_TO_EVENT, "none");
-                editor.apply();
-
-                setStyleDefault();
-            }
-        });
+    private void showDetailsBottomSheet(String eventId) {
+        if (detailsBottomSheetFragment != null) {
+            detailsBottomSheetFragment.subscribeEvent(eventId, () -> detailsBottomSheetFragment.show(getSupportFragmentManager(), detailsBottomSheetFragment.getTag()));
+        }
     }
-
 
     @Override
     protected void onPause() {
@@ -332,12 +284,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void setStyleClicked() {
-        if (btn_attend_withdraw != null) {
-            btn_attend_withdraw.setText(R.string.event_details_button_withdraw);
-            btn_attend_withdraw.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
-            btn_attend_withdraw.setTextColor(getResources().getColor(R.color.servus_pink, getTheme()));
-        }
-
         if (btn_creator != null) {
             btn_creator.setText(R.string.event_details_button_withdraw);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
@@ -346,12 +292,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void setStyleDefault() {
-        if (btn_attend_withdraw != null) {
-            btn_attend_withdraw.setText(R.string.event_details_button_attend);
-            btn_attend_withdraw.setBackgroundResource(R.drawable.style_btn_roundedcorners);
-            btn_attend_withdraw.setTextColor(getResources().getColor(R.color.servus_white, getTheme()));
-        }
-
         if (btn_creator != null) {
             btn_creator.setText(R.string.content_create_meetup);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners);
