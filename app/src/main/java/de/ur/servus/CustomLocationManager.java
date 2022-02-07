@@ -7,7 +7,10 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -43,9 +46,12 @@ public class CustomLocationManager {
     private static final LocationRequest LOCATION_REQUEST = createLocationRequest();
 
     private final FusedLocationProviderClient fusedLocationClient;
+    private final LocationManager locationManager;
     private final Activity activity;
     private final List<Consumer<LatLng>> locationListeners = new ArrayList<>();
-    private final LocationCallback locationCallback;
+    private final List<Runnable> providerDisabledListeners = new ArrayList<>();
+    private final LocationCallback locationCallback = getLocationCallback();
+    private final LocationListener providerDisabledCallback = getProviderDisabledCallback();
 
     private static LocationRequest createLocationRequest() {
         LocationRequest locationRequest = LocationRequest.create();
@@ -58,7 +64,13 @@ public class CustomLocationManager {
     public CustomLocationManager(@NonNull Activity activity) {
         this.activity = activity;
         this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
-        locationCallback = new LocationCallback() {
+        this.locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
+
+        locationListeners.add(this::saveLatLng);
+    }
+
+    private LocationCallback getLocationCallback() {
+        return new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 var location = locationResult.getLastLocation();
@@ -67,8 +79,24 @@ public class CustomLocationManager {
                 locationListeners.stream().filter(Objects::nonNull).forEach(listener -> listener.accept(latLng));
             }
         };
+    }
 
-        locationListeners.add(this::saveLatLng);
+    private LocationListener getProviderDisabledCallback() {
+        return new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
+            }
+
+            @Override
+            public void onProviderEnabled(@NonNull String provider) {
+            }
+
+            @Override
+            public void onProviderDisabled(@NonNull String provider) {
+                Log.d("loc", "gps disabled");
+                providerDisabledListeners.stream().filter(Objects::nonNull).forEach(Runnable::run);
+            }
+        };
     }
 
     /**
@@ -89,6 +117,25 @@ public class CustomLocationManager {
      */
     public void stopListeningForLocationUpdates() {
         fusedLocationClient.removeLocationUpdates(locationCallback);
+    }
+
+    /**
+     * Start listening, if provider gets disabled.
+     */
+    public void startListeningProviderDisabled() {
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: User didn't give permission initially. Ask again and try this again.
+            return;
+        }
+
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 200, providerDisabledCallback);
+    }
+
+    /**
+     * Stop listening, if provider gets disabled.
+     */
+    public void stopListeningProviderDisabled() {
+        locationManager.removeUpdates(providerDisabledCallback);
     }
 
     private void saveLatLng(@NonNull LatLng latLng) {
@@ -144,6 +191,14 @@ public class CustomLocationManager {
 
             listener.accept(latLng);
         });
+    }
+
+    public void addOnProviderDisabledListener(Runnable onProviderDisabledListener) {
+        providerDisabledListeners.add(onProviderDisabledListener);
+    }
+
+    public void removeOnProviderDisabledListener(Runnable onProviderDisabledListener) {
+        providerDisabledListeners.remove(onProviderDisabledListener);
     }
 
     public void showEnableGpsDialogIfNecessary() {

@@ -95,12 +95,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
 
+        // when GPS is turned off, ask to turn it on
+        customLocationManager.addOnProviderDisabledListener(customLocationManager::showEnableGpsDialogIfNecessary);
+
         // TODO this will be done in tutorial
         checkAndAskPermissions();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        if(mapFragment != null) {
+        if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         }
 
@@ -174,6 +177,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         super.onResume();
 
         customLocationManager.startListeningForLocationUpdates();
+        customLocationManager.startListeningProviderDisabled();
 
         BackendHandler bh = FirestoreBackendHandler.getInstance();
         this.listenerRegistration = bh.subscribeEvents(new EventListener<>() {
@@ -182,7 +186,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 // Log all event names to console
                 Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
 
-                if(mMap == null){
+                if (mMap == null) {
                     return;
                 }
 
@@ -220,10 +224,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         });
 
-        // Ask user to enable GPS, if it's disabled
-        customLocationManager.showEnableGpsDialogIfNecessary();
-
-        if(mMap != null) {
+        if (mMap != null) {
             centerCamera(mMap);
         }
     }
@@ -318,7 +319,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -328,6 +328,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         customLocationManager.stopListeningForLocationUpdates();
+        customLocationManager.stopListeningProviderDisabled();
     }
 
     private void attendEvent(String eventId) {
@@ -384,7 +385,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         int attendants = 0;
 
         customLocationManager.getLastObservedLocation(latLng -> {
-            if(!latLng.isPresent()){
+            if (!latLng.isPresent()) {
                 // TODO got no location. What should we do? Check before and disable create button?
                 Log.e("EventCreation", "Got no location. Not creating event.");
                 return;
@@ -412,7 +413,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void changeMapStyle(int currentNightMode) {
-        if(mMap == null){
+        if (mMap == null) {
             Log.e("mapStyle", "Map was not initialized.");
             return;
         }
