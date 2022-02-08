@@ -2,17 +2,29 @@ package de.ur.servus;
 
 import static de.ur.servus.CustomLocationManager.REQUEST_LOCATION_PERMISSION;
 
-import androidx.annotation.NonNull;
-
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -20,35 +32,25 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
-
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.FragmentActivity;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.widget.EditText;
-import android.widget.TextView;
-
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.imageview.ShapeableImageView;
-
 import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
 import de.ur.servus.core.EventListener;
-import de.ur.servus.core.firebase.FirestoreBackendHandler;
 import de.ur.servus.core.ListenerRegistration;
+import de.ur.servus.core.firebase.FirestoreBackendHandler;
 
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
+    private static final String TUTORIAL_PREFS_ITEM = "tutorialSeen";
 
     Context context;
     SharedPreferences sharedPreferences;
@@ -81,13 +83,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     Button btn_attend_withdraw;
     Button btn_create_event;
 
+    BroadcastReceiver networkReceiver;
+    IntentFilter networkFilter;
+    AlertDialog.Builder dialogBuilder;
+    AlertDialog locationDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        checkAndAskPermissions();
 
         context = getApplicationContext();
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
@@ -98,7 +102,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // when GPS is turned off, ask to turn it on
         customLocationManager.addOnProviderDisabledListener(customLocationManager::showEnableGpsDialogIfNecessary);
 
-        // TODO this will be done in tutorial
+        if (!sharedPreferences.getBoolean(TUTORIAL_PREFS_ITEM, false)){
+            editor.putBoolean(TUTORIAL_PREFS_ITEM, true).apply();
+
+            Intent intent = new Intent(MainActivity.this, TutorialActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
+
         checkAndAskPermissions();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -158,7 +169,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         details_eventname = findViewById(R.id.event_details_eventname);
         details_description = findViewById(R.id.event_details_description);
         details_attendees = findViewById(R.id.event_details_attendees);
-        //details_creator = findViewById(R.id.event_details_creator); //Not part of MVP
+        //details_creator = findViewById(R.id.event_details_creator); //TODO: Not part of MVP
 
 
         /*
@@ -169,7 +180,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             loadDataForEvent(subscribed);
         }
 
-
+        /*
+         * Initialize network broadcast receiver
+         */
+        networkReceiver = new NetworkChangeReceiver(this);
+        networkFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
     }
 
     @Override
@@ -258,8 +273,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         // If location permission was granted center camera
-        if (requestCode == REQUEST_LOCATION_PERMISSION && mMap != null) {
-            centerCamera(mMap);
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (mMap != null) {
+                centerCamera(mMap);
+            }
+        } else {
+            // User doesn't have permission again as Permission is not granted by user
+            // Now further, we need to check if the used denied permanently or not
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // User has denied permission once but he didn't click on "Never Show again" check box
+                // Recursively ask the user again for the permission
+
+                checkAndAskPermissions(); // Might never be called atm
+            } else {
+                // User denied the permission and also clicked on the "Never Show again" check box. Permission denied permanently.
+                // Open Permission denied activity with link to the setting's page from here
+
+                Intent intent = new Intent(MainActivity.this, PermissionDeniedActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
         }
     }
 
@@ -270,13 +303,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void checkAndAskPermissions() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Handle case, where user wont give permission. Ask again?
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    REQUEST_LOCATION_PERMISSION
-            );
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // User doesn't have permission. Now we need to check further if permission was shown before or not
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // User has denied permission once but he didn't clicked on "Never Show again" check box
+
+                Intent intent = new Intent(MainActivity.this, PermissionDeniedActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } else {
+                // User has never seen the permission Dialog. Request for permission.
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        REQUEST_LOCATION_PERMISSION
+                );
+            }
         }
     }
 
