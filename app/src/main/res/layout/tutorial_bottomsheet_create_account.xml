@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/mBottomSheets"
+    android:id="@+id/tutorial_bottomSheet" >
+
+    <LinearLayout
+        style="@style/mBottomSheetsContents"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TODO" />
+
+        <Button
+            style="@style/mButtons"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="16dp"
+            android:text="@string/tutorial_finalize_account_creation"
+            android:id="@+id/tutorial_finalize_account_creation"/>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:colorBackground"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:src="@drawable/undraw_hello"
+            android:elevation="2dp"
+            tools:ignore="ContentDescription" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal" >
+
+            <TextView
+                style="@style/mTutorialLabels"
+                android:text="@string/tutorial_servus_title" />
+
+            <TextView
+                style="@style/mTutorialSublabels"
+                android:text="@string/tutorial_servus_subtitle" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tutorial_servus_content" />
+    </LinearLayout>
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:padding="16dp"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                style="@style/mSlideIndicator"
+                android:src="@drawable/tutorial_slideindicator_selected"
+                android:id="@+id/tutorial_indicator_1"
+                tools:ignore="ContentDescription" />
+
+            <ImageView
+                style="@style/mSlideIndicator"
+                android:src="@drawable/tutorial_slideindicator_unselected"
+                android:id="@+id/tutorial_indicator_2"
+                tools:ignore="ContentDescription" />
+
+            <ImageView
+                style="@style/mSlideIndicator"
+                android:src="@drawable/tutorial_slideindicator_unselected"
+                android:id="@+id/tutorial_indicator_3"
+                tools:ignore="ContentDescription" />
+
+            <ImageView
+                style="@style/mSlideIndicator"
+                android:src="@drawable/tutorial_slideindicator_unselected"
+                android:id="@+id/tutorial_indicator_4"
+                tools:ignore="ContentDescription" />
+        </LinearLayout>
+
+        <Button
+            style="@style/mButtonsPlain"
+            android:id="@+id/tutorial_btn_prev"
+            android:text="@string/tutorial_skip"
+            android:layout_marginBottom="8dp"
+            android:visibility="invisible" />
+
+        <Button
+            style="@style/mButtons"
+            android:id="@+id/tutorial_btn_next"
+            android:text="@string/tutorial_next"
+            android:layout_marginBottom="16dp" />
+    </LinearLayout>
+</RelativeLayout>

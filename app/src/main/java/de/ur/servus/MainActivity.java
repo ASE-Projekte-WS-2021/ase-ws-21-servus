@@ -99,10 +99,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
 
-        // when GPS is turned off, ask to turn it on
+        // when GPS is turned off, ask to turn it on. Starting to listen needs to be done in onCreate
         customLocationManager.addOnProviderDisabledListener(customLocationManager::showEnableGpsDialogIfNecessary);
 
-        if (!sharedPreferences.getBoolean(TUTORIAL_PREFS_ITEM, false)){
+        if (!sharedPreferences.getBoolean(TUTORIAL_PREFS_ITEM, false)) {
             editor.putBoolean(TUTORIAL_PREFS_ITEM, true).apply();
 
             Intent intent = new Intent(MainActivity.this, TutorialActivity.class);
@@ -193,6 +193,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         customLocationManager.startListeningForLocationUpdates();
         customLocationManager.startListeningProviderDisabled();
+        customLocationManager.showEnableGpsDialogIfNecessary();
 
         BackendHandler bh = FirestoreBackendHandler.getInstance();
         this.listenerRegistration = bh.subscribeEvents(new EventListener<>() {
@@ -371,6 +372,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         customLocationManager.stopListeningForLocationUpdates();
         customLocationManager.stopListeningProviderDisabled();
+
     }
 
     private void attendEvent(String eventId) {
