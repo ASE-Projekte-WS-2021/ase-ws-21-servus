@@ -17,7 +17,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.MapStyleOptions;
-import com.google.android.gms.maps.model.Marker;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -29,7 +28,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,6 +35,8 @@ import java.util.stream.Collectors;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterManager;
 
 import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
@@ -45,7 +45,7 @@ import de.ur.servus.core.firebase.FirestoreBackendHandler;
 import de.ur.servus.core.ListenerRegistration;
 
 
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, ClusterManager.OnClusterClickListener<MarkerClusterItem>, ClusterManager.OnClusterItemClickListener<MarkerClusterItem> {
 
     private static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
 
@@ -53,13 +53,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
     CustomLocationManager customLocationManager;
+    MarkerManager markerManager;
+    CustomMarkerRenderer customMarkerRenderer;
+
 
     @Nullable
     private GoogleMap mMap;
     private ListenerRegistration listenerRegistration;
     private static final int REQUEST_LOCATION_PERMISSION = 1;
 
-    MarkerManager markerManager;
 
     View c_bottomSheet;
     View p_bottomSheet;
@@ -93,7 +95,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         context = getApplicationContext();
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
-        markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -163,6 +164,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -173,27 +175,30 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onEvent(List<Event> events) {
                 // Log all event names to console
                 Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
-                mMap.clear();
+                markerManager.getClusterManager().clearItems();
 
                 // save new markers
                 var markers = events.stream().map(event -> {
-                    Marker marker = mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
-                    if (marker != null) {
-                        marker.setTag(event.getId());
-                    }
+                    MarkerClusterItem marker = new MarkerClusterItem(event.getLocation(), event.getName(), event.getName(), event.getId());
+                    markerManager.getClusterManager().addItem(marker);
+
                     return marker;
                 }).filter(Objects::nonNull).collect(Collectors.toList());
-                markerManager.setMarkers(markers);
+
 
                 // show relevant markers
                 String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
 
                 if (subscribed.equals("none")) {
-                    markerManager.showAllMarkers();
+                    showAllMarkers();
                     setStyleDefault();
                 } else {
                     // TODO check if event really exists...
-                    markerManager.showSingleMarker(subscribed);
+                    hideAllMarkers();
+                    var marker = markerManager.getMarkerForId(subscribed);
+                    if(marker.isPresent()){
+                        marker.get().setVisible(true);
+                    }
                     setStyleClicked();
                 }
 
@@ -235,6 +240,25 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         int presetNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         changeMapStyle(presetNightMode);
+
+        markerManager = new MarkerManager();
+        markerManager.setUpClusterManager(this, mMap);
+        markerManager.setClusterAlgorithm();
+        customMarkerRenderer = new CustomMarkerRenderer(this, mMap, markerManager.getClusterManager());
+
+    }
+
+
+    void animateZoomInCamera(LatLng latLng){
+        if(mMap != null){
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,10f));
+        }
+    }
+
+    @Override
+    public boolean onClusterClick(Cluster cluster) {
+        animateZoomInCamera(cluster.getPosition());
+        return false;
     }
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -319,7 +343,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         setStyleClicked();
         editor.putString(SUBSCRIBED_TO_EVENT, eventId);
         editor.apply();
-        markerManager.showSingleMarker(eventId);
+        hideAllMarkers();
+        var marker = markerManager.getMarkerForId(eventId);
+        if(marker.isPresent()){
+            marker.get().setVisible(true);
+        }
         FirestoreBackendHandler.getInstance().incrementEventAttendants(eventId, null);
     }
 
@@ -327,7 +355,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         setStyleDefault();
         editor.putString(SUBSCRIBED_TO_EVENT, "none");
         editor.apply();
-        markerManager.showAllMarkers();
+        showAllMarkers();
         FirestoreBackendHandler.getInstance().decrementEventAttendants(eventId, null);
     }
 
@@ -401,4 +429,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 break;
         }
     }
+
+    @Override
+    public boolean onClusterItemClick(MarkerClusterItem markerClusterItem) {
+        return false;
+    }
+
+    public void showAllMarkers(){
+        this.markerManager.getClusterManager().getMarkerCollection().showAll();
+    }
+
+    public void hideAllMarkers(){
+        this.markerManager.getClusterManager().getMarkerCollection().hideAll();
+    }
+
 }
