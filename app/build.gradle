@@ -53,6 +53,7 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment:2.4.0'
     implementation 'androidx.navigation:navigation-ui:2.4.0'
     implementation 'com.google.android.gms:play-services-maps:18.0.2'
+    implementation 'com.google.maps.android:android-maps-utils:2.0.3'
     implementation 'com.google.android.gms:play-services-location:19.0.1'
     implementation 'com.google.firebase:firebase-firestore:24.0.1'
     testImplementation 'junit:junit:4.13.2'

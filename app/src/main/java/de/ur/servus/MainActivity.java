@@ -30,11 +30,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.maps.android.clustering.Cluster;
 
 import java.util.List;
 import java.util.Objects;
@@ -47,21 +47,23 @@ import de.ur.servus.core.ListenerRegistration;
 import de.ur.servus.core.firebase.FirestoreBackendHandler;
 
 
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, ClusterManagerContext {
 
-    private static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
+    public static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
     private static final String TUTORIAL_PREFS_ITEM = "tutorialSeen";
 
     Context context;
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
     CustomLocationManager customLocationManager;
+    MarkerManager markerManager;
+    CustomMarkerRenderer customMarkerRenderer;
+
 
     @Nullable
     private GoogleMap mMap;
     private ListenerRegistration listenerRegistration;
 
-    MarkerManager markerManager;
 
     View c_bottomSheet;
     View p_bottomSheet;
@@ -96,7 +98,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         context = getApplicationContext();
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
-        markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
 
         // when GPS is turned off, ask to turn it on. Starting to listen needs to be done in onCreate
@@ -201,32 +202,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onEvent(List<Event> events) {
                 // Log all event names to console
                 Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
-
-                if (mMap == null) {
-                    return;
-                }
-
-                mMap.clear();
+                markerManager.getClusterManager().clearItems();
 
                 // save new markers
                 var markers = events.stream().map(event -> {
-                    Marker marker = mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
-                    if (marker != null) {
-                        marker.setTag(event.getId());
-                    }
+                    MarkerClusterItem marker = new MarkerClusterItem(event.getLocation(), event.getName(), event.getName(), event.getId());
+                    markerManager.getClusterManager().addItem(marker);
+
                     return marker;
                 }).filter(Objects::nonNull).collect(Collectors.toList());
-                markerManager.setMarkers(markers);
+
+                markerManager.getClusterManager().cluster();
 
                 // show relevant markers
                 String subscribed = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
 
                 if (subscribed.equals("none")) {
-                    markerManager.showAllMarkers();
                     setStyleDefault();
                 } else {
-                    // TODO check if event really exists...
-                    markerManager.showSingleMarker(subscribed);
                     setStyleClicked();
                 }
 
@@ -255,18 +248,35 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e("Debug: ", "Can't find style. Error: ", e);
         }
 
-        // on marker click load/show event
-        mMap.setOnMarkerClickListener(marker -> {
-            loadDataForEvent(Objects.requireNonNull(marker.getTag()).toString());
-            p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-            return true;
-        });
-
         // This can fail on first run, because permission is not granted. (onRequestPermissionsResult handles this case)
         centerCamera(mMap);
 
         int presetNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         changeMapStyle(presetNightMode);
+
+        markerManager = new MarkerManager();
+        markerManager.setUpClusterManager((ClusterManagerContext) this, mMap);
+        markerManager.setClusterAlgorithm();
+        customMarkerRenderer = new CustomMarkerRenderer(this, sharedPreferences, mMap, markerManager.getClusterManager());
+
+        markerManager.getClusterManager().setOnClusterItemClickListener(marker -> {
+            loadDataForEvent(Objects.requireNonNull(marker.getEventId()));
+            p_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            return true;
+        });
+    }
+
+
+    void animateZoomInCamera(LatLng latLng) {
+        if (mMap != null) {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10f));
+        }
+    }
+
+    @Override
+    public boolean onClusterClick(Cluster cluster) {
+        animateZoomInCamera(cluster.getPosition());
+        return false;
     }
 
     @Override
@@ -379,7 +389,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         setStyleClicked();
         editor.putString(SUBSCRIBED_TO_EVENT, eventId);
         editor.apply();
-        markerManager.showSingleMarker(eventId);
+        markerManager.getClusterManager().cluster();
         FirestoreBackendHandler.getInstance().incrementEventAttendants(eventId, null);
     }
 
@@ -387,7 +397,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         setStyleDefault();
         editor.putString(SUBSCRIBED_TO_EVENT, "none");
         editor.apply();
-        markerManager.showAllMarkers();
         FirestoreBackendHandler.getInstance().decrementEventAttendants(eventId, null);
     }
 
@@ -474,4 +483,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 break;
         }
     }
+
+    @Override
+    public boolean onClusterItemClick(MarkerClusterItem markerClusterItem) {
+        return false;
+    }
+
 }
