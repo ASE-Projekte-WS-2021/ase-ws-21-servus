@@ -10,12 +10,14 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 
@@ -26,6 +28,7 @@ import androidx.fragment.app.FragmentActivity;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -40,12 +43,14 @@ import com.google.android.material.imageview.ShapeableImageView;
 
 import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
+import de.ur.servus.eventGenres.EventGenreAdapter;
 import de.ur.servus.core.EventListener;
 import de.ur.servus.core.firebase.FirestoreBackendHandler;
 import de.ur.servus.core.ListenerRegistration;
+import de.ur.servus.eventGenres.GenreData;
 
 
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, AdapterView.OnItemSelectedListener {
 
     private static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
 
@@ -77,11 +82,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     TextView details_eventname;
     TextView details_description;
     TextView details_attendees;
+    TextView details_genre;
     //TextView details_creator; //Not part of MVP
 
     Button btn_attend_withdraw;
     Button btn_create_event;
-
+    Spinner spinner_create_event;
+    EventGenreAdapter genreAdapter;
+    private int selectedGenrePos;
+    private String selectedGenre;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,6 +152,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         btn_attend_withdraw = findViewById(R.id.event_details_button);
 
         btn_create_event = findViewById(R.id.event_create_button);
+        spinner_create_event = findViewById(R.id.event_creation_genre_spinner);
+        spinner_create_event.setOnItemSelectedListener(this);
+        genreAdapter = new EventGenreAdapter(MainActivity.this, GenreData.getGenreList());
+        spinner_create_event.setAdapter(genreAdapter);
         btn_create_event.setOnClickListener(v -> createEvent());
 
         /*
@@ -151,6 +164,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         details_eventname = findViewById(R.id.event_details_eventname);
         details_description = findViewById(R.id.event_details_description);
         details_attendees = findViewById(R.id.event_details_attendees);
+        details_genre = findViewById(R.id.event_details_genre);
         //details_creator = findViewById(R.id.event_details_creator); //Not part of MVP
 
 
@@ -177,7 +191,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // save new markers
                 var markers = events.stream().map(event -> {
-                    Marker marker = mMap.addMarker(new MarkerOptions().position(event.getLocation()).title(event.getName()));
+
+                    Marker marker = mMap.addMarker(new MarkerOptions()
+                            .position(event.getLocation())
+                            .title(event.getName()));
                     if (marker != null) {
                         marker.setTag(event.getId());
                     }
@@ -275,6 +292,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 details_eventname.setText(event.getName());
                 details_description.setText(event.getDescription());
                 details_attendees.setText(Long.toString(event.getAttendants()));
+                details_genre.setText(event.getGenre());
                 //TODO details_creator.setText(event.getName());
 
                 /*
@@ -368,8 +386,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         String event_description = et_event_description.getText().toString();
         int attendants = 0;
         LatLng location = customLocationManager.getLastObservedLocation(this);
+        String genre = selectedGenre;
 
-        Event event = new Event(event_name, event_description, location, attendants);
+        Event event = new Event(event_name, event_description, location, attendants, genre);
         var bh = FirestoreBackendHandler.getInstance();
 
         bh.createNewEvent(event, new EventListener<>() {
@@ -388,6 +407,37 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 
+    @Override
+    //used for the event creation spinner
+    public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
+        selectedGenrePos = adapterView.getSelectedItemPosition();
+        switch (selectedGenrePos){
+            case 0:
+                selectedGenre = "Sport";
+                break;
+            case 1:
+                selectedGenre = "Food";
+                break;
+            case 2:
+                selectedGenre = "Party";
+                break;
+            case 3:
+                selectedGenre = "Activity";
+                break;
+            case 4:
+                selectedGenre = "Hang-out";
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    @Override
+    //used for the event creation spinner
+    public void onNothingSelected(AdapterView<?> adapterView) {
+    }
+
     private void changeMapStyle(int currentNightMode) {
         switch (currentNightMode) {
             case Configuration.UI_MODE_NIGHT_NO:
@@ -401,4 +451,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 break;
         }
     }
+
+
 }

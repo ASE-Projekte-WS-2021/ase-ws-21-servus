@@ -15,8 +15,10 @@ class EventPOJO {
     private String name;
     private String description;
     private String id;
+    private String genre;
     private List<Double> location;
     private int attendants;
+
 
     public EventPOJO() {
     }
@@ -26,6 +28,7 @@ class EventPOJO {
         this.description = event.getDescription();
         this.id = event.getId();
         this.attendants = event.getAttendants();
+        this.genre = event.getGenre();
 
         this.location = new ArrayList<Double>(2);
         this.location.add(event.getLocation().latitude);
@@ -73,12 +76,18 @@ class EventPOJO {
         return attendants;
     }
 
+
+    public void setGenre(String genre){this.genre = genre;}
+
+    public String getGenre(){return genre;}
+
     public Event toEvent() {
         Event event = new Event(
                 this.name,
                 this.description,
                 new LatLng(this.location.get(0), this.location.get(1)),
-                this.attendants
+                this.attendants,
+                this.genre
         );
         event.setId(this.id);
         return event;
