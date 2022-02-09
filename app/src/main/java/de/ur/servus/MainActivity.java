@@ -1,16 +1,30 @@
 package de.ur.servus;
 
-import androidx.annotation.NonNull;
+import static de.ur.servus.CustomLocationManager.REQUEST_LOCATION_PERMISSION;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -18,36 +32,25 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
-
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.FragmentActivity;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.widget.EditText;
-import android.widget.TextView;
-
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.imageview.ShapeableImageView;
-
 import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
 import de.ur.servus.core.EventListener;
-import de.ur.servus.core.firebase.FirestoreBackendHandler;
 import de.ur.servus.core.ListenerRegistration;
+import de.ur.servus.core.firebase.FirestoreBackendHandler;
 
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
+    private static final String TUTORIAL_PREFS_ITEM = "tutorialSeen";
 
     Context context;
     SharedPreferences sharedPreferences;
@@ -57,7 +60,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     @Nullable
     private GoogleMap mMap;
     private ListenerRegistration listenerRegistration;
-    private static final int REQUEST_LOCATION_PERMISSION = 1;
 
     MarkerManager markerManager;
 
@@ -77,18 +79,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     TextView details_eventname;
     TextView details_description;
     TextView details_attendees;
-    //TextView details_creator; //Not part of MVP
 
     Button btn_attend_withdraw;
     Button btn_create_event;
 
+    BroadcastReceiver networkReceiver;
+    IntentFilter networkFilter;
+    AlertDialog.Builder dialogBuilder;
+    AlertDialog locationDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        checkAndAskPermissions();
 
         context = getApplicationContext();
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
@@ -96,9 +99,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
 
+        // when GPS is turned off, ask to turn it on. Starting to listen needs to be done in onCreate
+        customLocationManager.addOnProviderDisabledListener(customLocationManager::showEnableGpsDialogIfNecessary);
+
+        if (!sharedPreferences.getBoolean(TUTORIAL_PREFS_ITEM, false)) {
+            editor.putBoolean(TUTORIAL_PREFS_ITEM, true).apply();
+
+            Intent intent = new Intent(MainActivity.this, TutorialActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
+
+        checkAndAskPermissions();
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        }
 
         /*
          * Initialize all Bottom Sheets, add a corresponding BottomSheetBehavior and referring Callbacks.
@@ -151,7 +169,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         details_eventname = findViewById(R.id.event_details_eventname);
         details_description = findViewById(R.id.event_details_description);
         details_attendees = findViewById(R.id.event_details_attendees);
-        //details_creator = findViewById(R.id.event_details_creator); //Not part of MVP
+        //details_creator = findViewById(R.id.event_details_creator); //TODO: Not part of MVP
 
 
         /*
@@ -161,11 +179,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if (!subscribed.equals("none")) {
             loadDataForEvent(subscribed);
         }
+
+        /*
+         * Initialize network broadcast receiver
+         */
+        networkReceiver = new NetworkChangeReceiver(this);
+        networkFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        customLocationManager.startListeningForLocationUpdates();
+        customLocationManager.startListeningProviderDisabled();
+        customLocationManager.showEnableGpsDialogIfNecessary();
 
         BackendHandler bh = FirestoreBackendHandler.getInstance();
         this.listenerRegistration = bh.subscribeEvents(new EventListener<>() {
@@ -173,6 +201,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onEvent(List<Event> events) {
                 // Log all event names to console
                 Log.d("Data", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
+
+                if (mMap == null) {
+                    return;
+                }
+
                 mMap.clear();
 
                 // save new markers
@@ -206,11 +239,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
         });
-    }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
+        if (mMap != null) {
+            centerCamera(mMap);
+        }
     }
 
     @Override
@@ -237,32 +269,57 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         changeMapStyle(presetNightMode);
     }
 
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         // If location permission was granted center camera
-        if (requestCode == REQUEST_LOCATION_PERMISSION && mMap != null) {
-            centerCamera(mMap);
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (mMap != null) {
+                centerCamera(mMap);
+            }
+        } else {
+            // User doesn't have permission again as Permission is not granted by user
+            // Now further, we need to check if the used denied permanently or not
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // User has denied permission once but he didn't click on "Never Show again" check box
+                // Recursively ask the user again for the permission
+
+                checkAndAskPermissions(); // Might never be called atm
+            } else {
+                // User denied the permission and also clicked on the "Never Show again" check box. Permission denied permanently.
+                // Open Permission denied activity with link to the setting's page from here
+
+                Intent intent = new Intent(MainActivity.this, PermissionDeniedActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
         }
     }
 
     private void centerCamera(@NonNull GoogleMap mMap) {
         final float ZOOM_FACTOR = 13.0f;
 
-        var latLng = customLocationManager.getLastObservedLocation(this);
-        if (latLng != null) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, ZOOM_FACTOR));
-        }
+        customLocationManager.getLastObservedLocation(latLng -> latLng.ifPresent(lng -> mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lng, ZOOM_FACTOR))));
     }
 
     private void checkAndAskPermissions() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Handle case, where user wont give permission. Ask again?
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    REQUEST_LOCATION_PERMISSION
-            );
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // User doesn't have permission. Now we need to check further if permission was shown before or not
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // User has denied permission once but he didn't clicked on "Never Show again" check box
+
+                Intent intent = new Intent(MainActivity.this, PermissionDeniedActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } else {
+                // User has never seen the permission Dialog. Request for permission.
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        REQUEST_LOCATION_PERMISSION
+                );
+            }
         }
     }
 
@@ -305,7 +362,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -313,6 +369,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if (this.listenerRegistration != null) {
             this.listenerRegistration.unsubscribe();
         }
+
+        customLocationManager.stopListeningForLocationUpdates();
+        customLocationManager.stopListeningProviderDisabled();
+
     }
 
     private void attendEvent(String eventId) {
@@ -367,28 +427,41 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         EditText et_event_description = findViewById(R.id.event_creation_description);
         String event_description = et_event_description.getText().toString();
         int attendants = 0;
-        LatLng location = customLocationManager.getLastObservedLocation(this);
 
-        Event event = new Event(event_name, event_description, location, attendants);
-        var bh = FirestoreBackendHandler.getInstance();
-
-        bh.createNewEvent(event, new EventListener<>() {
-            @Override
-            public void onEvent(String id) {
-                attendEvent(id);
+        customLocationManager.getLastObservedLocation(latLng -> {
+            if (!latLng.isPresent()) {
+                // TODO got no location. What should we do? Check before and disable create button?
+                Log.e("EventCreation", "Got no location. Not creating event.");
+                return;
             }
 
-            @Override
-            public void onError(Exception e) {
-                // TODO handle errors
-            }
+            Event event = new Event(event_name, event_description, latLng.get(), attendants);
+            var bh = FirestoreBackendHandler.getInstance();
+
+            bh.createNewEvent(event, new EventListener<>() {
+                @Override
+                public void onEvent(String id) {
+                    attendEvent(id);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    // TODO handle errors
+                }
+            });
+
+            //close bottomsheet
+            c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         });
 
-        //close bottomsheet
-        c_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 
     private void changeMapStyle(int currentNightMode) {
+        if (mMap == null) {
+            Log.e("mapStyle", "Map was not initialized.");
+            return;
+        }
+
         switch (currentNightMode) {
             case Configuration.UI_MODE_NIGHT_NO:
                 Log.d("Debug: ", "Light Mode");
