@@ -1,17 +1,10 @@
 package de.ur.servus;
 
 import android.content.Context;
+
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.Marker;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.algo.NonHierarchicalDistanceBasedAlgorithm;
-import java.util.Objects;
-import java.util.Optional;
-
-
-interface ClusterManagerContext extends ClusterManager.OnClusterClickListener<MarkerClusterItem>, ClusterManager.OnClusterItemClickListener<MarkerClusterItem>{
-
-}
 
 public class MarkerManager {
     private ClusterManager<MarkerClusterItem> clusterManager;
@@ -22,20 +15,13 @@ public class MarkerManager {
         return clusterManager;
     }
 
-    public void setClusterAlgorithm(){
+    public void setClusterAlgorithm() {
         this.algorithm = new NonHierarchicalDistanceBasedAlgorithm<>();
         this.algorithm.setMaxDistanceBetweenClusteredItems(20);
         clusterManager.setAlgorithm(this.algorithm);
     }
 
-    public Optional<Marker> getMarkerForId(String eventId) {
-        return clusterManager.getMarkerCollection().getMarkers().stream().filter(marker -> {
-            String markerId = Objects.requireNonNull(marker.getTag()).toString();
-            return markerId.equals(eventId);
-        }).findFirst();
-    }
-
-    public void setUpClusterManager(MainActivity context, GoogleMap map){
+    public void setUpClusterManager(ClusterManagerContext context, GoogleMap map) {
         this.clusterManager = new ClusterManager<>((Context) context, map);
         this.clusterManager.setOnClusterClickListener((ClusterManager.OnClusterClickListener<MarkerClusterItem>) context);
         this.clusterManager.setOnClusterItemClickListener((ClusterManager.OnClusterItemClickListener<MarkerClusterItem>) context);

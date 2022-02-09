@@ -5,7 +5,7 @@ import androidx.annotation.Nullable;
 
 import com.google.android.gms.maps.model.LatLng;
 
-class MarkerClusterItem implements ClusterItem, com.google.maps.android.clustering.ClusterItem {
+public class MarkerClusterItem implements ClusterItem, com.google.maps.android.clustering.ClusterItem {
     private final LatLng latLng;
     private final String title;
     private final String mSnippet;
