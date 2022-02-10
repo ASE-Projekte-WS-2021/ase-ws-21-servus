@@ -2,12 +2,19 @@ package de.ur.servus;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.Optional;
 import java.util.function.Consumer;
+
+import de.ur.servus.core.Event;
+import de.ur.servus.core.EventListener;
+import de.ur.servus.core.firebase.FirestoreBackendHandler;
 
 // TODO better name/structuring of this stuff
 public class Helpers {
@@ -69,6 +76,14 @@ public class Helpers {
         var editor = sharedPreferences.edit();
         editor.putString(SUBSCRIBED_TO_EVENT, "none");
         editor.apply();
+    }
+
+    public static void createEvent(Context context, CustomLocationManager locationManager, EventCreationData inputEventData,  EventListener<String> afterCreationListener){
+        LatLng location = locationManager.getLastObservedLocation(context);
+
+        Event event = new Event(inputEventData.name, inputEventData.description, location, 0);
+
+        FirestoreBackendHandler.getInstance().createNewEvent(event, afterCreationListener);
     }
 
     /**

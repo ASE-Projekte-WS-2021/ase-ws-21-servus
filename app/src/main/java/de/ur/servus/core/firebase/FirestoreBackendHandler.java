@@ -99,11 +99,19 @@ public class FirestoreBackendHandler implements BackendHandler {
         }
     }
 
-    public void createNewEvent(Event event, EventListener<String> listener) {
+    public void createNewEvent(Event event, @Nullable EventListener<String> listener) {
         EventPOJO pojo = new EventPOJO(event);
         db.collection(COLLECTION).add(pojo)
-                .addOnSuccessListener(doc -> listener.onEvent(doc.getId()))
-                .addOnFailureListener(listener::onError);
+                .addOnSuccessListener(doc -> {
+                    if (listener != null) {
+                        listener.onEvent(doc.getId());
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (listener != null) {
+                        listener.onError(e);
+                    }
+                });
     }
 
     public Task<Void> updateEvent(String eventId, Event event) {
