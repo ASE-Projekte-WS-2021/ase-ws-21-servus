@@ -3,6 +3,7 @@ package de.ur.servus;
 import static de.ur.servus.Helpers.ifSubscribedToEvent;
 import static de.ur.servus.Helpers.removeAttendingEvent;
 import static de.ur.servus.Helpers.saveAttendingEvent;
+import static de.ur.servus.Helpers.tryGetSubscribedEvent;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -85,7 +86,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
-        detailsBottomSheetFragment = new DetailsBottomSheetFragment(sharedPreferences, this);
+        detailsBottomSheetFragment = new DetailsBottomSheetFragment();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -223,16 +224,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         singleEventListenerRegistration = backendHandler.subscribeEvent(eventId, new EventListener<>() {
             @SuppressLint("SetTextI18n")
             @Override
-            public void onEvent(Event e) {
-                if (detailsBottomSheetFragment != null) {
-                    detailsBottomSheetFragment.setEvent(e);
+            public void onEvent(Event event) {
+                boolean attending = tryGetSubscribedEvent(sharedPreferences)
+                        .map(eventId -> eventId.equals(event.getId()))
+                        .orElse(false);
 
-                    detailsBottomSheetFragment.setOnClickListener(event -> {
-                        ifSubscribedToEvent(sharedPreferences,
-                                eventId -> leaveEvent(eventId), // leave current event (not necessarily event in bottom sheet)
-                                () -> attendEvent(event.getId())
-                        );
-                    });
+                // update details sheet
+                if (detailsBottomSheetFragment != null) {
+                    detailsBottomSheetFragment.update(event, attending, (e, a) -> onDetailsAttendWithdrawClicked(e, a));
                 }
             }
 
@@ -243,6 +242,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 setStyleDefault();
             }
         });
+    }
+
+    private void onDetailsAttendWithdrawClicked(Event event, boolean attending) {
+        ifSubscribedToEvent(sharedPreferences,
+                eventId -> leaveEvent(eventId), // leave current event (not necessarily event in bottom sheet)
+                () -> attendEvent(event.getId())
+        );
+    }
+
+    private void showDetailsBottomSheet() {
+        if (detailsBottomSheetFragment != null) {
+            detailsBottomSheetFragment.show(getSupportFragmentManager(), detailsBottomSheetFragment.getTag());
+        }
     }
 
     private void centerCamera(@NonNull GoogleMap mMap) {
@@ -262,12 +274,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_LOCATION_PERMISSION
             );
-        }
-    }
-
-    private void showDetailsBottomSheet() {
-        if (detailsBottomSheetFragment != null) {
-            detailsBottomSheetFragment.show(getSupportFragmentManager(), detailsBottomSheetFragment.getTag());
         }
     }
 
