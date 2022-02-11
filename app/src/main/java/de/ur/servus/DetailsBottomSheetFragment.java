@@ -21,6 +21,7 @@ interface OnAttendWithdrawClickListener extends BiConsumer<Event, Boolean> {}
 public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     @Nullable
     private View view;
+
     @Nullable
     private Button btn_attend_withdraw;
     @Nullable
@@ -29,6 +30,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     private TextView details_description;
     @Nullable
     private TextView details_attendees;
+
     @Nullable
     private OnAttendWithdrawClickListener onClickAttendWithdrawListener;
     @Nullable

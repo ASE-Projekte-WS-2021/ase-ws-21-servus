@@ -33,7 +33,7 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment {
         return view;
     }
 
-    public void update(OnCreateEventClickListener onCreateEventClickListener) {
+    public void update() {
 
         tryUpdateView();
     }
