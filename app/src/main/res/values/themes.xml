@@ -62,9 +62,8 @@
         <item name="behavior_hideable">true</item>
         <item name="behavior_peekHeight">0dp</item>
         <item name="layout_behavior">com.google.android.material.bottomsheet.BottomSheetBehavior</item>
-        <item name="android:background">@drawable/style_bottomsheet_background</item>
         <item name="android:elevation">2dp</item>
-        <item name="android:paddingTop">144dp</item>
+        <item name="android:paddingTop">24dp</item>
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingRight">16dp</item>
@@ -134,6 +133,11 @@
         <item name="android:inputType">textMultiLine</item>
         <item name="android:textColor">@color/servus_black</item>
         <item name="android:gravity">top|left</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.MaterialComponents.BottomSheet" parent="" tools:ignore="PrivateResource">
+        <item name="cornerSizeTopRight">24dp</item>
+        <item name="cornerSizeTopLeft">24dp</item>
     </style>
 
     <style name="mSlideIndicator">
