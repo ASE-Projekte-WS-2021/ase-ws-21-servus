@@ -14,7 +14,7 @@
     <item
         android:left="0dp"
         android:right="0dp"
-        android:top="16dp"
+        android:top="128dp"
         android:bottom="0dp">
         <shape>
             <solid android:color="?android:colorBackground"/>

@@ -1,44 +1,33 @@
 package de.ur.servus;
 
-import com.google.android.gms.maps.model.Marker;
+import android.content.Context;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.algo.NonHierarchicalDistanceBasedAlgorithm;
 
 public class MarkerManager {
-    private List<Marker> markers;
+    private ClusterManager<MarkerClusterItem> clusterManager;
+    private NonHierarchicalDistanceBasedAlgorithm<MarkerClusterItem> algorithm;
 
 
-    public List<Marker> getMarkers() {
-        return markers;
+    public ClusterManager<MarkerClusterItem> getClusterManager() {
+        return clusterManager;
     }
 
-    public Optional<Marker> getMarkerForId(String eventId) {
-        return markers.stream().filter(marker -> {
-            String markerId = Objects.requireNonNull(marker.getTag()).toString();
-            return markerId.equals(eventId);
-        }).findFirst();
+    public void setClusterAlgorithm() {
+        this.algorithm = new NonHierarchicalDistanceBasedAlgorithm<>();
+        this.algorithm.setMaxDistanceBetweenClusteredItems(20);
+        clusterManager.setAlgorithm(this.algorithm);
     }
 
-    public void setMarkers(List<Marker> markers) {
-        this.markers = markers;
-    }
-
-    public void showAllMarkers() {
-        markers.forEach(marker -> marker.setVisible(true));
-    }
-
-    public void hideAllMarkers() {
-        markers.forEach(marker -> marker.setVisible(false));
-    }
-
-    public void showSingleMarker(String eventId) {
-        var marker = getMarkerForId(eventId);
-        if (marker.isPresent()) {
-            hideAllMarkers();
-            marker.get().setVisible(true);
-        }
+    public void setUpClusterManager(ClusterManagerContext context, GoogleMap map) {
+        this.clusterManager = new ClusterManager<>((Context) context, map);
+        this.clusterManager.setOnClusterClickListener((ClusterManager.OnClusterClickListener<MarkerClusterItem>) context);
+        this.clusterManager.setOnClusterItemClickListener((ClusterManager.OnClusterItemClickListener<MarkerClusterItem>) context);
+        map.setOnCameraIdleListener(clusterManager);
+        map.setOnMarkerClickListener(clusterManager);
+        clusterManager.setAnimation(true);
     }
 
 }

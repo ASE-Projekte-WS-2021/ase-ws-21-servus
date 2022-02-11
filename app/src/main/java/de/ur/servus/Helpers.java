@@ -2,12 +2,10 @@ package de.ur.servus;
 
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
-
-import com.google.android.gms.maps.model.LatLng;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -78,12 +76,18 @@ public class Helpers {
         editor.apply();
     }
 
-    public static void createEvent(Context context, CustomLocationManager locationManager, EventCreationData inputEventData,  EventListener<String> afterCreationListener){
-        LatLng location = locationManager.getLastObservedLocation(context);
+    public static void createEvent(CustomLocationManager locationManager, EventCreationData inputEventData,  EventListener<String> afterCreationListener){
+        locationManager.getLastObservedLocation(latLng -> {
+            if(!latLng.isPresent()){
+                Log.e("eventCreation", "Could not create event.");
+                return;
+            }
 
-        Event event = new Event(inputEventData.name, inputEventData.description, location, 0);
+            Event event = new Event(inputEventData.name, inputEventData.description, latLng.get(), 0);
 
-        FirestoreBackendHandler.getInstance().createNewEvent(event, afterCreationListener);
+            FirestoreBackendHandler.getInstance().createNewEvent(event, afterCreationListener);
+
+        });
     }
 
     /**
