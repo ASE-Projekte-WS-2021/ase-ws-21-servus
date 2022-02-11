@@ -14,7 +14,6 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 
 import androidx.annotation.NonNull;
@@ -29,7 +28,6 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.imageview.ShapeableImageView;
 
@@ -62,10 +60,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     DetailsBottomSheetFragment detailsBottomSheetFragment = new DetailsBottomSheetFragment();
     EventCreationBottomSheetFragment eventCreationBottomSheetFragment = new EventCreationBottomSheetFragment();
     SettingsBottomSheetFragment settingsBottomSheetFragment = new SettingsBottomSheetFragment();
+    FilterBottomSheetFragment filterBottomSheetFragment = new FilterBottomSheetFragment();
 
-    View f_bottomSheet;
-    BottomSheetBehavior<View> f_bottomSheetBehavior;
-
+    /*
+     * Views
+     */
     ShapeableImageView btn_settings;
     Button btn_creator;
     ShapeableImageView btn_filter;
@@ -75,30 +74,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        checkAndAskPermissions();
-
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
+
+        checkAndAskPermissions();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         /*
-         * Initialize all Bottom Sheets, add a corresponding BottomSheetBehavior and referring Callbacks.
-         */
-        f_bottomSheet = findViewById(R.id.filter_bottomSheet);
-        f_bottomSheetBehavior = BottomSheetBehavior.from(f_bottomSheet);
-
-        /*
-         * Add functionality to the BottomNav buttons.
-         * Each button should be able to expand its pre-loaded bottomsheet.
-         *
-         * This explicitly EXCLUDES a button for the participant bottom sheet due to the fact,
-         * that this sheet will only be expanded when clicked on a marker.
-         *
-         * This will be added in a future release.
+         * Setup views
          */
         btn_settings = findViewById(R.id.btn_settings);
         btn_settings.setOnClickListener(v -> showBottomSheet(settingsBottomSheetFragment));
@@ -115,7 +102,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         btn_filter = findViewById(R.id.btn_filter);
-        btn_filter.setOnClickListener(v -> f_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
+        btn_filter.setOnClickListener(v -> showBottomSheet(filterBottomSheetFragment));
 
         eventCreationBottomSheetFragment.update(this::onEventCreationCreateClicked);
 
@@ -129,9 +116,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
+        int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
 
         try {
-            googleMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_light_mode)));
+            switch (currentNightMode) {
+                case Configuration.UI_MODE_NIGHT_NO:
+                    Log.d("Debug: ", "Light Mode");
+                    mMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_light_mode)));
+                    break;
+
+                case Configuration.UI_MODE_NIGHT_YES:
+                    Log.d("Debug: ", "Dark Mode");
+                    mMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_dark_mode)));
+                    break;
+            }
         } catch (Resources.NotFoundException e) {
             Log.e("Debug: ", "Can't find style. Error: ", e);
         }
@@ -147,9 +145,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         // This can fail on first run, because permission is not granted. (onRequestPermissionsResult handles this case)
         centerCamera(mMap);
-
-        int presetNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-        changeMapStyle(presetNightMode);
     }
 
     @Override
@@ -240,9 +235,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void onDetailsAttendWithdrawClicked(Event event, boolean attending) {
-        if(attending){
+        if (attending) {
             leaveEvent(event.getId());
-        }else {
+        } else {
             attendEvent(event.getId());
         }
     }
@@ -261,7 +256,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         //close bottomsheet
-        if(eventCreationBottomSheetFragment != null) {
+        if (eventCreationBottomSheetFragment != null) {
             eventCreationBottomSheetFragment.dismiss();
         }
     }
@@ -332,20 +327,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             btn_creator.setText(R.string.content_create_meetup);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_white, getTheme()));
-        }
-    }
-
-    private void changeMapStyle(int currentNightMode) {
-        switch (currentNightMode) {
-            case Configuration.UI_MODE_NIGHT_NO:
-                Log.d("Debug: ", "Light Mode");
-                mMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_light_mode)));
-                break;
-
-            case Configuration.UI_MODE_NIGHT_YES:
-                Log.d("Debug: ", "Dark Mode");
-                mMap.setMapStyle(new MapStyleOptions(getResources().getString(R.string.map_dark_mode)));
-                break;
         }
     }
 }
