@@ -39,6 +39,17 @@
         <item name="android:textColor">@color/servus_white</item>
     </style>
 
+    <style name="mButtonsPlain">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:background">@color/servus_white_transparent</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/servus_white</item>
+    </style>
+
     <style name="mEditTexts">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>

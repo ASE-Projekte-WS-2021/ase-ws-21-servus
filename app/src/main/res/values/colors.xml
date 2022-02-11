@@ -19,6 +19,9 @@
     <color name="servus_black_transparent">#00161616</color>
     <color name="servus_white">#FFF5F5F5</color>
     <color name="servus_white_transparent">#00F5F5F5</color>
+    <color name="servus_grey">#FFD3D3D3</color>
+
+    <color name="servus_background_transparent">#99161616</color>
 
     <!-- Servus color palette - specialized for darkmode -->
     <color name="servus_darkmode_grey">#FF3A3A3A</color>
