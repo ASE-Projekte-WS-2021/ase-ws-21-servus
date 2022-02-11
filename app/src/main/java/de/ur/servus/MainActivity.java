@@ -59,21 +59,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private ListenerRegistration singleEventListenerRegistration;
     MarkerManager markerManager;
 
-    @Nullable
-    DetailsBottomSheetFragment detailsBottomSheetFragment;
-    @Nullable
-    EventCreationBottomSheetFragment eventCreationBottomSheetFragment;
+    DetailsBottomSheetFragment detailsBottomSheetFragment = new DetailsBottomSheetFragment();
+    EventCreationBottomSheetFragment eventCreationBottomSheetFragment = new EventCreationBottomSheetFragment();
+    SettingsBottomSheetFragment settingsBottomSheetFragment = new SettingsBottomSheetFragment();
 
-    View s_bottomSheet;
     View f_bottomSheet;
-    BottomSheetBehavior<View> s_bottomSheetBehavior;
     BottomSheetBehavior<View> f_bottomSheetBehavior;
 
     ShapeableImageView btn_settings;
     Button btn_creator;
     ShapeableImageView btn_filter;
-
-    Button btn_create_event;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,8 +80,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
-        detailsBottomSheetFragment = new DetailsBottomSheetFragment();
-        eventCreationBottomSheetFragment = new EventCreationBottomSheetFragment();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -95,9 +88,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         /*
          * Initialize all Bottom Sheets, add a corresponding BottomSheetBehavior and referring Callbacks.
          */
-        s_bottomSheet = findViewById(R.id.settings_bottomSheet);
         f_bottomSheet = findViewById(R.id.filter_bottomSheet);
-        s_bottomSheetBehavior = BottomSheetBehavior.from(s_bottomSheet);
         f_bottomSheetBehavior = BottomSheetBehavior.from(f_bottomSheet);
 
         /*
@@ -110,7 +101,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
          * This will be added in a future release.
          */
         btn_settings = findViewById(R.id.btn_settings);
-        btn_settings.setOnClickListener(v -> s_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
+        btn_settings.setOnClickListener(v -> showBottomSheet(settingsBottomSheetFragment));
 
         btn_creator = findViewById(R.id.btn_meetup);
         btn_creator.setOnClickListener(v -> {
