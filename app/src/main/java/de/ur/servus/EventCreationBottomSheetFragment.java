@@ -120,19 +120,19 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
         int selectedGenrePos = adapterView.getSelectedItemPosition();
         switch (selectedGenrePos) {
             case 0:
-                selectedGenre = "Sport";
+                selectedGenre = "Activity";
                 break;
             case 1:
                 selectedGenre = "Food";
                 break;
             case 2:
-                selectedGenre = "Party";
+                selectedGenre = "Hang-out";
                 break;
             case 3:
-                selectedGenre = "Activity";
+                selectedGenre = "Party";
                 break;
             case 4:
-                selectedGenre = "Hang-out";
+                selectedGenre = "Sport";
                 break;
             default:
                 break;
