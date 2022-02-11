@@ -55,7 +55,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private final BackendHandler backendHandler = FirestoreBackendHandler.getInstance();
     Context context;
     SharedPreferences sharedPreferences;
-    SharedPreferences.Editor editor;
     CustomLocationManager customLocationManager;
     MarkerManager markerManager;
     CustomMarkerRenderer customMarkerRenderer;
@@ -89,7 +88,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         context = getApplicationContext();
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
 
@@ -97,7 +95,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         customLocationManager.addOnProviderDisabledListener(customLocationManager::showEnableGpsDialogIfNecessary);
 
         if (!sharedPreferences.getBoolean(TUTORIAL_PREFS_ITEM, false)) {
-            editor.putBoolean(TUTORIAL_PREFS_ITEM, true).apply();
+            sharedPreferences.edit().putBoolean(TUTORIAL_PREFS_ITEM, true).apply();
 
             Intent intent = new Intent(MainActivity.this, TutorialActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
