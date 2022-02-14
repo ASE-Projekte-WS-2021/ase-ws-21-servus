@@ -1,10 +1,6 @@
 package de.ur.servus;
 
 import static de.ur.servus.CustomLocationManager.REQUEST_LOCATION_PERMISSION;
-import static de.ur.servus.Helpers.ifSubscribedToEvent;
-import static de.ur.servus.Helpers.removeAttendingEvent;
-import static de.ur.servus.Helpers.saveAttendingEvent;
-import static de.ur.servus.Helpers.tryGetSubscribedEvent;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -53,6 +49,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private static final String TUTORIAL_PREFS_ITEM = "tutorialSeen";
 
     private final BackendHandler backendHandler = FirestoreBackendHandler.getInstance();
+    private SubscribedEventHelpers subscribedEventHelpers;
     Context context;
     SharedPreferences sharedPreferences;
     CustomLocationManager customLocationManager;
@@ -90,6 +87,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
+        subscribedEventHelpers = new SubscribedEventHelpers(sharedPreferences);
 
         // when GPS is turned off, ask to turn it on. Starting to listen needs to be done in onCreate
         customLocationManager.addOnProviderDisabledListener(customLocationManager::showEnableGpsDialogIfNecessary);
@@ -121,8 +119,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             /*
              * Add behavior for create button, if user is already subscribed to an event as attendant
              */
-            ifSubscribedToEvent(sharedPreferences,
-                    eventId -> showBottomSheet(detailsBottomSheetFragment),
+            subscribedEventHelpers.ifSubscribedToEvent(
+                    preferences -> {
+                        subscribeEvent(preferences.eventId);
+                        showBottomSheet(detailsBottomSheetFragment);
+                    },
                     () -> showBottomSheet(eventCreationBottomSheetFragment)
             );
         });
@@ -132,8 +133,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         eventCreationBottomSheetFragment.update(this::onEventCreationCreateClicked);
 
-        ifSubscribedToEvent(sharedPreferences,
-                this::subscribeEvent,
+        subscribedEventHelpers.ifSubscribedToEvent(
+                eventPreferences -> this.subscribeEvent(eventPreferences.eventId),
                 null
         );
 
@@ -178,7 +179,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 markerManager.getClusterManager().cluster();
 
                 // style bottom button
-                ifSubscribedToEvent(sharedPreferences,
+                subscribedEventHelpers.ifSubscribedToEvent(
                         eventId -> setStyleClicked(),
                         () -> setStyleDefault()
                 );
@@ -203,9 +204,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @SuppressLint("SetTextI18n")
             @Override
             public void onEvent(Event event) {
-                boolean attending = tryGetSubscribedEvent(sharedPreferences)
-                        .map(eventId -> eventId.equals(event.getId()))
-                        .orElse(false);
+                var eventPreferences = subscribedEventHelpers.tryGetSubscribedEvent();
+                var attending = eventPreferences.eventId != null && eventPreferences.eventId.equals(event.getId());
 
                 // update details sheet
                 if (detailsBottomSheetFragment != null) {
@@ -216,7 +216,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onError(Exception e) {
                 Log.e("Data", e.getMessage());
-                removeAttendingEvent(sharedPreferences);
+                subscribedEventHelpers.removeAttendingEvent();
                 setStyleDefault();
             }
         });
@@ -283,15 +283,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if (attending) {
             leaveEvent(event.getId());
         } else {
-            attendEvent(event.getId());
+            attendEvent(event.getId(), false);
         }
     }
 
     private void onEventCreationCreateClicked(EventCreationData inputEventData) {
-        Helpers.createEvent(customLocationManager, inputEventData, new EventListener<>() {
+        subscribedEventHelpers.createEvent(customLocationManager, inputEventData, new EventListener<>() {
             @Override
             public void onEvent(String id) {
-                attendEvent(id);
+                attendEvent(id, true);
             }
 
             @Override
@@ -346,16 +346,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // TODO unsubscribe single event
     }
 
-    private void attendEvent(String eventId) {
+    private void attendEvent(String eventId, boolean isCreator) {
         setStyleClicked();
-        saveAttendingEvent(sharedPreferences, eventId);
+        var subscribedEventInfos = new EventPreferences(eventId, isCreator);
+        subscribedEventHelpers.saveAttendingEvent(subscribedEventInfos);
         markerManager.getClusterManager().cluster();
         backendHandler.incrementEventAttendants(eventId, null);
     }
 
     private void leaveEvent(String eventId) {
         setStyleDefault();
-        removeAttendingEvent(sharedPreferences);
+        subscribedEventHelpers.removeAttendingEvent();
         markerManager.getClusterManager().cluster();
         backendHandler.decrementEventAttendants(eventId, null);
     }
