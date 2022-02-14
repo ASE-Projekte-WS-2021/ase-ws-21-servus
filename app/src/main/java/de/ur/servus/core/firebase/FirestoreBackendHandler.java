@@ -1,6 +1,5 @@
 package de.ur.servus.core.firebase;
 
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -114,11 +113,19 @@ public class FirestoreBackendHandler implements BackendHandler {
                 });
     }
 
-    public Task<Void> updateEvent(String eventId, Event event) {
-        // FIXME Can create new event, if id does not exist. Add a check.
-        return db.collection(COLLECTION).document(eventId).set(event);
-    }
 
-    // TODO delete event
+    public void updateEvent(String eventId, Event newEventData, @Nullable Runnable listener) {
+        EventPOJO pojo = new EventPOJO(newEventData);
+        var dataMap = pojo.toMap();
+        // remove id, because it is not saved directly in document
+        dataMap.remove("id");
+
+        db.collection(COLLECTION).document(eventId).update(dataMap)
+                .addOnSuccessListener(doc -> {
+                    if (listener != null) {
+                        listener.run();
+                    }
+                });
+    }
 
 }

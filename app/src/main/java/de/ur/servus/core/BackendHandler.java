@@ -1,7 +1,5 @@
 package de.ur.servus.core;
 
-import com.google.android.gms.tasks.Task;
-
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -51,8 +49,7 @@ public interface BackendHandler {
     /**
      * Updates a event in the database.
      * @param eventId The ID of the event to update.
-     * @param event The event to be saved.
-     * @return A Task to await the asynchronous operation.
+     * @param event The new event to be saved.
      */
-    Task<Void> updateEvent(String eventId, Event event);
+    void updateEvent(String eventId, Event event, Runnable listener);
 }
