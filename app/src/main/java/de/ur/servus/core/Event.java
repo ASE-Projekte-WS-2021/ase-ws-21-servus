@@ -10,12 +10,14 @@ public class Event {
     private @Nullable String id;
     private final LatLng location;
     private final int attendants;
+    private final String genre;
 
-    public Event(String name, String description, LatLng location, int attendants) {
+    public Event(String name, String description, LatLng location, int attendants, String genre) {
         this.name = name;
         this.description = description;
         this.location = location;
         this.attendants = attendants;
+        this.genre = genre;
     }
 
     public LatLng getLocation() {
@@ -30,6 +32,7 @@ public class Event {
         return description;
     }
 
+    public String getGenre(){return genre;}
 
     @Nullable
     public String getId() {

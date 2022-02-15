@@ -21,7 +21,13 @@
 
     <string name="event_creation_label_eventname">Name</string>
     <string name="event_creation_label_description">Description</string>
+    <string name="event_creation_label_genre">What do you want to do?</string>
     <string name="event_creation_button_create">Create</string>
+    <string name="event_creation_genre_sport">Sport</string>
+    <string name="event_creation_genre_party">Party</string>
+    <string name="event_creation_genre_food">Food</string>
+    <string name="event_creation_genre_activity">Activity</string>
+    <string name="event_creation_genre_hangout">Hang-out</string>
 
     <string name="event_details_label_eventname">Name</string>
     <string name="event_details_default_eventname">%eventname%</string>
@@ -29,6 +35,8 @@
     <string name="event_details_default_description">%description%</string>
     <string name="event_details_label_attendees">Attendees</string>
     <string name="event_details_default_attendees">% X / Y %</string>
+    <string name="event_details_label_genre">Mode</string>
+    <string name="event_details_default_genre">%meetup-mode%</string>
     <string name="event_details_label_creator">Creator</string>
     <string name="event_details_default_creator">%creator%</string>
     <string name="event_details_button_attend">Attend to Meet-Up</string>

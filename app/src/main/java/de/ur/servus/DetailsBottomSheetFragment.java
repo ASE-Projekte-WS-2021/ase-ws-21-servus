@@ -30,6 +30,8 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     private TextView details_description;
     @Nullable
     private TextView details_attendees;
+    @Nullable
+    private TextView details_genre;
 
     @Nullable
     private OnAttendWithdrawClickListener onClickAttendWithdrawListener;
@@ -55,6 +57,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         details_description = view.findViewById(R.id.event_details_description);
         details_attendees = view.findViewById(R.id.event_details_attendees);
         btn_attend_withdraw = view.findViewById(R.id.event_details_button);
+        details_genre = view.findViewById(R.id.event_details_genre);
 
         tryUpdateView();
 
@@ -74,7 +77,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
      */
     @SuppressLint("SetTextI18n")
     private void tryUpdateView() {
-        if (details_eventname == null || details_description == null || details_attendees == null || event == null || btn_attend_withdraw == null || view == null) {
+        if (details_eventname == null || details_description == null || details_attendees == null || event == null || btn_attend_withdraw == null || details_genre == null || view == null) {
             return;
         }
 
@@ -82,6 +85,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         details_eventname.setText(event.getName());
         details_description.setText(event.getDescription());
         details_attendees.setText(Long.toString(event.getAttendants()));
+        details_genre.setText(event.getGenre());
 
         // set listeners
         btn_attend_withdraw.setOnClickListener(v -> {

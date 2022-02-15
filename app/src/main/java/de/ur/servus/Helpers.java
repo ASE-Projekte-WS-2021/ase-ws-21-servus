@@ -83,7 +83,7 @@ public class Helpers {
                 return;
             }
 
-            Event event = new Event(inputEventData.name, inputEventData.description, latLng.get(), 0);
+            Event event = new Event(inputEventData.name, inputEventData.description, latLng.get(), 0, inputEventData.genre);
 
             FirestoreBackendHandler.getInstance().createNewEvent(event, afterCreationListener);
 

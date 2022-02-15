@@ -31,12 +31,26 @@
     </LinearLayout>
 
 
+    <LinearLayout
+        style="@style/mLabelContainer"
+        android:id="@+id/event_creation_genre_container" >
+
+        <TextView
+            style="@style/mLabels"
+            android:text="@string/event_creation_label_genre" />
+
+        <Spinner
+            android:id="@+id/event_creation_genre_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
 
     <Button
+        android:id="@+id/event_create_button"
         style="@style/mButtons"
         android:layout_marginTop="32dp"
         android:layout_marginBottom="16dp"
-        android:text="@string/event_creation_button_create"
-        android:id="@+id/event_create_button"/>
+        android:text="@string/event_creation_button_create" />
 
 </LinearLayout>
