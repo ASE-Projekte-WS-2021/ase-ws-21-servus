@@ -1,13 +1,18 @@
 package de.ur.servus;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.function.BiConsumer;
@@ -21,6 +26,13 @@ interface OnAttendWithdrawClickListener extends BiConsumer<Event, Boolean> {}
 public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     @Nullable
     private View view;
+
+    @Nullable
+    private Activity activity;
+    @Nullable
+    private Context context;
+    @Nullable
+    BottomSheetBehavior<View> behavior;
 
     @Nullable
     private Button btn_attend_withdraw;
@@ -45,6 +57,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setStyle(BottomSheetDialogFragment.STYLE_NORMAL, R.style.mBottomSheetFragments);
     }
 
     @SuppressLint("SetTextI18n")
@@ -53,11 +66,16 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.bottomsheet_participant, container, false);
 
-        details_eventname = view.findViewById(R.id.event_details_eventname);
-        details_description = view.findViewById(R.id.event_details_description);
-        details_attendees = view.findViewById(R.id.event_details_attendees);
-        btn_attend_withdraw = view.findViewById(R.id.event_details_button);
-        details_genre = view.findViewById(R.id.event_details_genre);
+        context = getContext();
+        activity = (Activity) context;
+
+        if (view != null) {
+            details_eventname = view.findViewById(R.id.event_details_eventname);
+            details_description = view.findViewById(R.id.event_details_description);
+            details_attendees = view.findViewById(R.id.event_details_attendees);
+            btn_attend_withdraw = view.findViewById(R.id.event_details_button);
+            details_genre = view.findViewById(R.id.event_details_genre);
+        }
 
         tryUpdateView();
 
@@ -70,6 +88,26 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         this.onClickAttendWithdrawListener = onClickAttendWithdrawListener;
 
         tryUpdateView();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        if (view != null) {
+            View root = (View) view.getParent();
+            behavior = BottomSheetBehavior.from(root);
+
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            if (activity != null) {
+                activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            }
+            int maxHeight = (int) (displayMetrics.heightPixels - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,128, displayMetrics));
+
+            behavior.setSkipCollapsed(true);
+            behavior.setMaxHeight(maxHeight);
+            behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        }
     }
 
     /*

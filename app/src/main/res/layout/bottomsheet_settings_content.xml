@@ -1,13 +1,129 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/mBottomSheetsContents">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/mBottomSheetsContents"
+    android:orientation="vertical" >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/tmp_settings"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true" />
+    <LinearLayout
+        style="@style/mLabelContainer"
+        android:id="@+id/settings_profile_name_container" >
 
-</RelativeLayout>
+        <TextView
+            style="@style/mLabels"
+            android:text="@string/settings_profile_name_label" />
+
+        <EditText
+            style="@style/mEditTexts"
+            android:id="@+id/settings_profile_name"
+            android:inputType="textPersonName"
+            android:maxLines="1"
+            android:lines="1"
+            android:hint="@string/settings_profile_name_hint"
+            android:importantForAutofill="no" />
+    </LinearLayout>
+
+    <LinearLayout
+        style="@style/mLabelContainer"
+        android:id="@+id/settings_gender_container" >
+
+        <TextView
+            style="@style/mLabels"
+            android:text="@string/settings_gender_label" />
+
+        <RadioGroup
+            android:id="@+id/settings_gender_selection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:layout_marginHorizontal="32dp"
+            android:layout_marginEnd="4dp"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal" >
+
+            <RadioButton
+                style="@style/mImageRadioButtons"
+                android:id="@+id/settings_gender_male"
+                android:text="@string/settings_gender_male"
+                android:background="@drawable/style_radiobutton_male" />
+
+            <RadioButton
+                style="@style/mImageRadioButtons"
+                android:id="@+id/settings_gender_female"
+                android:text="@string/settings_gender_female"
+                android:background="@drawable/style_radiobutton_female" />
+
+            <RadioButton
+                style="@style/mImageRadioButtons"
+                android:id="@+id/settings_gender_divers"
+                android:text="@string/settings_gender_divers"
+                android:background="@drawable/style_radiobutton_divers" />
+        </RadioGroup>
+    </LinearLayout>
+
+    <LinearLayout
+        style="@style/mLabelContainer"
+        android:id="@+id/settings_age_container" >
+
+        <TextView
+            style="@style/mLabels"
+            android:text="@string/settings_age_label" />
+
+        <DatePicker
+            style="@style/mDatePickerStyle"
+            android:id="@+id/settings_age" />
+    </LinearLayout>
+
+    <LinearLayout
+        style="@style/mLabelContainer"
+        android:id="@+id/settings_study_course_container" >
+
+        <TextView
+            style="@style/mLabels"
+            android:text="@string/settings_study_course_label" />
+
+        <EditText
+            android:id="@+id/settings_study_course"
+            style="@style/mEditTexts"
+            android:hint="@string/settings_study_course_hint"
+            android:importantForAutofill="no" />
+    </LinearLayout>
+
+    <LinearLayout
+        style="@style/mLabelContainer"
+        android:orientation="horizontal"
+        android:id="@+id/settings_profile_picture_container" >
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/settings_profile_picture"
+            style="@style/mRoundedImageViews" />
+
+        <LinearLayout
+            style="@style/mLabelContainer"
+            android:layout_marginBottom="0dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                style="@style/mLabels"
+                android:text="@string/settings_profile_picture_label" />
+
+            <TextView
+                style="@style/mLabelledTextViews"
+                android:id="@+id/event_details_creator"
+                android:text="@string/settings_profile_picture_sublabel" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        style="@style/mButtons"
+        android:id="@+id/settings_btn_vita"
+        android:layout_marginVertical="32dp"
+        android:text="@string/settings_show_vita" />
+
+    <Button
+        style="@style/mButtons"
+        android:id="@+id/settings_tutorial_btn_next"
+        android:layout_marginVertical="32dp"
+        android:text="@string/tutorial_finalize_account_creation"
+        android:visibility="gone" />
+</LinearLayout>

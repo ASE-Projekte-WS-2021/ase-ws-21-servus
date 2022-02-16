@@ -6,42 +6,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root_layout">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/servus_background_transparent"
-        android:elevation="4dp"
-        android:id="@+id/container_404"
-        android:visibility="gone" >
-        <!-- Visibility will be triggered by network change receiver -->
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:background="@drawable/style_error_roundedcorners_right"
-            android:paddingVertical="5dp"
-            android:paddingHorizontal="20dp"
-            android:layout_marginTop="40dp"
-            android:gravity="center" >
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginEnd="10dp"
-                android:src="@drawable/ic_network_failed"
-                tools:ignore="ContentDescription" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="?attr/colorOnPrimary"
-                android:textAllCaps="true"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:text="@string/network_404" />
-        </LinearLayout>
-    </LinearLayout>
-
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -58,17 +22,9 @@
         android:layout_marginHorizontal="8dp" >
 
         <com.google.android.material.imageview.ShapeableImageView
-            app:shapeAppearanceOverlay="@style/roundedImageView"
-            android:id="@+id/btn_settings"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_margin="8dp"
-            android:adjustViewBounds="true"
-            android:scaleType="centerInside"
+            style="@style/mRoundedImageViews"
             android:contentDescription="@string/descriptions_btn_settings"
-            android:src="@drawable/img_placeholder_avatar"
-            android:background="@drawable/style_imageview_roundedcorners"
-            android:elevation="2dp" />
+            android:id="@+id/btn_settings" />
 
         <Button
             android:id="@+id/btn_meetup"
@@ -115,9 +71,39 @@
         </RelativeLayout>
     </LinearLayout>
 
-    <include layout="@layout/bottomsheet_settings" />
-    <include layout="@layout/bottomsheet_creator" />
-    <include layout="@layout/bottomsheet_participant" />
-    <include layout="@layout/bottomsheet_filter" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/servus_background_transparent"
+        android:elevation="4dp"
+        android:id="@+id/container_404"
+        android:visibility="gone" >
+        <!-- Visibility will be triggered by network change receiver -->
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:background="@drawable/style_error_roundedcorners_right"
+            android:paddingVertical="5dp"
+            android:paddingHorizontal="20dp"
+            android:layout_marginTop="40dp"
+            android:gravity="center" >
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/ic_network_failed"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnPrimary"
+                android:textAllCaps="true"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:text="@string/network_404" />
+        </LinearLayout>
+    </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,7 +1,11 @@
 package de.ur.servus;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +14,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.function.Consumer;
@@ -40,6 +45,14 @@ interface OnCreateEventClickListener extends Consumer<EventCreationData> {
 public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment implements AdapterView.OnItemSelectedListener {
     @Nullable
     private View view;
+
+    @Nullable
+    private Activity activity;
+    @Nullable
+    private Context context;
+    @Nullable
+    BottomSheetBehavior<View> behavior;
+
     @Nullable
     private EditText et_event_name;
     @Nullable
@@ -61,6 +74,7 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setStyle(BottomSheetDialogFragment.STYLE_NORMAL, R.style.mBottomSheetFragments);
     }
 
     @SuppressLint("SetTextI18n")
@@ -69,15 +83,20 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.bottomsheet_creator, container, false);
 
-        et_event_name = view.findViewById(R.id.event_creation_eventname);
-        et_event_description = view.findViewById(R.id.event_creation_description);
-        event_create_button = view.findViewById(R.id.event_create_button);
-        spinner_create_event = view.findViewById(R.id.event_creation_genre_spinner);
+        context = getContext();
+        activity = (Activity) context;
 
-        genreAdapter = new EventGenreAdapter(view.getContext(), GenreData.getGenreList());
-        if (spinner_create_event != null) {
-            spinner_create_event.setOnItemSelectedListener(this);
-            spinner_create_event.setAdapter(genreAdapter);
+        if (view != null){
+            et_event_name = view.findViewById(R.id.event_creation_eventname);
+            et_event_description = view.findViewById(R.id.event_creation_description);
+            event_create_button = view.findViewById(R.id.event_create_button);
+            spinner_create_event = view.findViewById(R.id.event_creation_genre_spinner);
+
+            genreAdapter = new EventGenreAdapter(view.getContext(), GenreData.getGenreList());
+            if (spinner_create_event != null) {
+                spinner_create_event.setOnItemSelectedListener(this);
+                spinner_create_event.setAdapter(genreAdapter);
+            }
         }
 
         tryUpdateView();
@@ -89,6 +108,26 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
         this.onCreateEventClickListener = onCreateEventClickListener;
 
         tryUpdateView();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        if (view != null) {
+            View root = (View) view.getParent();
+            behavior = BottomSheetBehavior.from(root);
+
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            if (activity != null) {
+                activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            }
+            int maxHeight = (int) (displayMetrics.heightPixels - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,128, displayMetrics));
+
+            behavior.setSkipCollapsed(true);
+            behavior.setMaxHeight(maxHeight);
+            behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        }
     }
 
     /*
