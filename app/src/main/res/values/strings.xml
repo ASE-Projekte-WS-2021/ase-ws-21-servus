@@ -30,15 +30,15 @@
     <string name="event_creation_genre_hangout">Hang-out</string>
 
     <string name="event_details_label_eventname">Name</string>
-    <string name="event_details_default_eventname">%eventname%</string>
+    <string name="event_details_default_eventname">%EVENTNAME%</string>
     <string name="event_details_label_description">Description</string>
-    <string name="event_details_default_description">%description%</string>
+    <string name="event_details_default_description">%DESCRIPTION%</string>
     <string name="event_details_label_attendees">Attendees</string>
     <string name="event_details_default_attendees">% X / Y %</string>
     <string name="event_details_label_genre">Mode</string>
     <string name="event_details_default_genre">%meetup-mode%</string>
     <string name="event_details_label_creator">Creator</string>
-    <string name="event_details_default_creator">%creator%</string>
+    <string name="event_details_default_creator">%CREATOR%</string>
     <string name="event_details_button_attend">Attend to Meet-Up</string>
     <string name="event_details_button_withdraw">Withdraw attendance</string>
 
@@ -59,7 +59,7 @@
     <string name="tutorial_location_title">&#160;Location</string>
     <string name="tutorial_location_subtitle">Permission required.</string>
     <string name="tutorial_location_content">Unfortunately, as this service works with the location signals of every user, we will ask you from time to time to grant permission for us to access your devices location services.</string>
-    <string name="tutorial_finalize_account_creation">Finalize account creation</string>
+    <string name="tutorial_finalize_account_creation">Finish &amp; continue</string>
 
     <string name="location_404">No location found</string>
     <string name="network_404">No network connection</string>
@@ -68,8 +68,39 @@
     <string name="location_404_dialog_content">To ensure full functionality, this app needs to access your location via your phones location settings. Please ensure that your systems location services are enabled.</string>
     <string name="btn_alertDialog">Go to settings</string>
 
-    <string name="permission_denied_title">&#160;Location</string>
-    <string name="permission_denied_subtitle">Permission required.</string>
-    <string name="permission_denied_content">We are sorry! Without your permission to access your current phone location we can\'t offer you our most valuable benefits: create or participate at meetups. We would gladly appreciate if you would reconsider an authorization. Thank you!</string>
+    <string name="permission_denied_title">&#160;Permission required&#160;</string>
+    <string name="permission_denied_subtitle">Set manually.</string>
+    <string name="permission_denied_content">We are sorry! Without your permission to access your current phone location and storage we can\'t or just partially offer you our most valuable benefits: create or participate at meetups. We would gladly appreciate if you would reconsider an authorization. Thank you!</string>
     <string name="permission_denied_link">Go to permission settings</string>
+
+    <string name="settings_profile_name_label">Whats is your name?</string>
+    <string name="settings_profile_name">%USERNAME%</string>
+    <string name="settings_profile_name_hint">Prename Lastname</string>
+    <string name="settings_age_label">When is your birthday?</string>
+    <string name="settings_age">% XX.YY.ZZZZ %</string>
+    <string name="settings_age_hint">Date of birth</string>
+    <string name="settings_profile_picture_label">Set or swap your profile picture</string>
+    <string name="settings_profile_picture_sublabel">Click on the image!</string>
+    <string name="settings_study_course_label">What do you study?</string>
+    <string name="settings_study_course">% STUDY COURSE %</string>
+    <string name="settings_gender_label">What is your gender?</string>
+    <string name="settings_gender_hint">Gender</string>
+    <string name="settings_gender">% GENDER %</string>
+    <string name="settings_study_course_hint">Course of study</string>
+    <string name="settings_show_vita">Save &amp; Preview</string>
+    <string name="settings_profile_picture_picker">Select your profile picture</string>
+    <string name="settings_gender_male">Male</string>
+    <string name="settings_gender_female">Female</string>
+    <string name="settings_gender_divers">Divers</string>
+
+    <string name="toast_storage_permission_error">Please grant storage permission before using this feature.</string>
+
+    <string name="profilecard_name_label">Username</string>
+    <string name="profilecard_name">No user found</string>
+    <string name="profilecard_birthdate_label">Date of birth</string>
+    <string name="profilecard_birthdate">No date found</string>
+    <string name="profilecard_course_label">Course of study</string>
+    <string name="profilecard_course">No course found</string>
+    <string name="profilecard_gender_label">Gender</string>
+    <string name="profilecard_gender">No gender found</string>
 </resources>
