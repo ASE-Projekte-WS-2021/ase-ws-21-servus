@@ -1,8 +1,9 @@
 package de.ur.servus.core;
 
-import java.util.List;
+import com.google.android.gms.tasks.Task;
 
-import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
 
 public interface BackendHandler {
 
@@ -14,7 +15,6 @@ public interface BackendHandler {
      */
     ListenerRegistration subscribeEvents(EventListener<List<Event>> listener);
 
-
     /**
      * Subscribes to a single Event updates from the database. Provides a single Event.
      *
@@ -24,32 +24,36 @@ public interface BackendHandler {
     ListenerRegistration subscribeEvent(String eventId, EventListener<Event> listener);
 
     /**
-     * Increments the attendance counter of an Event in the database by 1.
+     * Adds an Attendant to an Event.
      *
-     * @param eventId The id of the Event.
-     * @param listener A listener to react, when the server has finished.
+     * @param eventId   The id of the Event.
+     * @param attendant The attendant to add.
+     * @return A Task to react, when the attendant was added.
      */
-    void incrementEventAttendants(String eventId, @Nullable EventListener<Void> listener);
+    Task<Void> addEventAttendant(String eventId, Attendant attendant);
 
     /**
-     * Decrements the attendance counter of an Event in the database by 1.
+     * Removes an Attendant from an Event.
      *
-     * @param eventId The id of the Event.
-     * @param listener A listener to react, when the server has finished.
+     * @param eventId     The id of the Event.
+     * @param attendantId The id of the attendant to remove.
+     * @return A Task to react, when the attendant was removed.
      */
-    void decrementEventAttendants(String eventId, @Nullable EventListener<Void> listener);
+    Task<Void> removeEventAttendantById(String eventId, String attendantId);
 
     /**
      * Saves a new event to the database and returns its ID.
-     * @param event The event to be saved.
+     *
+     * @param event         The event to be saved.
      * @param eventListener A listener to get the Event's ID when it is created.
      */
     void createNewEvent(Event event, EventListener<String> eventListener);
 
     /**
      * Updates a event in the database.
+     *
      * @param eventId The ID of the event to update.
-     * @param event The new event to be saved.
+     * @param newEventData   The data to be updated.
      */
-    void updateEvent(String eventId, Event event, Runnable listener);
+    void updateEvent(String eventId, Map<String, Object> newEventData, Runnable listener);
 }

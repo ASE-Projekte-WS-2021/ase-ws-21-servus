@@ -1,13 +1,19 @@
 package de.ur.servus.core.firebase;
 
+import android.util.Log;
+
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import de.ur.servus.core.Attendant;
 import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
 import de.ur.servus.core.EventListener;
@@ -39,12 +45,19 @@ public class FirestoreBackendHandler implements BackendHandler {
                     assert value != null;
 
                     List<Event> events = value.getDocuments().stream().map(doc -> {
-                        EventPOJO eventPOJO = doc.toObject(EventPOJO.class);
-                        assert eventPOJO != null;
+                        // casting may fail, e.g. if it's an old event.
+                        try {
+                            EventPOJO eventPOJO = doc.toObject(EventPOJO.class);
+                            assert eventPOJO != null;
 
-                        eventPOJO.setId(doc.getId());
-                        return eventPOJO.toEvent();
-                    }).collect(Collectors.toList());
+                            eventPOJO.setId(doc.getId());
+                            return eventPOJO.toObject();
+                        } catch (Exception e) {
+                            Log.e("eventSubscription", "For event with id:" + doc.getId() + ". " + e.getLocalizedMessage());
+                            return null;
+                        }
+
+                    }).filter(Objects::nonNull).collect(Collectors.toList());
 
                     listener.onEvent(events);
                 } catch (Exception e) {
@@ -72,7 +85,7 @@ public class FirestoreBackendHandler implements BackendHandler {
 
                     eventPOJO.setId(value.getId());
 
-                    listener.onEvent(eventPOJO.toEvent());
+                    listener.onEvent(eventPOJO.toObject());
                 } catch (Exception e) {
                     listener.onError(e);
                 }
@@ -98,6 +111,24 @@ public class FirestoreBackendHandler implements BackendHandler {
         }
     }
 
+    public Task<Void> addEventAttendant(String eventId, Attendant attendant) {
+        var pojo = new AttendantPOJO(attendant);
+        return db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.arrayUnion(pojo));
+    }
+
+    public Task<Void> removeEventAttendantById(String eventId, String attendantId) {
+        return db.collection(COLLECTION).document(eventId).get().addOnSuccessListener(documentSnapshot -> {
+            var event = documentSnapshot.toObject(EventPOJO.class);
+            if (event != null) {
+                var attendant = event.getAttendants().stream().filter(attendantPOJO -> attendantPOJO.getUserId().equals(attendantId)).findFirst();
+
+                if (attendant.isPresent()) {
+                    db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.arrayRemove(attendant.get()));
+                }
+            }
+        }).continueWith(runnable -> null);
+    }
+
     public void createNewEvent(Event event, @Nullable EventListener<String> listener) {
         EventPOJO pojo = new EventPOJO(event);
         db.collection(COLLECTION).add(pojo)
@@ -114,13 +145,13 @@ public class FirestoreBackendHandler implements BackendHandler {
     }
 
 
-    public void updateEvent(String eventId, Event newEventData, @Nullable Runnable listener) {
-        EventPOJO pojo = new EventPOJO(newEventData);
-        var dataMap = pojo.toMap();
+    public void updateEvent(String eventId, Map<String, Object> newEventData, @Nullable Runnable listener) {
+//        EventPOJO pojo = new EventPOJO(newEventData);
+//        var dataMap = pojo.toFieldMap();
         // remove id, because it is not saved directly in document
-        dataMap.remove("id");
+//        dataMap.remove("id");
 
-        db.collection(COLLECTION).document(eventId).update(dataMap)
+        db.collection(COLLECTION).document(eventId).update(newEventData)
                 .addOnSuccessListener(doc -> {
                     if (listener != null) {
                         listener.run();

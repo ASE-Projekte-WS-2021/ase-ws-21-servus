@@ -45,6 +45,20 @@
             android:text="@string/event_details_default_attendees" />
     </LinearLayout>
 
+    <LinearLayout
+        style="@style/mLabelContainer"
+        android:id="@+id/event_details_genre_container" >
+
+        <TextView
+            style="@style/mLabels"
+            android:text="@string/event_details_label_genre" />
+
+        <TextView
+            style="@style/mLabelledTextViews"
+            android:id="@+id/event_details_genre"
+            android:text="@string/event_details_default_genre" />
+    </LinearLayout>
+
     <!--
     <LinearLayout
         android:id="@+id/event_details_creator_container"
@@ -86,4 +100,13 @@
         android:layout_marginBottom="16dp"
         android:text="@string/event_details_button_attend"
         android:id="@+id/event_details_button" />
+
+    <Button
+        android:id="@+id/event_details_button_edit"
+        style="@style/mButtons"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/event_details_button_edit" />
+
+
 </LinearLayout>

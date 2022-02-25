@@ -1,25 +1,25 @@
 package de.ur.servus;
 
+import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.viewpager.widget.PagerAdapter;
-
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.util.Objects;
 
 public class TutorialManager extends PagerAdapter {
 
-    Context context;
+    private final Activity activity;
+    private final Context context;
+    SettingsBottomSheetFragment settingsBottomSheetFragment = new SettingsBottomSheetFragment();
 
-    public TutorialManager(Context context) {
+    public TutorialManager(Context context, Activity activity) {
         this.context = context;
+        this.activity = activity;
     }
 
     @Override
@@ -61,38 +61,12 @@ public class TutorialManager extends PagerAdapter {
         }
         container.addView(view);
 
-        Button tutorial_btn_prev = Objects.requireNonNull(view).findViewById(R.id.tutorial_btn_prev);
-        tutorial_btn_prev.setOnClickListener(v -> {
-            if (position == 0){
-                Intent intent = new Intent(context, MainActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
-            } else {
-                TutorialActivity.viewPager.setCurrentItem(position - 1);
-            }
-        });
-
-        Button tutorial_btn_next = Objects.requireNonNull(view).findViewById(R.id.tutorial_btn_next);
-        tutorial_btn_next.setOnClickListener(v -> {
-            if(position == 2) {
-                TutorialActivity.t_bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-            } else if (position == 3) {
-                // TODO: Ask for permission here?
-
-                Intent intent = new Intent(context, MainActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
-            } else {
-                TutorialActivity.viewPager.setCurrentItem(position + 1);
-            }
-        });
-
-        view.findViewById(R.id.tutorial_indicator_1).setOnClickListener(v -> TutorialActivity.viewPager.setCurrentItem(0));
-        view.findViewById(R.id.tutorial_indicator_2).setOnClickListener(v -> TutorialActivity.viewPager.setCurrentItem(1));
-        view.findViewById(R.id.tutorial_indicator_3).setOnClickListener(v -> TutorialActivity.viewPager.setCurrentItem(2));
-        view.findViewById(R.id.tutorial_indicator_4).setOnClickListener(v -> TutorialActivity.viewPager.setCurrentItem(3));
-
         return Objects.requireNonNull(view);
+    }
+
+    @Override
+    public int getItemPosition(@NonNull Object object) {
+        return super.getItemPosition(object);
     }
 
     @Override
