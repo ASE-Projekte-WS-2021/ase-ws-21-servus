@@ -1,12 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/mBottomSheets"
-    android:id="@+id/creator_bottomSheet">
+    android:id="@+id/creator_bottomSheet"
+    style="@style/mBottomSheets">
 
-    <androidx.core.widget.NestedScrollView
-        style="@style/mScrollViews" >
+    <androidx.core.widget.NestedScrollView style="@style/mScrollViews">
 
-        <include layout="@layout/bottomsheet_creator_content" />
+        <LinearLayout
+            style="@style/mBottomSheetsContents"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/event_creation_eventname_container"
+                style="@style/mLabelContainer">
+
+                <TextView
+                    style="@style/mLabels"
+                    android:text="@string/event_creation_label_eventname" />
+
+                <EditText
+                    android:id="@+id/event_creation_eventname"
+                    style="@style/mEditTexts"
+                    android:text="@{eventCreationData.name}" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/event_creation_description_container"
+                style="@style/mLabelContainer">
+
+                <TextView
+                    style="@style/mLabels"
+                    android:text="@string/event_creation_label_description" />
+
+                <EditText
+                    android:id="@+id/event_creation_description"
+                    style="@style/mEditTexts"
+                    android:lines="5"
+                    android:text="@{eventCreationData.description}" />
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:id="@+id/event_creation_genre_container"
+                style="@style/mLabelContainer">
+
+                <TextView
+                    style="@style/mLabels"
+                    android:text="@string/event_creation_label_genre" />
+
+                <Spinner
+                    android:id="@+id/event_creation_genre_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+
+            <Button
+                android:id="@+id/event_create_button"
+                style="@style/mButtons"
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/event_creation_button_create" />
+
+        </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

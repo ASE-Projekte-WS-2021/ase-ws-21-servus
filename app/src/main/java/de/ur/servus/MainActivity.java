@@ -41,8 +41,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import de.ur.servus.EventCreationBottomSheet.EventCreationBottomSheetFragment;
-import de.ur.servus.EventCreationBottomSheet.EventCreationData;
+import de.ur.servus.core.firebase.EventUpdateData;
+import de.ur.servus.eventcreationbottomsheet.EventCreationBottomSheetFragment;
+import de.ur.servus.eventcreationbottomsheet.EventCreationData;
 import de.ur.servus.SharedPreferencesHelpers.CurrentSubscribedEventData;
 import de.ur.servus.SharedPreferencesHelpers.SubscribedEventHelpers;
 import de.ur.servus.core.Attendant;
@@ -57,7 +58,6 @@ import de.ur.servus.utils.AvatarEditor;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, ClusterManagerContext {
 
-    public static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
     private static final String TUTORIAL_PREFS_ITEM = "tutorialSeen";
 
     private final BackendHandler backendHandler = FirestoreBackendHandler.getInstance();
@@ -140,14 +140,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         subscribeEvent(preferences.eventId);
                         showBottomSheet(detailsBottomSheetFragment);
                     },
-                    () -> showBottomSheet(eventCreationBottomSheetFragment)
+                    () -> {
+                        unsubscribeEvent();
+                        eventCreationBottomSheetFragment.update(null, this::onEventCreationCreateClicked, this::onEventCreationEditClicked);
+                        showBottomSheet(eventCreationBottomSheetFragment);
+                    }
             );
         });
 
         btn_filter = findViewById(R.id.btn_filter);
         btn_filter.setOnClickListener(v -> showBottomSheet(filterBottomSheetFragment));
 
-        eventCreationBottomSheetFragment.update(null, this::onEventCreationCreateClicked, this::onEventCreationEditClicked);
         settingsBottomSheetFragment.update(this::onUserProfileSaved);
 
         subscribedEventHelpers.ifSubscribedToEvent(
@@ -278,10 +281,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void onEventCreationCreateClicked(EventCreationData inputEventData) {
-        // empty inputs
-        eventCreationBottomSheetFragment.update(null, this::onEventCreationCreateClicked, this::onEventCreationEditClicked);
-
-        subscribedEventHelpers.createEvent(customLocationManager, inputEventData, new EventListener<String>() {
+        subscribedEventHelpers.createEvent(customLocationManager, inputEventData, new EventListener<>() {
             @Override
             public void onEvent(String id) {
                 attendEvent(id, true);
@@ -301,10 +301,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void onEventCreationEditClicked(Event event, EventCreationData inputEventData) {
-        // empty inputs
-        eventCreationBottomSheetFragment.update(null, this::onEventCreationCreateClicked, this::onEventCreationEditClicked);
-
-        backendHandler.updateEvent(event.getId(), inputEventData.toUpdateMap(), null);
+        var eventUpdate = new EventUpdateData(inputEventData.name, inputEventData.description, inputEventData.genre);
+        backendHandler.updateEvent(event.getId(), eventUpdate.toUpdateMap(), null);
 
         //close bottomsheet
         if (eventCreationBottomSheetFragment != null) {
@@ -313,9 +311,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void onDetailsEditEventClicked(Event event) {
-        // TODO input data in creator sheet and open creator sheet
-        eventCreationBottomSheetFragment.update(event, this::onEventCreationCreateClicked, this::onEventCreationEditClicked);
-
         detailsBottomSheetFragment.dismiss();
         showBottomSheet(eventCreationBottomSheetFragment);
     }
@@ -433,9 +428,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void subscribeEvent(String eventId) {
-        if (singleEventListenerRegistration != null) {
-            singleEventListenerRegistration.unsubscribe();
-        }
+        unsubscribeEvent();
 
         singleEventListenerRegistration = backendHandler.subscribeEvent(eventId, new EventListener<>() {
             @SuppressLint("SetTextI18n")
@@ -454,6 +447,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             e -> onDetailsEditEventClicked(e)
                     );
                 }
+
+                // update edit view
+                if (eventCreationBottomSheetFragment != null) {
+                    eventCreationBottomSheetFragment.update(
+                            event,
+                            data -> onEventCreationCreateClicked(data),
+                            (e, data) -> onEventCreationEditClicked(e, data)
+                    );
+                }
+
             }
 
             @Override
@@ -463,6 +466,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 setStyleDefault();
             }
         });
+    }
+
+    private void unsubscribeEvent(){
+        if (singleEventListenerRegistration != null) {
+            singleEventListenerRegistration.unsubscribe();
+        }
     }
 
     private void attendEvent(String eventId, boolean isCreator) {
@@ -486,6 +495,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             subscribedEventHelpers.removeAttendingEvent();
             markerManager.getClusterManager().cluster();
             backendHandler.removeEventAttendantById(eventId, userId.get());
+
+            if (eventCreationBottomSheetFragment != null) {
+                eventCreationBottomSheetFragment.update(null,
+                        this::onEventCreationCreateClicked,
+                        this::onEventCreationEditClicked
+                );
+            }
         } else {
             Log.e("eventAttend", "No own user if found.");
         }

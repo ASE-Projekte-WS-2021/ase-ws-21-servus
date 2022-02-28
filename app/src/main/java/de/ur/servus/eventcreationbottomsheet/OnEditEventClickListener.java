@@ -1,4 +1,4 @@
-package de.ur.servus.EventCreationBottomSheet;
+package de.ur.servus.eventcreationbottomsheet;
 
 import java.util.function.BiConsumer;
 

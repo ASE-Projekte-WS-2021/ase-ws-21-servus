@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 
 import de.ur.servus.CustomLocationManager;
-import de.ur.servus.EventCreationBottomSheet.EventCreationData;
+import de.ur.servus.eventcreationbottomsheet.EventCreationData;
 import de.ur.servus.Helpers;
 import de.ur.servus.core.Attendant;
 import de.ur.servus.core.Event;
