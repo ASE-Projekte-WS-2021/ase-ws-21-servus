@@ -1,5 +1,7 @@
 package de.ur.servus;
 
+import static de.ur.servus.SettingsBottomSheetFragment.ACCOUNT;
+import static de.ur.servus.SettingsBottomSheetFragment.ACCOUNT_EXISTS;
 import static de.ur.servus.SettingsBottomSheetFragment.PICK_IMAGE;
 
 import android.Manifest;
@@ -14,6 +16,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -41,9 +44,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import de.ur.servus.core.firebase.EventUpdateData;
-import de.ur.servus.eventcreationbottomsheet.EventCreationBottomSheetFragment;
-import de.ur.servus.eventcreationbottomsheet.EventCreationData;
 import de.ur.servus.SharedPreferencesHelpers.CurrentSubscribedEventData;
 import de.ur.servus.SharedPreferencesHelpers.SubscribedEventHelpers;
 import de.ur.servus.core.Attendant;
@@ -52,7 +52,10 @@ import de.ur.servus.core.Event;
 import de.ur.servus.core.EventListener;
 import de.ur.servus.core.ListenerRegistration;
 import de.ur.servus.core.UserProfile;
+import de.ur.servus.core.firebase.EventUpdateData;
 import de.ur.servus.core.firebase.FirestoreBackendHandler;
+import de.ur.servus.eventcreationbottomsheet.EventCreationBottomSheetFragment;
+import de.ur.servus.eventcreationbottomsheet.EventCreationData;
 import de.ur.servus.utils.AvatarEditor;
 
 
@@ -135,7 +138,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         btn_creator = findViewById(R.id.btn_meetup);
         btn_creator.setOnClickListener(v -> {
             // Add behavior for create button, if user is already subscribed to an event as attendant
-            subscribedEventHelpers.ifSubscribedToEvent(
+            if (onlyAllowIfAccountExists()){
+                subscribedEventHelpers.ifSubscribedToEvent(
                     preferences -> {
                         subscribeEvent(preferences.eventId);
                         showBottomSheet(detailsBottomSheetFragment);
@@ -144,8 +148,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         unsubscribeEvent();
                         eventCreationBottomSheetFragment.update(null, this::onEventCreationCreateClicked, this::onEventCreationEditClicked);
                         showBottomSheet(eventCreationBottomSheetFragment);
-                    }
-            );
+                    });
+            }
         });
 
         btn_filter = findViewById(R.id.btn_filter);
@@ -228,7 +232,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     startActivityForResult(Intent.createChooser(getIntent, getResources().getString(R.string.settings_profile_picture_picker)), PICK_IMAGE);
                 } else {
                     // Permission is denied
-                    Toast.makeText(context, getResources().getString(R.string.toast_storage_permission_error), Toast.LENGTH_LONG).show();
+                    Toast toast = Toast.makeText(context, getResources().getString(R.string.toast_storage_permission_error), Toast.LENGTH_LONG);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
                 }
             });
 
@@ -273,10 +279,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void onDetailsAttendWithdrawClicked(Event event, boolean attending) {
-        if (attending) {
-            leaveEvent(event.getId());
-        } else {
-            attendEvent(event.getId(), false);
+        if (context != null && onlyAllowIfAccountExists()){
+            if (attending) {
+                leaveEvent(event.getId());
+            } else {
+                attendEvent(event.getId(), false);
+            }
         }
     }
 
@@ -311,12 +319,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void onDetailsEditEventClicked(Event event) {
-        detailsBottomSheetFragment.dismiss();
-        showBottomSheet(eventCreationBottomSheetFragment);
+        if (onlyAllowIfAccountExists()){
+            /* TODO: Replace this as soon as we have a way to check if the clicked user is the creator
+             * Until then: Only allows a registered user to edit events
+             */
+
+            detailsBottomSheetFragment.dismiss();
+            showBottomSheet(eventCreationBottomSheetFragment);
+        }
     }
 
     private void onUserProfileSaved(UserProfile userProfile) {
         btn_settings.setImageBitmap(avatarEditor.loadProfilePicture());
+    }
+
+    private void onRequireAccount() {
+        showBottomSheet(settingsBottomSheetFragment);
     }
 
 
@@ -525,6 +543,27 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             btn_creator.setText(R.string.content_create_meetup);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_white, getTheme()));
+        }
+    }
+
+
+    /**
+     * All other functionalities
+     */
+    
+    private boolean onlyAllowIfAccountExists() {
+        boolean accountExists = this.getSharedPreferences(ACCOUNT, MODE_PRIVATE).getBoolean(ACCOUNT_EXISTS, false);
+
+        if (accountExists){
+            return true;
+        }
+        else {
+            Toast toast = Toast.makeText(this, getResources().getString(R.string.toast_require_local_account), Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
+
+            showBottomSheet(settingsBottomSheetFragment);
+            return false;
         }
     }
 }
