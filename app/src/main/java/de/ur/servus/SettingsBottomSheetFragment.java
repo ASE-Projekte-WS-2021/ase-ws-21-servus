@@ -83,11 +83,12 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
     @Nullable
     private SharedPreferences sharedPreferences;
 
-    private static final String ACCOUNT = "userAccount";
-    private static final String ACCOUNT_ITEM_NAME = "Username";
-    private static final String ACCOUNT_ITEM_AGE = "Birthday";
-    private static final String ACCOUNT_ITEM_GENDER = "Gender";
-    private static final String ACCOUNT_ITEM_COURSE = "CourseOfStudy";
+    public static final String ACCOUNT = "userAccount";
+    public static final String ACCOUNT_ITEM_NAME = "Username";
+    public static final String ACCOUNT_ITEM_AGE = "Birthday";
+    public static final String ACCOUNT_ITEM_GENDER = "Gender";
+    public static final String ACCOUNT_ITEM_COURSE = "CourseOfStudy";
+    public static final String ACCOUNT_ITEM_ID = "UserId";
 
     public static final int PICK_IMAGE = 3;
 

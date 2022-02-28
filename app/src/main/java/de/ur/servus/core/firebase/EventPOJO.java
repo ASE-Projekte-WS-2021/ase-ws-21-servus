@@ -5,20 +5,21 @@ import com.google.firebase.firestore.Exclude;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import de.ur.servus.core.Attendant;
 import de.ur.servus.core.Event;
 
 /**
  * This is a POJO version of the Event class and is only used to convert database data to Event objects.
  */
-class EventPOJO {
+class EventPOJO implements POJO<Event>{
     private String name;
     private String description;
     private String id;
     private String genre;
     private List<Double> location;
-    private int attendants;
-
+    private List<AttendantPOJO> attendants;
 
     public EventPOJO() {
     }
@@ -27,10 +28,10 @@ class EventPOJO {
         this.name = event.getName();
         this.description = event.getDescription();
         this.id = event.getId();
-        this.attendants = event.getAttendants();
+        this.attendants = event.getAttendants().stream().map(AttendantPOJO::new).collect(Collectors.toList());
         this.genre = event.getGenre();
 
-        this.location = new ArrayList<Double>(2);
+        this.location = new ArrayList<>(2);
         this.location.add(event.getLocation().latitude);
         this.location.add(event.getLocation().longitude);
     }
@@ -68,25 +69,33 @@ class EventPOJO {
         this.id = id;
     }
 
-    public void setAttendants(int attendants) {
-        this.attendants = attendants;
-    }
-
-    public int getAttendants() {
+    public List<AttendantPOJO> getAttendants() {
         return attendants;
     }
 
+    public void setAttendants(List<AttendantPOJO> attendants) {
+        this.attendants = attendants;
+    }
 
     public void setGenre(String genre){this.genre = genre;}
 
     public String getGenre(){return genre;}
 
-    public Event toEvent() {
+
+    @Override
+    public String[] excludedFields() {
+        return new String[]{
+                "id"
+        };
+    }
+
+    @Override
+    public Event toObject() {
         Event event = new Event(
                 this.name,
                 this.description,
                 new LatLng(this.location.get(0), this.location.get(1)),
-                this.attendants,
+                this.attendants.stream().map(pojo -> new Attendant(pojo.getUserId(), pojo.isCreator())).collect(Collectors.toList()),
                 this.genre
         );
         event.setId(this.id);

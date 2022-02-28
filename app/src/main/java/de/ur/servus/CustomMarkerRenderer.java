@@ -1,8 +1,6 @@
 package de.ur.servus;
 
-import static de.ur.servus.MainActivity.SUBSCRIBED_TO_EVENT;
-
-import android.content.Context;
+import android.app.Activity;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
@@ -13,15 +11,15 @@ import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
+import de.ur.servus.SharedPreferencesHelpers.SubscribedEventHelpers;
+
 public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterItem> {
 
-    private final Context context;
-    private final SharedPreferences sharedPreferences;
+    private final SubscribedEventHelpers subscribedEventHelpers;
 
-    public CustomMarkerRenderer(Context context, SharedPreferences sharedPreferences, GoogleMap map, ClusterManager<MarkerClusterItem> clusterManager) {
-        super(context, map, clusterManager);
-        this.context = context;
-        this.sharedPreferences = sharedPreferences;
+    public CustomMarkerRenderer(Activity activity, SharedPreferences sharedPreferences, GoogleMap map, ClusterManager<MarkerClusterItem> clusterManager) {
+        super(activity, map, clusterManager);
+        this.subscribedEventHelpers = new SubscribedEventHelpers(activity);
         clusterManager.setRenderer(this);
     }
 
@@ -29,12 +27,11 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
     protected void onBeforeClusterItemRendered(@NonNull MarkerClusterItem item, @NonNull MarkerOptions markerOptions) {
         super.onBeforeClusterItemRendered(item, markerOptions);
 
-        String currentEventId = sharedPreferences.getString(SUBSCRIBED_TO_EVENT, "none");
-
-        if (!currentEventId.equals("none") && !item.getEventId().equals(currentEventId)) {
-            // Style currently not attended event
-            markerOptions.alpha(0.5f);
-        }
+        subscribedEventHelpers.ifSubscribedToEvent(currentSubscribedEventData -> {
+            if(!item.getEventId().equals(currentSubscribedEventData.eventId)){
+                markerOptions.alpha(0.5f);
+            }
+        }, null);
     }
 
 

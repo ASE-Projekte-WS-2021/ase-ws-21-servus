@@ -1,9 +1,5 @@
 package de.ur.servus;
 
-import static de.ur.servus.Helpers.ifSubscribedToEvent;
-import static de.ur.servus.Helpers.removeAttendingEvent;
-import static de.ur.servus.Helpers.saveAttendingEvent;
-import static de.ur.servus.Helpers.tryGetSubscribedEvent;
 import static de.ur.servus.SettingsBottomSheetFragment.PICK_IMAGE;
 
 import android.Manifest;
@@ -27,6 +23,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -44,6 +41,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import de.ur.servus.core.firebase.EventUpdateData;
+import de.ur.servus.eventcreationbottomsheet.EventCreationBottomSheetFragment;
+import de.ur.servus.eventcreationbottomsheet.EventCreationData;
+import de.ur.servus.SharedPreferencesHelpers.CurrentSubscribedEventData;
+import de.ur.servus.SharedPreferencesHelpers.SubscribedEventHelpers;
+import de.ur.servus.core.Attendant;
 import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
 import de.ur.servus.core.EventListener;
@@ -53,12 +56,12 @@ import de.ur.servus.core.firebase.FirestoreBackendHandler;
 import de.ur.servus.utils.AvatarEditor;
 
 
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ClusterManagerContext {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, ClusterManagerContext {
 
-    public static final String SUBSCRIBED_TO_EVENT = "subscribedToEvent";
     private static final String TUTORIAL_PREFS_ITEM = "tutorialSeen";
 
     private final BackendHandler backendHandler = FirestoreBackendHandler.getInstance();
+    private SubscribedEventHelpers subscribedEventHelpers;
     Context context;
     SharedPreferences sharedPreferences;
     CustomLocationManager customLocationManager;
@@ -88,14 +91,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     LinearLayout error_message;
 
 
-
     /**
-     *
-     *
-     *      App state handling
-     *
-     *
-     *
+     * App state handling
      */
 
     @Override
@@ -108,6 +105,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         markerManager = new MarkerManager();
         customLocationManager = new CustomLocationManager(this);
         avatarEditor = new AvatarEditor(this);
+        subscribedEventHelpers = new SubscribedEventHelpers(this);
+
+        Helpers.saveNewUserIdIfNotExisting(this);
 
         // when GPS is turned off, ask to turn it on. Starting to listen needs to be done in onCreate
         customLocationManager.addOnProviderDisabledListener(customLocationManager::showEnableGpsDialogIfNecessary);
@@ -135,20 +135,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         btn_creator = findViewById(R.id.btn_meetup);
         btn_creator.setOnClickListener(v -> {
             // Add behavior for create button, if user is already subscribed to an event as attendant
-            ifSubscribedToEvent(sharedPreferences,
-                    eventId -> showBottomSheet(detailsBottomSheetFragment),
-                    () -> showBottomSheet(eventCreationBottomSheetFragment)
+            subscribedEventHelpers.ifSubscribedToEvent(
+                    preferences -> {
+                        subscribeEvent(preferences.eventId);
+                        showBottomSheet(detailsBottomSheetFragment);
+                    },
+                    () -> {
+                        unsubscribeEvent();
+                        eventCreationBottomSheetFragment.update(null, this::onEventCreationCreateClicked, this::onEventCreationEditClicked);
+                        showBottomSheet(eventCreationBottomSheetFragment);
+                    }
             );
         });
 
         btn_filter = findViewById(R.id.btn_filter);
         btn_filter.setOnClickListener(v -> showBottomSheet(filterBottomSheetFragment));
 
-        eventCreationBottomSheetFragment.update(this::onEventCreationCreateClicked);
         settingsBottomSheetFragment.update(this::onUserProfileSaved);
 
-        ifSubscribedToEvent(sharedPreferences,
-                this::subscribeEvent,
+        subscribedEventHelpers.ifSubscribedToEvent(
+                currentSubscribedEventData -> this.subscribeEvent(currentSubscribedEventData.eventId),
                 null
         );
 
@@ -201,14 +207,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-
     /**
-     *
-     *
-     *      Permission functionality
-     *
-     *
-     *
+     * Permission functionality
      */
 
     // Method Duplicate in SettingsBottomSheet, despite please don't delete!
@@ -262,14 +262,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-
     /**
-     *
-     *
-     *      Bottom sheet functionality
-     *
-     *
-     *
+     * Bottom sheet functionality
      */
 
     private void showBottomSheet(@Nullable BottomSheetDialogFragment bottomSheet) {
@@ -282,15 +276,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if (attending) {
             leaveEvent(event.getId());
         } else {
-            attendEvent(event.getId());
+            attendEvent(event.getId(), false);
         }
     }
 
     private void onEventCreationCreateClicked(EventCreationData inputEventData) {
-        Helpers.createEvent(customLocationManager, inputEventData, new EventListener<>() {
+        subscribedEventHelpers.createEvent(customLocationManager, inputEventData, new EventListener<>() {
             @Override
             public void onEvent(String id) {
-                attendEvent(id);
+                attendEvent(id, true);
             }
 
             @Override
@@ -305,19 +299,29 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+
+    private void onEventCreationEditClicked(Event event, EventCreationData inputEventData) {
+        var eventUpdate = new EventUpdateData(inputEventData.name, inputEventData.description, inputEventData.genre);
+        backendHandler.updateEvent(event.getId(), eventUpdate.toUpdateMap(), null);
+
+        //close bottomsheet
+        if (eventCreationBottomSheetFragment != null) {
+            eventCreationBottomSheetFragment.dismiss();
+        }
+    }
+
+    private void onDetailsEditEventClicked(Event event) {
+        detailsBottomSheetFragment.dismiss();
+        showBottomSheet(eventCreationBottomSheetFragment);
+    }
+
     private void onUserProfileSaved(UserProfile userProfile) {
         btn_settings.setImageBitmap(avatarEditor.loadProfilePicture());
     }
 
 
-
     /**
-     *
-     *
-     *      Map features
-     *
-     *
-     *
+     * Map features
      */
 
     @Override
@@ -382,14 +386,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-
     /**
-     *
-     *
-     *      Map-Event features
-     *
-     *
-     *
+     * Map-Event features
      */
 
     public void subscribeAllEvents() {
@@ -413,7 +411,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 markerManager.getClusterManager().cluster();
 
                 // style bottom button
-                ifSubscribedToEvent(sharedPreferences,
+                subscribedEventHelpers.ifSubscribedToEvent(
                         eventId -> setStyleClicked(),
                         () -> setStyleDefault()
                 );
@@ -430,56 +428,88 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void subscribeEvent(String eventId) {
-        if (singleEventListenerRegistration != null) {
-            singleEventListenerRegistration.unsubscribe();
-        }
+        unsubscribeEvent();
 
         singleEventListenerRegistration = backendHandler.subscribeEvent(eventId, new EventListener<>() {
             @SuppressLint("SetTextI18n")
             @Override
             public void onEvent(Event event) {
-                boolean attending = tryGetSubscribedEvent(sharedPreferences)
-                        .map(eventId -> eventId.equals(event.getId()))
-                        .orElse(false);
+                var eventPreferences = subscribedEventHelpers.tryGetSubscribedEvent();
+                var attending = eventPreferences.eventId != null && eventPreferences.eventId.equals(event.getId());
 
                 // update details sheet
                 if (detailsBottomSheetFragment != null) {
-                    detailsBottomSheetFragment.update(event, attending, (e, a) -> onDetailsAttendWithdrawClicked(e, a));
+                    detailsBottomSheetFragment.update(
+                            event,
+                            attending,
+                            true,   // TODO get isCreator
+                            (e, a) -> onDetailsAttendWithdrawClicked(e, a),
+                            e -> onDetailsEditEventClicked(e)
+                    );
                 }
+
+                // update edit view
+                if (eventCreationBottomSheetFragment != null) {
+                    eventCreationBottomSheetFragment.update(
+                            event,
+                            data -> onEventCreationCreateClicked(data),
+                            (e, data) -> onEventCreationEditClicked(e, data)
+                    );
+                }
+
             }
 
             @Override
             public void onError(Exception e) {
                 Log.e("Data", e.getMessage());
-                removeAttendingEvent(sharedPreferences);
+                subscribedEventHelpers.removeAttendingEvent();
                 setStyleDefault();
             }
         });
     }
 
-    private void attendEvent(String eventId) {
-        setStyleClicked();
-        saveAttendingEvent(sharedPreferences, eventId);
-        markerManager.getClusterManager().cluster();
-        backendHandler.incrementEventAttendants(eventId, null);
+    private void unsubscribeEvent(){
+        if (singleEventListenerRegistration != null) {
+            singleEventListenerRegistration.unsubscribe();
+        }
+    }
+
+    private void attendEvent(String eventId, boolean isCreator) {
+        var userId = Helpers.readOwnUserId(this);
+        if (userId.isPresent()) {
+            setStyleClicked();
+            var subscribedEventInfos = new CurrentSubscribedEventData(eventId);
+            subscribedEventHelpers.saveAttendingEvent(subscribedEventInfos);
+            markerManager.getClusterManager().cluster();
+            var attendant = new Attendant(userId.get(), isCreator);
+            backendHandler.addEventAttendant(eventId, attendant);
+        } else {
+            Log.e("eventAttend", "No own user if found.");
+        }
     }
 
     private void leaveEvent(String eventId) {
-        setStyleDefault();
-        removeAttendingEvent(sharedPreferences);
-        markerManager.getClusterManager().cluster();
-        backendHandler.decrementEventAttendants(eventId, null);
+        var userId = Helpers.readOwnUserId(this);
+        if (userId.isPresent()) {
+            setStyleDefault();
+            subscribedEventHelpers.removeAttendingEvent();
+            markerManager.getClusterManager().cluster();
+            backendHandler.removeEventAttendantById(eventId, userId.get());
+
+            if (eventCreationBottomSheetFragment != null) {
+                eventCreationBottomSheetFragment.update(null,
+                        this::onEventCreationCreateClicked,
+                        this::onEventCreationEditClicked
+                );
+            }
+        } else {
+            Log.e("eventAttend", "No own user if found.");
+        }
     }
 
 
-
     /**
-     *
-     *
-     *      App Styling
-     *
-     *
-     *
+     * App Styling
      */
 
     private void setStyleClicked() {

@@ -28,6 +28,7 @@
     <string name="event_creation_genre_food">Food</string>
     <string name="event_creation_genre_activity">Activity</string>
     <string name="event_creation_genre_hangout">Hang-out</string>
+    <string name="event_creation_button_edit">Save</string>
 
     <string name="event_details_label_eventname">Name</string>
     <string name="event_details_default_eventname">%EVENTNAME%</string>
@@ -41,6 +42,7 @@
     <string name="event_details_default_creator">%CREATOR%</string>
     <string name="event_details_button_attend">Attend to Meet-Up</string>
     <string name="event_details_button_withdraw">Withdraw attendance</string>
+    <string name="event_details_button_edit">Edit Meet-Up</string>
 
     <string name="tutorial_skip">Skip onboarding</string>
     <string name="tutorial_next">Next Slide</string>
