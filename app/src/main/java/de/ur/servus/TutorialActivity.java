@@ -103,6 +103,8 @@ public class TutorialActivity extends AppCompatActivity implements ViewPager.OnP
     @Override // Allows handling of UI for selected pages
     public void onPageSelected(int position) {
 
+        btn_next.setText(getResources().getString(R.string.tutorial_next));
+
         if (position == 0) {
             btn_prev.setText(getResources().getString(R.string.tutorial_skip));
         } else btn_prev.setText(getResources().getString(R.string.tutorial_prev));

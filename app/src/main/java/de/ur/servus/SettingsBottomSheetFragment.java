@@ -90,6 +90,8 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
     public static final String ACCOUNT_ITEM_COURSE = "CourseOfStudy";
     public static final String ACCOUNT_ITEM_ID = "UserId";
 
+    public static final String ACCOUNT_EXISTS = "accountExists";
+
     public static final int PICK_IMAGE = 3;
 
     public SettingsBottomSheetFragment() {
@@ -191,27 +193,29 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
         ll_select_picture.setOnClickListener(v -> checkAndAskStoragePermission());
 
         btn_preview.setOnClickListener(v -> {
-            saveInputs();
-            this.dismiss();
+            if (saveInputs()){
 
-            UserProfile ownProfile = new UserProfile(
-                    sharedPreferences.getString(ACCOUNT_ITEM_NAME, "DEF_NAME"),
-                    sharedPreferences.getString(ACCOUNT_ITEM_GENDER, "DEF_GENDER"),
-                    sharedPreferences.getString(ACCOUNT_ITEM_AGE, "DEF_BIRTHDATE"),
-                    sharedPreferences.getString(ACCOUNT_ITEM_COURSE, "DEF_COURSE"),
-                    avatarEditor.loadProfilePicture()
-            );
+                this.dismiss();
 
-            FragmentTransaction transaction;
+                UserProfile ownProfile = new UserProfile(
+                        sharedPreferences.getString(ACCOUNT_ITEM_NAME, "DEF_NAME"),
+                        sharedPreferences.getString(ACCOUNT_ITEM_GENDER, "DEF_GENDER"),
+                        sharedPreferences.getString(ACCOUNT_ITEM_AGE, "DEF_BIRTHDATE"),
+                        sharedPreferences.getString(ACCOUNT_ITEM_COURSE, "DEF_COURSE"),
+                        avatarEditor.loadProfilePicture()
+                );
 
-            transaction = getParentFragmentManager().beginTransaction();
-            ProfileCardFragment servusCard = ProfileCardFragment.newInstance(ownProfile);
-            transaction.add(R.id.root_layout, servusCard, servusCard.getTag());
-            transaction.addToBackStack(null);
-            transaction.commit();
+                FragmentTransaction transaction;
 
-            if (onProfileSavedListener != null) {
-                onProfileSavedListener.accept(ownProfile);
+                transaction = getParentFragmentManager().beginTransaction();
+                ProfileCardFragment servusCard = ProfileCardFragment.newInstance(ownProfile);
+                transaction.add(R.id.root_layout, servusCard, servusCard.getTag());
+                transaction.addToBackStack(null);
+                transaction.commit();
+
+                if (onProfileSavedListener != null) {
+                    onProfileSavedListener.accept(ownProfile);
+                }
             }
         });
 
@@ -222,9 +226,10 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
                 view.findViewById(R.id.settings_tutorial_btn_next).setVisibility(View.VISIBLE);
 
                 view.findViewById(R.id.settings_tutorial_btn_next).setOnClickListener(v -> {
-                    TutorialActivity.viewPager.setCurrentItem(3);
-                    saveInputs();
-                    this.dismiss();
+                    if (saveInputs()) {
+                        TutorialActivity.viewPager.setCurrentItem(3);
+                        this.dismiss();
+                    }
                 });
             }
         }
@@ -291,20 +296,31 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
      *
      */
 
-    public void saveInputs() {
-        if (sharedPreferences == null || avatarEditor == null) return;
+    public boolean saveInputs() {
+        if (sharedPreferences == null || avatarEditor == null) return false;
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
+        boolean[] requiredFieldFilled = {false, false, false};
 
         if (name != null) {
-            editor.putString(ACCOUNT_ITEM_NAME, String.valueOf(name.getText()));
+            if (name.getText() == null || String.valueOf(name.getText()).equals("")){
+                requiredFieldFilled[0] = false; // Necessary for possible secondary changes after initial account creation
+            } else {
+                editor.putString(ACCOUNT_ITEM_NAME, String.valueOf(name.getText()));
+                requiredFieldFilled[0] = true;
+            }
         }
 
         if (gender != null) {
             int selectedId = gender.getCheckedRadioButtonId();
             genderSelection = gender.findViewById(selectedId);
-            if (genderSelection != null)
-                editor.putString(ACCOUNT_ITEM_GENDER, String.valueOf(genderSelection.getText()));
+
+            if (genderSelection != null) {
+                if (genderSelection.getText() != null){
+                    editor.putString(ACCOUNT_ITEM_GENDER, String.valueOf(genderSelection.getText()));
+                    requiredFieldFilled[1] = true;
+                }
+            }
         }
 
         if (birthday != null) {
@@ -314,6 +330,7 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
             String birthdate = day + "." + month + "." + year;
 
             editor.putString(ACCOUNT_ITEM_AGE, birthdate);
+            requiredFieldFilled[2] = true; // No further if needed -> Always takes currently initialized date as default
         }
 
         if (course != null) {
@@ -324,7 +341,28 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
             avatarEditor.saveProfilePicture(selectedImage);
         }
 
-        editor.apply();
+
+        // Check requirements before applying to Shared Preferences
+        // Handles error toast
+        boolean requirementPassed = false;
+        for (boolean b : requiredFieldFilled) {
+            if (b) {
+                requirementPassed = true;
+            } else {
+                requirementPassed = false;
+                break;
+            }
+        }
+
+        if (requirementPassed) {
+            editor.putBoolean(ACCOUNT_EXISTS, true);
+            editor.apply();
+            return true;
+        }
+        else {
+            Toast.makeText(activity, getResources().getString(R.string.toast_fill_required_fields), Toast.LENGTH_LONG).show();
+            return false;
+        }
     }
 
     private void loadAccountDetails() {
