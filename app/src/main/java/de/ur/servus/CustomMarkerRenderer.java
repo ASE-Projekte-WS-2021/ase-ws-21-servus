@@ -11,15 +11,15 @@ import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
-import de.ur.servus.utils.SubscribedEventHelpers;
+import de.ur.servus.utils.EventHelpers;
 
 public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterItem> {
 
-    private final SubscribedEventHelpers subscribedEventHelpers;
+    private final EventHelpers eventHelpers;
 
     public CustomMarkerRenderer(Activity activity, SharedPreferences sharedPreferences, GoogleMap map, ClusterManager<MarkerClusterItem> clusterManager) {
         super(activity, map, clusterManager);
-        this.subscribedEventHelpers = new SubscribedEventHelpers(activity);
+        this.eventHelpers = new EventHelpers(activity);
         clusterManager.setRenderer(this);
     }
 
@@ -27,7 +27,7 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
     protected void onBeforeClusterItemRendered(@NonNull MarkerClusterItem item, @NonNull MarkerOptions markerOptions) {
         super.onBeforeClusterItemRendered(item, markerOptions);
 
-        subscribedEventHelpers.ifSubscribedToEvent(currentSubscribedEventData -> {
+        eventHelpers.ifSubscribedToEvent(currentSubscribedEventData -> {
             if(!item.getEventId().equals(currentSubscribedEventData.eventId)){
                 markerOptions.alpha(0.5f);
             }

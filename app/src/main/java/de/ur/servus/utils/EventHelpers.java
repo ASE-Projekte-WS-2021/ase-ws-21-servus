@@ -24,16 +24,17 @@ import de.ur.servus.core.firebase.FirestoreBackendHandler;
 /**
  * Contains helper functions to save events to the database and manage shared preferences.
  */
-public class SubscribedEventHelpers {
-    public static final String SP_KEY_ATTENDING_EVENT = "subscribedToEvent";
+public class EventHelpers {
+    public static final String CURRENT_EVENT = "currentEvent";
+    public static final String CURRENT_EVENT_ITEM_ID = "id";
     private final String NO_EVENT = "none";
 
     private final Activity activity;
     private final SharedPreferences sharedPreferences;
 
-    public SubscribedEventHelpers(Activity activity) {
+    public EventHelpers(Activity activity) {
         this.activity = activity;
-        this.sharedPreferences = activity.getSharedPreferences(SP_KEY_ATTENDING_EVENT, MODE_PRIVATE);
+        this.sharedPreferences = activity.getSharedPreferences(CURRENT_EVENT, MODE_PRIVATE);
     }
 
     /**
@@ -44,6 +45,8 @@ public class SubscribedEventHelpers {
      */
     public void ifSubscribedToEvent(@Nullable Consumer<CurrentSubscribedEventData> then, @Nullable Runnable els) {
         var eventPreferences = tryGetSubscribedEvent();
+
+        Log.d("dbg", "subscirbed to event?: " + (eventPreferences.eventId != null));
 
         if (eventPreferences.eventId != null) {
             if (then != null) {
@@ -62,9 +65,10 @@ public class SubscribedEventHelpers {
      * @return An object, that may be an event id, or may be null. Needs to be checked before using.
      */
     public CurrentSubscribedEventData tryGetSubscribedEvent() {
-        String eventId = sharedPreferences.getString(SP_KEY_ATTENDING_EVENT, NO_EVENT);
+        String eventId = sharedPreferences.getString(CURRENT_EVENT_ITEM_ID, NO_EVENT);
+        eventId = !eventId.equals(NO_EVENT) ? eventId : null;
 
-        return new CurrentSubscribedEventData(eventId.equals(NO_EVENT) ? null : eventId);
+        return new CurrentSubscribedEventData(eventId);
     }
 
     /**
@@ -72,7 +76,7 @@ public class SubscribedEventHelpers {
      */
     public void saveAttendingEvent(CurrentSubscribedEventData currentSubscribedEventData) {
         var editor = sharedPreferences.edit();
-        editor.putString(SP_KEY_ATTENDING_EVENT, currentSubscribedEventData.eventId);
+        editor.putString(CURRENT_EVENT_ITEM_ID, currentSubscribedEventData.eventId);
         editor.apply();
     }
 
@@ -81,7 +85,7 @@ public class SubscribedEventHelpers {
      */
     public void removeAttendingEvent() {
         var editor = sharedPreferences.edit();
-        editor.putString(SP_KEY_ATTENDING_EVENT, NO_EVENT);
+        editor.putString(CURRENT_EVENT_ITEM_ID, NO_EVENT);
         editor.apply();
     }
 

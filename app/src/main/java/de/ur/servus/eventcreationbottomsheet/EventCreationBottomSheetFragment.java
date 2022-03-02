@@ -2,7 +2,6 @@ package de.ur.servus.eventcreationbottomsheet;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -33,8 +32,6 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
 
     @Nullable
     private Activity activity;
-    @Nullable
-    private Context context;
     @Nullable
     BottomSheetBehavior<View> behavior;
 
@@ -71,8 +68,7 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
         binding = BottomsheetCreatorBinding.inflate(inflater, container, false);
         view = binding.getRoot();
 
-        context = getContext();
-        activity = (Activity) context;
+        activity = (Activity) getContext();
 
         genreAdapter = new EventGenreAdapter(view.getContext(), GenreData.allGenres);
         binding.eventCreationGenreSpinner.setOnItemSelectedListener(this);
