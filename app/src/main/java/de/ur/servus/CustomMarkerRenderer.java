@@ -11,7 +11,7 @@ import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
-import de.ur.servus.SharedPreferencesHelpers.SubscribedEventHelpers;
+import de.ur.servus.utils.SubscribedEventHelpers;
 
 public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterItem> {
 

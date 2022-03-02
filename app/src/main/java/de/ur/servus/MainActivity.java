@@ -1,8 +1,8 @@
 package de.ur.servus;
 
-import static de.ur.servus.SettingsBottomSheetFragment.ACCOUNT;
-import static de.ur.servus.SettingsBottomSheetFragment.ACCOUNT_EXISTS;
 import static de.ur.servus.SettingsBottomSheetFragment.PICK_IMAGE;
+import static de.ur.servus.utils.UserAccountKeys.ACCOUNT_EXISTS;
+import static de.ur.servus.utils.UserAccountKeys.ACCOUNT_ITEM_ID;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -44,8 +44,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import de.ur.servus.SharedPreferencesHelpers.CurrentSubscribedEventData;
-import de.ur.servus.SharedPreferencesHelpers.SubscribedEventHelpers;
+import de.ur.servus.utils.CurrentSubscribedEventData;
+import de.ur.servus.utils.SubscribedEventHelpers;
 import de.ur.servus.core.Attendant;
 import de.ur.servus.core.BackendHandler;
 import de.ur.servus.core.Event;
@@ -57,6 +57,7 @@ import de.ur.servus.core.firebase.FirestoreBackendHandler;
 import de.ur.servus.eventcreationbottomsheet.EventCreationBottomSheetFragment;
 import de.ur.servus.eventcreationbottomsheet.EventCreationData;
 import de.ur.servus.utils.AvatarEditor;
+import de.ur.servus.utils.UserAccountHelpers;
 
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, ClusterManagerContext {
@@ -65,6 +66,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private final BackendHandler backendHandler = FirestoreBackendHandler.getInstance();
     private SubscribedEventHelpers subscribedEventHelpers;
+    private UserAccountHelpers userAccountHelpers;
     Context context;
     SharedPreferences sharedPreferences;
     CustomLocationManager customLocationManager;
@@ -109,8 +111,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         customLocationManager = new CustomLocationManager(this);
         avatarEditor = new AvatarEditor(this);
         subscribedEventHelpers = new SubscribedEventHelpers(this);
+        userAccountHelpers = new UserAccountHelpers(this);
 
-        Helpers.saveNewUserIdIfNotExisting(this);
+        userAccountHelpers.saveNewUserIdIfNotExisting();
 
         // when GPS is turned off, ask to turn it on. Starting to listen needs to be done in onCreate
         customLocationManager.addOnProviderDisabledListener(customLocationManager::showEnableGpsDialogIfNecessary);
@@ -138,17 +141,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         btn_creator = findViewById(R.id.btn_meetup);
         btn_creator.setOnClickListener(v -> {
             // Add behavior for create button, if user is already subscribed to an event as attendant
-            if (onlyAllowIfAccountExists()){
+            if (onlyAllowIfAccountExists()) {
                 subscribedEventHelpers.ifSubscribedToEvent(
-                    preferences -> {
-                        subscribeEvent(preferences.eventId);
-                        showBottomSheet(detailsBottomSheetFragment);
-                    },
-                    () -> {
-                        unsubscribeEvent();
-                        eventCreationBottomSheetFragment.update(null, this::onEventCreationCreateClicked, this::onEventCreationEditClicked);
-                        showBottomSheet(eventCreationBottomSheetFragment);
-                    });
+                        preferences -> {
+                            subscribeEvent(preferences.eventId);
+                            showBottomSheet(detailsBottomSheetFragment);
+                        },
+                        () -> {
+                            unsubscribeEvent();
+                            eventCreationBottomSheetFragment.update(null, this::onEventCreationCreateClicked, this::onEventCreationEditClicked);
+                            showBottomSheet(eventCreationBottomSheetFragment);
+                        });
             }
         });
 
@@ -279,7 +282,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void onDetailsAttendWithdrawClicked(Event event, boolean attending) {
-        if (context != null && onlyAllowIfAccountExists()){
+        if (context != null && onlyAllowIfAccountExists()) {
             if (attending) {
                 leaveEvent(event.getId());
             } else {
@@ -319,7 +322,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void onDetailsEditEventClicked(Event event) {
-        if (onlyAllowIfAccountExists()){
+        if (onlyAllowIfAccountExists()) {
             /* TODO: Replace this as soon as we have a way to check if the clicked user is the creator
              * Until then: Only allows a registered user to edit events
              */
@@ -486,20 +489,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    private void unsubscribeEvent(){
+    private void unsubscribeEvent() {
         if (singleEventListenerRegistration != null) {
             singleEventListenerRegistration.unsubscribe();
         }
     }
 
     private void attendEvent(String eventId, boolean isCreator) {
-        var userId = Helpers.readOwnUserId(this);
-        if (userId.isPresent()) {
+        var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null);
+        if (userId != null) {
             setStyleClicked();
             var subscribedEventInfos = new CurrentSubscribedEventData(eventId);
             subscribedEventHelpers.saveAttendingEvent(subscribedEventInfos);
             markerManager.getClusterManager().cluster();
-            var attendant = new Attendant(userId.get(), isCreator);
+            var attendant = new Attendant(userId, isCreator);
             backendHandler.addEventAttendant(eventId, attendant);
         } else {
             Log.e("eventAttend", "No own user if found.");
@@ -507,12 +510,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void leaveEvent(String eventId) {
-        var userId = Helpers.readOwnUserId(this);
-        if (userId.isPresent()) {
+        var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null);
+        if (userId != null) {
             setStyleDefault();
             subscribedEventHelpers.removeAttendingEvent();
             markerManager.getClusterManager().cluster();
-            backendHandler.removeEventAttendantById(eventId, userId.get());
+            backendHandler.removeEventAttendantById(eventId, userId);
 
             if (eventCreationBottomSheetFragment != null) {
                 eventCreationBottomSheetFragment.update(null,
@@ -550,14 +553,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     /**
      * All other functionalities
      */
-    
-    private boolean onlyAllowIfAccountExists() {
-        boolean accountExists = this.getSharedPreferences(ACCOUNT, MODE_PRIVATE).getBoolean(ACCOUNT_EXISTS, false);
 
-        if (accountExists){
+    private boolean onlyAllowIfAccountExists() {
+        boolean accountExists = this.userAccountHelpers.readBooleanValue(ACCOUNT_EXISTS, false);
+
+        if (accountExists) {
             return true;
-        }
-        else {
+        } else {
             Toast toast = Toast.makeText(this, getResources().getString(R.string.toast_require_local_account), Toast.LENGTH_LONG);
             toast.setGravity(Gravity.CENTER, 0, 0);
             toast.show();
