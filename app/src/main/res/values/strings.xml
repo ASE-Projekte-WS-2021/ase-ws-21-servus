@@ -38,8 +38,9 @@
     <string name="event_details_default_attendees">% X / Y %</string>
     <string name="event_details_label_genre">Mode</string>
     <string name="event_details_default_genre">%meetup-mode%</string>
-    <string name="event_details_label_creator">Creator</string>
-    <string name="event_details_default_creator">%CREATOR%</string>
+    <string name="event_details_label_role_creator">Creator</string>
+    <string name="event_details_label_role_attendee">Attendee</string>
+    <string name="event_details_default_creator">%USERNAME%</string>
     <string name="event_details_button_attend">Attend to Meet-Up</string>
     <string name="event_details_button_withdraw">Withdraw attendance</string>
     <string name="event_details_button_edit">Edit Meet-Up</string>
@@ -110,4 +111,6 @@
     <string name="toast_storage_permission_error">Please grant storage permission before using this feature.</string>
     <string name="toast_require_local_account">To use this functionality a local account is required. Please consider creating one.</string>
     <string name="toast_fill_required_fields">Please fill in all required fields.</string>
+    <string name="event_details_total_attendees">[X / Y]</string>
+    <string name="event_details_total_attendees_count">out of</string>
 </resources>

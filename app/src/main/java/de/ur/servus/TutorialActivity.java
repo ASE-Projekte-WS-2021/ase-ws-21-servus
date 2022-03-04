@@ -12,6 +12,8 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
+import de.ur.servus.utils.TutorialManager;
+
 public class TutorialActivity extends AppCompatActivity implements ViewPager.OnPageChangeListener {
 
     public static ViewPager viewPager;

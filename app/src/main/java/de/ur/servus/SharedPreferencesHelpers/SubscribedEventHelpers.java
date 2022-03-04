@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 
 import de.ur.servus.CustomLocationManager;
+import de.ur.servus.core.UserProfile;
 import de.ur.servus.eventcreationbottomsheet.EventCreationData;
 import de.ur.servus.Helpers;
 import de.ur.servus.core.Attendant;
@@ -85,7 +86,7 @@ public class SubscribedEventHelpers {
         editor.apply();
     }
 
-    public void createEvent(CustomLocationManager locationManager, EventCreationData inputEventData, EventListener<String> afterCreationListener) {
+    public void createEvent(CustomLocationManager locationManager, EventCreationData inputEventData, EventListener<String> afterCreationListener, UserProfile localUser) {
         locationManager.getLastObservedLocation(latLng -> {
             if (!latLng.isPresent()) {
                 Log.e("eventCreation", "No location was provided.");
@@ -98,14 +99,14 @@ public class SubscribedEventHelpers {
                 return;
             }
 
-            var owner = new Attendant(userId.get(), true);
             var attendants = new ArrayList<Attendant>();
-            attendants.add(owner);
+            //TODO: Check if necessary for creator identification, if not, this can be deleted in the future; got commented due to a double add of attendant creator (user will be added as attendant in MainActivities attendEvent() already)
+            //var owner = new Attendant(userId.get(), true, localUser.getUserName(), localUser.getUserGender(), localUser.getUserCourse(), localUser.getUserBirthdate(), "tbd"); //TODO: IF NECESSARY, url for profile picture still needed
+            //attendants.add(owner);
 
             Event event = new Event(inputEventData.name, inputEventData.description, latLng.get(), attendants, inputEventData.genre);
 
             FirestoreBackendHandler.getInstance().createNewEvent(event, afterCreationListener);
-
         });
     }
 
