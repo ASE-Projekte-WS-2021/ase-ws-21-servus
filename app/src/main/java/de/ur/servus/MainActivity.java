@@ -404,7 +404,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // create markers
                 events.forEach(event -> {
-                    MarkerClusterItem marker = new MarkerClusterItem(event.getLocation(), event.getName(), event.getName(), event.getId());
+                    MarkerClusterItem marker = new MarkerClusterItem(event.getLocation(), event.getName(), event.getName(), event.getId(), event.getGenre());
                     markerManager.getClusterManager().addItem(marker);
                 });
 
