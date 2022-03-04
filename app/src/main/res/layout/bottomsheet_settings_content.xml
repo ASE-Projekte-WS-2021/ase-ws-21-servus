@@ -7,9 +7,29 @@
         style="@style/mLabelContainer"
         android:id="@+id/settings_profile_name_container" >
 
+        <!--
         <TextView
             style="@style/mLabels"
-            android:text="@string/settings_profile_name_label" />
+            android:text="@string/settings_profile_name_label" />-->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/mLabels"
+                android:layout_width="wrap_content"
+                android:text="@string/settings_profile_name_label" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:translationY="-4dp"
+                android:textStyle="bold"
+                android:text="@string/required_indicator" />
+        </LinearLayout>
 
         <EditText
             style="@style/mEditTexts"
@@ -25,9 +45,24 @@
         style="@style/mLabelContainer"
         android:id="@+id/settings_gender_container" >
 
-        <TextView
-            style="@style/mLabels"
-            android:text="@string/settings_gender_label" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/mLabels"
+                android:layout_width="wrap_content"
+                android:text="@string/settings_gender_label" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:translationY="-4dp"
+                android:textStyle="bold"
+                android:text="@string/required_indicator" />
+        </LinearLayout>
 
         <RadioGroup
             android:id="@+id/settings_gender_selection"
@@ -64,9 +99,24 @@
         style="@style/mLabelContainer"
         android:id="@+id/settings_age_container" >
 
-        <TextView
-            style="@style/mLabels"
-            android:text="@string/settings_age_label" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <TextView
+                style="@style/mLabels"
+                android:layout_width="wrap_content"
+                android:text="@string/settings_age_label" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:translationY="-4dp"
+                android:textStyle="bold"
+                android:text="@string/required_indicator" />
+        </LinearLayout>
 
         <DatePicker
             style="@style/mDatePickerStyle"

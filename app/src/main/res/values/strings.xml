@@ -75,27 +75,25 @@
     <string name="permission_denied_content">We are sorry! Without your permission to access your current phone location and storage we can\'t or just partially offer you our most valuable benefits: create or participate at meetups. We would gladly appreciate if you would reconsider an authorization. Thank you!</string>
     <string name="permission_denied_link">Go to permission settings</string>
 
-    <string name="settings_profile_name_label">Whats is your name?</string>
+    <string name="settings_profile_name_label">Whats is your name?&#160;</string>
     <string name="settings_profile_name">%USERNAME%</string>
     <string name="settings_profile_name_hint">Prename Lastname</string>
-    <string name="settings_age_label">When is your birthday?</string>
+    <string name="settings_gender_label">What is your gender?&#160;</string>
+    <string name="settings_gender_hint">Gender</string>
+    <string name="settings_gender">% GENDER %</string>
+    <string name="settings_age_label">When is your birthday?&#160;</string>
+    <string name="settings_gender_male">Male</string>
+    <string name="settings_gender_female">Female</string>
+    <string name="settings_gender_divers">Divers</string>
     <string name="settings_age">% XX.YY.ZZZZ %</string>
     <string name="settings_age_hint">Date of birth</string>
     <string name="settings_profile_picture_label">Set or swap your profile picture</string>
     <string name="settings_profile_picture_sublabel">Click on the image!</string>
-    <string name="settings_study_course_label">What do you study?</string>
+    <string name="settings_study_course_label">What do you study?&#160;</string>
     <string name="settings_study_course">% STUDY COURSE %</string>
-    <string name="settings_gender_label">What is your gender?</string>
-    <string name="settings_gender_hint">Gender</string>
-    <string name="settings_gender">% GENDER %</string>
     <string name="settings_study_course_hint">Course of study</string>
-    <string name="settings_show_vita">Save &amp; Preview</string>
     <string name="settings_profile_picture_picker">Select your profile picture</string>
-    <string name="settings_gender_male">Male</string>
-    <string name="settings_gender_female">Female</string>
-    <string name="settings_gender_divers">Divers</string>
-
-    <string name="toast_storage_permission_error">Please grant storage permission before using this feature.</string>
+    <string name="settings_show_vita">Save &amp; Preview</string>
 
     <string name="profilecard_name_label">Username</string>
     <string name="profilecard_name">No user found</string>
@@ -105,4 +103,11 @@
     <string name="profilecard_course">No course found</string>
     <string name="profilecard_gender_label">Gender</string>
     <string name="profilecard_gender">No gender found</string>
+    <string name="profilecard_course_404">N/A</string>
+
+    <string name="required_indicator">*</string>
+
+    <string name="toast_storage_permission_error">Please grant storage permission before using this feature.</string>
+    <string name="toast_require_local_account">To use this functionality a local account is required. Please consider creating one.</string>
+    <string name="toast_fill_required_fields">Please fill in all required fields.</string>
 </resources>

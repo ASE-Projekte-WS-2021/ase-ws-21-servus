@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import de.ur.servus.core.UserProfile;
@@ -83,12 +84,14 @@ public class ProfileCardFragment extends DialogFragment implements View.OnClickL
         ImageView iv_gender = inflatedView.findViewById(R.id.profilecard_gender_indicator);
         TextView tv_date = inflatedView.findViewById(R.id.profilecard_birthdate);
         TextView tv_course = inflatedView.findViewById(R.id.profilecard_course);
+        LinearLayout ll_course = inflatedView.findViewById(R.id.profilecard_course_container);
         RoundishImageView iv_picture = inflatedView.findViewById(R.id.profilecard_picture);
 
         tv_name.setText(pName);
         tv_date.setText(pBirthdate);
         iv_gender.setImageDrawable(getGenderDrawable(pGender));
-        tv_course.setText(pCourse);
+        if (pCourse == null || pCourse.equals("")) tv_course.setText(getResources().getString(R.string.profilecard_course_404));
+        else tv_course.setText(pCourse);
         iv_picture.setImageBitmap(pPicture);
 
         return inflatedView;
