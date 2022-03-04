@@ -17,4 +17,13 @@ public class GenreData {
             PARTY,
             SPORT
     };
+
+    public static Genre getGenreFromName(String genreName) {
+        for (var genre : allGenres) {
+            if (genre.getName().equals(genreName)) {
+                return genre;
+            }
+        }
+        return ACTIVITY;
+    }
 }

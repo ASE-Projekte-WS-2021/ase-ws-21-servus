@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="round_corner_radius">12dp</dimen>
+    <dimen name="custom_marker_image">50dp</dimen>
+    <dimen name="custom_marker_padding">7dp</dimen>
 </resources>
