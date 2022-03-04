@@ -193,23 +193,11 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
         ll_select_picture.setOnClickListener(v -> checkAndAskStoragePermission());
 
         btn_preview.setOnClickListener(v -> {
-            if (saveInputs()){
-
-                this.dismiss();
-
-                UserProfile ownProfile = new UserProfile(
-                        sharedPreferences.getString(ACCOUNT_ITEM_NAME, "DEF_NAME"),
-                        sharedPreferences.getString(ACCOUNT_ITEM_GENDER, "DEF_GENDER"),
-                        sharedPreferences.getString(ACCOUNT_ITEM_AGE, "DEF_BIRTHDATE"),
-                        sharedPreferences.getString(ACCOUNT_ITEM_COURSE, "DEF_COURSE"),
-                        avatarEditor.loadProfilePicture()
-                );
-
-                FragmentTransaction transaction;
-
-                transaction = getParentFragmentManager().beginTransaction();
+            if (saveInputs()){UserProfile ownProfile = Helpers.loadLocalAccountDataIntoUserProfile(activity);
                 ProfileCardFragment servusCard = ProfileCardFragment.newInstance(ownProfile);
-                transaction.add(R.id.root_layout, servusCard, servusCard.getTag());
+
+                FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+                transaction.add(servusCard, servusCard.getTag());
                 transaction.addToBackStack(null);
                 transaction.commit();
 

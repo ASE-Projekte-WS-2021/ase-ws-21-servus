@@ -95,7 +95,7 @@ class EventPOJO implements POJO<Event>{
                 this.name,
                 this.description,
                 new LatLng(this.location.get(0), this.location.get(1)),
-                this.attendants.stream().map(pojo -> new Attendant(pojo.getUserId(), pojo.isCreator())).collect(Collectors.toList()),
+                this.attendants.stream().map(pojo -> new Attendant(pojo.getUserId(), pojo.isCreator(), pojo.getUserName(), pojo.getUserGender(), pojo.getUserBirthdate(), pojo.getUserCourse(), pojo.getUserPicturePath())).collect(Collectors.toList()),
                 this.genre
         );
         event.setId(this.id);

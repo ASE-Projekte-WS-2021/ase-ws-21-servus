@@ -4,13 +4,15 @@ import android.graphics.Bitmap;
 
 public class UserProfile {
 
+    private final String userID;
     private final String name;
     private final String gender;
     private final String birthdate;
     private final String course;
     private final Bitmap picture;
 
-    public UserProfile(String name, String gender, String birthdate, String course, Bitmap picture) {
+    public UserProfile(String userID, String name, String gender, String birthdate, String course, Bitmap picture) {
+        this.userID = userID;
         this.name = name;
         this.gender = gender;
         this.birthdate = birthdate;
@@ -18,23 +20,27 @@ public class UserProfile {
         this.picture = picture;
     }
 
-    public String getName() {
+    public String getUserID() {
+        return userID;
+    }
+
+    public String getUserName() {
         return name;
     }
 
-    public String getGender() {
+    public String getUserGender() {
         return gender;
     }
 
-    public String getBirthdate() {
+    public String getUserBirthdate() {
         return birthdate;
     }
 
-    public String getCourse() {
+    public String getUserCourse() {
         return course;
     }
 
-    public Bitmap getPicture() {
+    public Bitmap getUserPicture() {
         return picture;
     }
 }

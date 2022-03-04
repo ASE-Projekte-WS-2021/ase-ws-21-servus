@@ -72,6 +72,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     CustomMarkerRenderer customMarkerRenderer;
 
     AvatarEditor avatarEditor;
+    UserProfile localProfile;
 
     @Nullable
     private GoogleMap mMap;
@@ -111,6 +112,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         subscribedEventHelpers = new SubscribedEventHelpers(this);
 
         Helpers.saveNewUserIdIfNotExisting(this);
+        localProfile = Helpers.loadLocalAccountDataIntoUserProfile(this);
 
         // when GPS is turned off, ask to turn it on. Starting to listen needs to be done in onCreate
         customLocationManager.addOnProviderDisabledListener(customLocationManager::showEnableGpsDialogIfNecessary);
@@ -137,7 +139,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         btn_creator = findViewById(R.id.btn_meetup);
         btn_creator.setOnClickListener(v -> {
-            // Add behavior for create button, if user is already subscribed to an event as attendant
             if (onlyAllowIfAccountExists()){
                 subscribedEventHelpers.ifSubscribedToEvent(
                     preferences -> {
@@ -299,7 +300,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onError(Exception e) {
                 // TODO handle errors
             }
-        });
+        }, localProfile);
 
         //close bottomsheet
         if (eventCreationBottomSheetFragment != null) {
@@ -374,10 +375,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         try {
             switch (currentNightMode) {
                 case Configuration.UI_MODE_NIGHT_NO:
-                    Log.d("Debug: ", "Light Mode");
+                    Log.d("UI Mode", "Light Mode");
                     return new MapStyleOptions(getResources().getString(R.string.map_light_mode));
                 case Configuration.UI_MODE_NIGHT_YES:
-                    Log.d("Debug: ", "Dark Mode");
+                    Log.d("UI Mode", "Dark Mode");
                     return new MapStyleOptions(getResources().getString(R.string.map_dark_mode));
                 default:
                     return new MapStyleOptions(getResources().getString(R.string.map_light_mode));
@@ -494,12 +495,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void attendEvent(String eventId, boolean isCreator) {
         var userId = Helpers.readOwnUserId(this);
+
+        localProfile = Helpers.loadLocalAccountDataIntoUserProfile(this);
+
         if (userId.isPresent()) {
             setStyleClicked();
             var subscribedEventInfos = new CurrentSubscribedEventData(eventId);
             subscribedEventHelpers.saveAttendingEvent(subscribedEventInfos);
             markerManager.getClusterManager().cluster();
-            var attendant = new Attendant(userId.get(), isCreator);
+            var attendant = new Attendant(userId.get(), isCreator, localProfile.getUserName(), localProfile.getUserGender(), localProfile.getUserBirthdate(), localProfile.getUserCourse(), "tbd"); // TODO
             backendHandler.addEventAttendant(eventId, attendant);
         } else {
             Log.e("eventAttend", "No own user if found.");
