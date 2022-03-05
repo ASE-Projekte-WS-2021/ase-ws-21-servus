@@ -361,7 +361,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     void animateZoomInCamera(LatLng latLng) {
         if (mMap != null) {
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10f));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, mMap.getCameraPosition().zoom));
         }
     }
 
@@ -373,18 +373,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private MapStyleOptions getMapStyle(int currentNightMode) {
         try {
-            switch (currentNightMode) {
-                case Configuration.UI_MODE_NIGHT_NO:
-                    Log.d("UI Mode", "Light Mode");
-                    return new MapStyleOptions(getResources().getString(R.string.map_light_mode));
-                case Configuration.UI_MODE_NIGHT_YES:
-                    Log.d("UI Mode", "Dark Mode");
-                    return new MapStyleOptions(getResources().getString(R.string.map_dark_mode));
-                default:
-                    return new MapStyleOptions(getResources().getString(R.string.map_light_mode));
+            if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+                return new MapStyleOptions(getResources().getString(R.string.map_dark_mode));
             }
+            return new MapStyleOptions(getResources().getString(R.string.map_light_mode));
         } catch (Resources.NotFoundException e) {
-            Log.e("Debug: ", "Can't find style. Error: ", e);
             return new MapStyleOptions(getResources().getString(R.string.map_light_mode));
         }
     }
@@ -392,7 +385,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public boolean onClusterClick(Cluster cluster) {
         animateZoomInCamera(cluster.getPosition());
-        return false;
+        return true;
     }
 
     @Override
@@ -401,7 +394,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         subscribeEvent(eventId);
         // TODO wait before initial data was fetched before showing bottom sheet
         showBottomSheet(detailsBottomSheetFragment);
-        return false;
+        return true;
     }
 
 
