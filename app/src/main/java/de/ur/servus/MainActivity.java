@@ -450,6 +450,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onEvent(Event event) {
                 var eventPreferences = eventHelpers.tryGetSubscribedEvent();
                 var attending = eventPreferences.eventId != null && eventPreferences.eventId.equals(event.getId());
+                var subscribedToAnyEvent = eventHelpers.tryGetSubscribedEvent().eventId != null;
 
                 // update details sheet
                 if (detailsBottomSheetFragment != null) {
@@ -459,6 +460,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     detailsBottomSheetFragment.update(
                             event,
                             attending,
+                            subscribedToAnyEvent,
                             isOwner,
                             (e, a) -> onDetailsAttendWithdrawClicked(e, a),
                             e -> onDetailsEditEventClicked(e)

@@ -50,7 +50,8 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     @Nullable
     private Event event;
 
-    private boolean attending = false;
+    private boolean attendingThisEvent = false;
+    private boolean attendingAnyEvent = false;
     private boolean isCreator = false;
 
     public DetailsBottomSheetFragment() {
@@ -76,14 +77,15 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         return view;
     }
 
-    public void update(Event event, boolean attending, boolean isCreator, OnAttendWithdrawClickListener onClickAttendWithdrawListener, Consumer<Event> onClickEditEventListener) {
+    public void update(Event event, boolean attendingThisEvent, boolean attendingAnyEvent, boolean isCreator, OnAttendWithdrawClickListener onClickAttendWithdrawListener, Consumer<Event> onClickEditEventListener) {
         this.event = event;
-        this.attending = attending;
+        this.attendingThisEvent = attendingThisEvent;
+        this.attendingAnyEvent = attendingAnyEvent;
         this.isCreator = isCreator;
         this.onClickAttendWithdrawListener = onClickAttendWithdrawListener;
         this.onClickEditEventListener = onClickEditEventListener;
 
-        if(this.isAdded()){
+        if (this.isAdded()) {
             tryUpdateView();
         }
     }
@@ -137,7 +139,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         // set listeners
         binding.eventDetailsButton.setOnClickListener(v -> {
             if (onClickAttendWithdrawListener != null) {
-                onClickAttendWithdrawListener.accept(event, attending);
+                onClickAttendWithdrawListener.accept(event, attendingThisEvent);
             }
         });
 
@@ -148,14 +150,21 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         });
 
         // style views
-        if (attending) {
+        // not attending an event => show attend button
+        // attending an event AND attending this event => show withdraw button
+        // attending an event AND NOT attending this event => show no button (for now)
+        if (!attendingAnyEvent) {
+            binding.eventDetailsButton.setVisibility(View.VISIBLE);
+            binding.eventDetailsButton.setText(R.string.event_details_button_attend);
+            binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners);
+            binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
+        } else if (attendingThisEvent) {
+            binding.eventDetailsButton.setVisibility(View.VISIBLE);
             binding.eventDetailsButton.setText(R.string.event_details_button_withdraw);
             binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
             binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_pink, view.getContext().getTheme()));
         } else {
-            binding.eventDetailsButton.setText(R.string.event_details_button_attend);
-            binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners);
-            binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
+            binding.eventDetailsButton.setVisibility(View.GONE);
         }
 
         binding.eventDetailsButtonEdit.setVisibility(isCreator ? View.VISIBLE : View.GONE);
