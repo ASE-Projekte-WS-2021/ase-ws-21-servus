@@ -2,21 +2,24 @@ package de.ur.servus;
 
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
-
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import de.ur.servus.core.UserProfile;
 import de.ur.servus.utils.RoundishImageView;
@@ -26,7 +29,7 @@ import de.ur.servus.utils.RoundishImageView;
  * Use the {@link ProfileCardFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ProfileCardFragment extends DialogFragment implements View.OnClickListener {
+public class ProfileCardFragment extends DialogFragment {
 
     private static final String PROFILE_NAME = "profileName";
     private static final String PROFILE_GENDER = "profileGender";
@@ -40,8 +43,6 @@ public class ProfileCardFragment extends DialogFragment implements View.OnClickL
     private String pCourse;
     private Bitmap pPicture;
 
-    private View profileCardBackground;
-
     public ProfileCardFragment() {
         // Required empty public constructor
     }
@@ -50,14 +51,28 @@ public class ProfileCardFragment extends DialogFragment implements View.OnClickL
         ProfileCardFragment fragment = new ProfileCardFragment();
 
         Bundle args = new Bundle();
-        args.putString(PROFILE_NAME, user.getName());
-        args.putString(PROFILE_GENDER, user.getGender());
-        args.putString(PROFILE_BIRTHDATE, user.getBirthdate());
-        args.putString(PROFILE_COURSE, user.getCourse());
-        args.putParcelable(PROFILE_PICTURE, user.getPicture());
+        args.putString(PROFILE_NAME, user.getUserName());
+        args.putString(PROFILE_GENDER, user.getUserGender());
+        args.putString(PROFILE_BIRTHDATE, user.getUserBirthdate());
+        args.putString(PROFILE_COURSE, user.getUserCourse());
+        args.putParcelable(PROFILE_PICTURE, user.getUserPicture());
         fragment.setArguments(args);
 
         return fragment;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Window window = getDialog().getWindow();
+
+        // Set the displayed position where the dialog should be displayed on screen
+        window.setGravity(Gravity.TOP);
+        WindowManager.LayoutParams params = window.getAttributes();
+        params.y = 128;
+        window.setAttributes(params);
+
     }
 
     @Override
@@ -77,8 +92,13 @@ public class ProfileCardFragment extends DialogFragment implements View.OnClickL
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View inflatedView = inflater.inflate(R.layout.fragment_profile_card, container, false);
+        //inflatedView.bringToFront();
 
-        profileCardBackground = inflatedView.findViewById(R.id.profilecard_background);
+        // Set transparent background and no title
+        if (getDialog() != null && getDialog().getWindow() != null) {
+            getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        }
 
         TextView tv_name = inflatedView.findViewById(R.id.profilecard_name);
         ImageView iv_gender = inflatedView.findViewById(R.id.profilecard_gender_indicator);
@@ -100,15 +120,12 @@ public class ProfileCardFragment extends DialogFragment implements View.OnClickL
     @SuppressLint("UseCompatLoadingForDrawables")
     private Drawable getGenderDrawable(String gender) {
         if (gender.equals(getResources().getString(R.string.settings_gender_male))) {
-            Log.i("ProfileCard: ", "m");
             return getResources().getDrawable(R.drawable.ic_gender_male_checked);
         }
         else if (gender.equals(getResources().getString(R.string.settings_gender_female))){
-            Log.i("ProfileCard: ", "f");
             return getResources().getDrawable(R.drawable.ic_gender_female_checked);
         }
         else {
-            Log.i("ProfileCard: ", "d");
             return getResources().getDrawable(R.drawable.ic_gender_divers_checked);
         }
     }
@@ -117,20 +134,5 @@ public class ProfileCardFragment extends DialogFragment implements View.OnClickL
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        /*
-        if (pName != null) Log.i("ProfileCard: ", pName);
-        if (pBirthdate != null) Log.i("ProfileCard: ", pBirthdate);
-        if (pGender != null) Log.i("ProfileCard: ", pGender);
-        if (pCourse != null) Log.i("ProfileCard: ", pCourse);
-        if (pPicture != null) Log.i("ProfileCard: ", pPicture.toString());
-        */
-
-        profileCardBackground.setOnClickListener(this);
-    }
-
-    @Override
-    public void onClick(View v) {
-        if (v.getId() != R.id.profilecard_card) this.dismiss();
     }
 }

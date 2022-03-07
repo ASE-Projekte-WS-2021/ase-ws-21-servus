@@ -43,6 +43,7 @@ public class UserAccountHelpers {
 
     public UserProfile getOwnProfile(AvatarEditor avatarEditor) {
         return new UserProfile(
+                readStringValue(UserAccountKeys.ACCOUNT_ITEM_ID, null),
                 readStringValue(UserAccountKeys.ACCOUNT_ITEM_NAME, ""),
                 readStringValue(UserAccountKeys.ACCOUNT_ITEM_GENDER, ""),
                 readStringValue(UserAccountKeys.ACCOUNT_ITEM_AGE, ""),

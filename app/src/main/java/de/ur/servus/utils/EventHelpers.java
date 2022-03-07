@@ -3,8 +3,6 @@ package de.ur.servus.utils;
 
 import static android.content.Context.MODE_PRIVATE;
 
-import static de.ur.servus.utils.UserAccountKeys.ACCOUNT_ITEM_ID;
-
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -15,11 +13,11 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 
 import de.ur.servus.CustomLocationManager;
-import de.ur.servus.eventcreationbottomsheet.EventCreationData;
 import de.ur.servus.core.Attendant;
 import de.ur.servus.core.Event;
 import de.ur.servus.core.EventListener;
 import de.ur.servus.core.firebase.FirestoreBackendHandler;
+import de.ur.servus.eventcreationbottomsheet.EventCreationData;
 
 /**
  * Contains helper functions to save events to the database and manage shared preferences.
@@ -45,8 +43,6 @@ public class EventHelpers {
      */
     public void ifSubscribedToEvent(@Nullable Consumer<CurrentSubscribedEventData> then, @Nullable Runnable els) {
         var eventPreferences = tryGetSubscribedEvent();
-
-        Log.d("dbg", "subscirbed to event?: " + (eventPreferences.eventId != null));
 
         if (eventPreferences.eventId != null) {
             if (then != null) {
@@ -90,27 +86,29 @@ public class EventHelpers {
     }
 
     public void createEvent(CustomLocationManager locationManager, EventCreationData inputEventData, EventListener<String> afterCreationListener) {
+        var avatarEditor = new AvatarEditor(activity);
+        var userAccountHelpers = new UserAccountHelpers(activity);
+
         locationManager.getLastObservedLocation(latLng -> {
             if (!latLng.isPresent()) {
                 Log.e("eventCreation", "No location was provided.");
                 return;
             }
-            var userAccountHelpers = new UserAccountHelpers(activity);
-            var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null);
+            var profile = userAccountHelpers.getOwnProfile(avatarEditor);
 
-            if (userId == null) {
+            if (profile.getUserID() == null) {
                 Log.e("eventCreation", "No own user id found.");
                 return;
             }
 
-            var owner = new Attendant(userId, true);
+            // TODO add profile picture path
+            var owner = Attendant.fromUserProfile(profile, true, "tbd");
             var attendants = new ArrayList<Attendant>();
             attendants.add(owner);
 
             Event event = new Event(inputEventData.name, inputEventData.description, latLng.get(), attendants, inputEventData.genre);
 
             FirestoreBackendHandler.getInstance().createNewEvent(event, afterCreationListener);
-
         });
     }
 

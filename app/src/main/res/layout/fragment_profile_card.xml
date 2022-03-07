@@ -1,29 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@drawable/style_fragment_profilecard"
     tools:context=".ProfileCardFragment">
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/servus_background_transparent"
-        android:id="@+id/profilecard_background" />
 
     <LinearLayout
         android:id="@+id/profilecard_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="64dp"
-        android:background="@drawable/style_fragment_profilecard"
         android:clickable="true"
         android:orientation="horizontal"
-        android:paddingVertical="8dp"
-        android:paddingEnd="8dp"
-        android:paddingStart="12dp"
+        android:paddingVertical="12dp"
+        android:paddingEnd="12dp"
+        android:paddingStart="16dp"
         tools:ignore="DisableBaselineAlignment,KeyboardInaccessibleWidget,RtlSymmetry">
 
         <LinearLayout

@@ -138,7 +138,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         btn_creator = findViewById(R.id.btn_meetup);
         btn_creator.setOnClickListener(v -> {
-            // Add behavior for create button, if user is already subscribed to an event as attendant
             if (onlyAllowIfAccountExists()) {
                 eventHelpers.ifSubscribedToEvent(
                         preferences -> {
@@ -361,7 +360,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     void animateZoomInCamera(LatLng latLng) {
         if (mMap != null) {
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 10f));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, mMap.getCameraPosition().zoom));
         }
     }
 
@@ -373,18 +372,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private MapStyleOptions getMapStyle(int currentNightMode) {
         try {
-            switch (currentNightMode) {
-                case Configuration.UI_MODE_NIGHT_NO:
-                    Log.d("Debug: ", "Light Mode");
-                    return new MapStyleOptions(getResources().getString(R.string.map_light_mode));
-                case Configuration.UI_MODE_NIGHT_YES:
-                    Log.d("Debug: ", "Dark Mode");
-                    return new MapStyleOptions(getResources().getString(R.string.map_dark_mode));
-                default:
-                    return new MapStyleOptions(getResources().getString(R.string.map_light_mode));
+            if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+                return new MapStyleOptions(getResources().getString(R.string.map_dark_mode));
             }
+            return new MapStyleOptions(getResources().getString(R.string.map_light_mode));
         } catch (Resources.NotFoundException e) {
-            Log.e("Debug: ", "Can't find style. Error: ", e);
             return new MapStyleOptions(getResources().getString(R.string.map_light_mode));
         }
     }
@@ -392,7 +384,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public boolean onClusterClick(Cluster cluster) {
         animateZoomInCamera(cluster.getPosition());
-        return false;
+        return true;
     }
 
     @Override
@@ -401,7 +393,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         subscribeEvent(eventId);
         // TODO wait before initial data was fetched before showing bottom sheet
         showBottomSheet(detailsBottomSheetFragment);
-        return false;
+        return true;
     }
 
 
@@ -501,12 +493,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void attendEvent(String eventId, boolean isCreator) {
-        var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null);
-        if (userId != null) {
+        var localProfile = userAccountHelpers.getOwnProfile(avatarEditor);
+
+        if (localProfile.getUserID() != null) {
             setStyleClicked();
             var subscribedEventInfos = new CurrentSubscribedEventData(eventId);
             eventHelpers.saveAttendingEvent(subscribedEventInfos);
-            var attendant = new Attendant(userId, isCreator);
+
+            // TODO add profile picture path
+            var attendant = new Attendant(localProfile.getUserID(), isCreator, localProfile.getUserName(), localProfile.getUserGender(), localProfile.getUserBirthdate(), localProfile.getUserCourse(), "tbd");
             backendHandler.addEventAttendant(eventId, attendant)
                     .addOnSuccessListener(unused -> redrawClusters());
         } else {

@@ -1,4 +1,4 @@
-package de.ur.servus;
+package de.ur.servus.utils;
 
 import android.app.Activity;
 import android.content.Context;
@@ -10,6 +10,9 @@ import androidx.annotation.NonNull;
 import androidx.viewpager.widget.PagerAdapter;
 
 import java.util.Objects;
+
+import de.ur.servus.R;
+import de.ur.servus.SettingsBottomSheetFragment;
 
 public class TutorialManager extends PagerAdapter {
 
