@@ -479,7 +479,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onError(Exception e) {
-                Log.e("LoadSingleEvent", e.getMessage());
+                Log.e("LoadSingleEvent", e.getMessage() + Log.getStackTraceString(e));
                 eventHelpers.removeAttendingEvent();
                 setStyleDefault();
             }
