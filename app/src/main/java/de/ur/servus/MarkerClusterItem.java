@@ -5,38 +5,35 @@ import androidx.annotation.Nullable;
 
 import com.google.android.gms.maps.model.LatLng;
 
-public class MarkerClusterItem implements ClusterItem, com.google.maps.android.clustering.ClusterItem {
-    private final LatLng latLng;
-    private final String title;
-    private final String mSnippet;
-    private final String eventId;
+import de.ur.servus.core.Event;
 
-    public MarkerClusterItem(LatLng latLng, String title, String mSnippet, String eventId){
-        this.latLng = latLng;
-        this.title = title;
-        this.mSnippet = mSnippet;
-        this.eventId = eventId;
+public class MarkerClusterItem implements ClusterItem, com.google.maps.android.clustering.ClusterItem {
+    private final Event event;
+
+    public MarkerClusterItem(@NonNull Event event){
+        this.event = event;
     }
 
-    public String getEventId(){
-        return eventId;
+    public Event getEvent() {
+        return event;
     }
 
     @NonNull
     @Override
     public LatLng getPosition() {
-        return latLng;
+        return event.getLocation();
     }
 
     @Nullable
     @Override
     public String getTitle() {
-        return title;
+        return event.getName();
     }
 
     @Nullable
     @Override
     public String getSnippet() {
-        return mSnippet;
+        return "";
     }
+
 }

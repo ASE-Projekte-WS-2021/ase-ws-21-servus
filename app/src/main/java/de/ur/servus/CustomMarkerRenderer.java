@@ -26,9 +26,12 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
     @Override
     protected void onBeforeClusterItemRendered(@NonNull MarkerClusterItem item, @NonNull MarkerOptions markerOptions) {
         super.onBeforeClusterItemRendered(item, markerOptions);
+        var event = item.getEvent();
 
         eventHelpers.ifSubscribedToEvent(currentSubscribedEventData -> {
-            if(!item.getEventId().equals(currentSubscribedEventData.eventId)){
+            if (event.getId() == null) {
+                markerOptions.visible(false);
+            } else if (!event.getId().equals(currentSubscribedEventData.eventId)) {
                 markerOptions.alpha(0.5f);
             }
         }, null);

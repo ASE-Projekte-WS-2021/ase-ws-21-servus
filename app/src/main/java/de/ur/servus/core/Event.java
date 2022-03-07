@@ -57,4 +57,9 @@ public class Event {
         var user = attendants.stream().filter(attendant -> Objects.equals(attendant.getUserId(), userId)).findFirst();
         return user.isPresent() && user.get().isCreator();
     }
+
+    public boolean isUserAttending(String userId) {
+        var user = attendants.stream().filter(attendant -> Objects.equals(attendant.getUserId(), userId)).findFirst();
+        return user.isPresent();
+    }
 }
