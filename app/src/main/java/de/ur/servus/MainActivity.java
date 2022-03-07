@@ -502,8 +502,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             // TODO add profile picture path
             var attendant = new Attendant(localProfile.getUserID(), isCreator, localProfile.getUserName(), localProfile.getUserGender(), localProfile.getUserBirthdate(), localProfile.getUserCourse(), "tbd");
-            backendHandler.addEventAttendant(eventId, attendant)
-                    .addOnSuccessListener(unused -> redrawClusters());
+            backendHandler.addEventAttendant(eventId, attendant);
         } else {
             Log.e("eventAttend", "No own user id found.");
         }
@@ -514,8 +513,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if (userId != null) {
             setStyleDefault();
             eventHelpers.removeAttendingEvent();
-            backendHandler.removeEventAttendantById(eventId, userId)
-                    .addOnSuccessListener(unused -> redrawClusters());
+            backendHandler.removeEventAttendantById(eventId, userId);
 
             if (eventCreationBottomSheetFragment != null) {
                 eventCreationBottomSheetFragment.update(null,

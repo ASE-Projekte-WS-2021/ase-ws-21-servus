@@ -25,7 +25,6 @@ import de.ur.servus.eventcreationbottomsheet.EventCreationData;
 public class EventHelpers {
     public static final String CURRENT_EVENT = "currentEvent";
     public static final String CURRENT_EVENT_ITEM_ID = "id";
-    private final String NO_EVENT = "none";
 
     private final Activity activity;
     private final SharedPreferences sharedPreferences;
@@ -61,8 +60,7 @@ public class EventHelpers {
      * @return An object, that may be an event id, or may be null. Needs to be checked before using.
      */
     public CurrentSubscribedEventData tryGetSubscribedEvent() {
-        String eventId = sharedPreferences.getString(CURRENT_EVENT_ITEM_ID, NO_EVENT);
-        eventId = !eventId.equals(NO_EVENT) ? eventId : null;
+        String eventId = sharedPreferences.getString(CURRENT_EVENT_ITEM_ID, null);
 
         return new CurrentSubscribedEventData(eventId);
     }
@@ -81,7 +79,7 @@ public class EventHelpers {
      */
     public void removeAttendingEvent() {
         var editor = sharedPreferences.edit();
-        editor.putString(CURRENT_EVENT_ITEM_ID, NO_EVENT);
+        editor.remove(CURRENT_EVENT_ITEM_ID);
         editor.apply();
     }
 

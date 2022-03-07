@@ -12,17 +12,22 @@ import androidx.appcompat.content.res.AppCompatResources;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
 
+import java.util.Objects;
+
 import de.ur.servus.utils.EventHelpers;
+import de.ur.servus.utils.UserAccountHelpers;
 
 public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterItem> {
 
     private final EventHelpers eventHelpers;
+    private final UserAccountHelpers userAccountHelpers;
     private final IconGenerator iconGenerator;
     private final ImageView imageView;
     private final int markerWidth;
@@ -31,6 +36,7 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
     public CustomMarkerRenderer(Activity activity, SharedPreferences sharedPreferences, GoogleMap map, ClusterManager<MarkerClusterItem> clusterManager) {
         super(activity, map, clusterManager);
         this.eventHelpers = new EventHelpers(activity);
+        this.userAccountHelpers = new UserAccountHelpers(activity);
 
         iconGenerator = new IconGenerator(activity.getApplicationContext());
         imageView = new ImageView(activity.getApplicationContext());
@@ -49,20 +55,23 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
     @Override
     protected void onBeforeClusterItemRendered(@NonNull MarkerClusterItem item, @NonNull MarkerOptions markerOptions) {
         super.onBeforeClusterItemRendered(item, markerOptions);
-        var event = item.getEvent();
 
-        eventHelpers.ifSubscribedToEvent(currentSubscribedEventData -> {
-            if (event.getId() == null) {
-                markerOptions.visible(false);
-            } else if (!event.getId().equals(currentSubscribedEventData.eventId)) {
-                markerOptions.alpha(0.5f);
-            }
-        }, null);
+        var alpha = getAlphaForClusterItem(item);
+        markerOptions.alpha(alpha);
 
         imageView.setImageResource(item.getGenrePicture());
         Bitmap icon = iconGenerator.makeIcon();
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(item.getTitle());
 
+    }
+
+    @Override
+    protected void onClusterItemUpdated(@NonNull MarkerClusterItem item, @NonNull Marker marker) {
+        super.onClusterItemUpdated(item, marker);
+
+        var alpha = getAlphaForClusterItem(item);
+
+        marker.setAlpha(alpha);
     }
 
     @Override
@@ -72,11 +81,39 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
 
     @Override
     protected int getColor(int clusterSize) {
-       if(clusterSize < 10 ){
+        if (clusterSize < 10) {
             return Color.rgb(108, 91, 123);
         } else {
             return Color.rgb(53, 92, 125);
         }
 
+    }
+
+    /**
+     * Generate alpha value for marker, depending on the user attending the event.
+     *
+     * @param item
+     * @return
+     */
+    private float getAlphaForClusterItem(MarkerClusterItem item) {
+        var event = item.getEvent();
+
+        var currentSubscribedEventData = eventHelpers.tryGetSubscribedEvent();
+
+        // event does not exist!? just don't show it. Should not happen.
+        if (event.getId() == null) {
+            return 0f;
+        }
+
+        // if user is subscribed to an event, return every other half transparent
+        if (currentSubscribedEventData.eventId != null) {
+            if (Objects.equals(currentSubscribedEventData.eventId, event.getId())) {
+                return 1f;
+            } else {
+                return 0.5f;
+            }
+        }
+
+        return 1f;
     }
 }

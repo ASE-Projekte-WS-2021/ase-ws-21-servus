@@ -146,11 +146,6 @@ public class FirestoreBackendHandler implements BackendHandler {
 
 
     public void updateEvent(String eventId, Map<String, Object> newEventData, @Nullable Runnable listener) {
-//        EventPOJO pojo = new EventPOJO(newEventData);
-//        var dataMap = pojo.toFieldMap();
-        // remove id, because it is not saved directly in document
-//        dataMap.remove("id");
-
         db.collection(COLLECTION).document(eventId).update(newEventData)
                 .addOnSuccessListener(doc -> {
                     if (listener != null) {
