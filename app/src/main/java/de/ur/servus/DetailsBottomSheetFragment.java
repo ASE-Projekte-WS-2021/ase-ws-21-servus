@@ -2,7 +2,6 @@ package de.ur.servus;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -11,12 +10,9 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
@@ -30,6 +26,8 @@ import javax.annotation.Nullable;
 import de.ur.servus.core.Attendant;
 import de.ur.servus.core.Event;
 import de.ur.servus.core.UserProfile;
+import de.ur.servus.databinding.BottomsheetParticipantAttendeeBinding;
+import de.ur.servus.databinding.BottomsheetParticipantBinding;
 
 interface OnAttendWithdrawClickListener extends BiConsumer<Event, Boolean> {}
 
@@ -40,24 +38,10 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     @Nullable
     private Activity activity;
     @Nullable
-    private Context context;
-    @Nullable
     BottomSheetBehavior<View> behavior;
 
     @Nullable
-    private Button btn_attend_withdraw;
-    @Nullable
-    private Button btn_edit_event;
-    @Nullable
-    private TextView details_eventname;
-    @Nullable
-    private TextView details_description;
-    @Nullable
-    private LinearLayout details_attendees;
-    @Nullable
-    private TextView details_total_attendees;
-    @Nullable
-    private TextView details_genre;
+    private BottomsheetParticipantBinding binding;
 
     @Nullable
     private OnAttendWithdrawClickListener onClickAttendWithdrawListener;
@@ -66,8 +50,9 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     @Nullable
     private Event event;
 
-    private boolean attending = false;
-    private boolean enableEdit = false;
+    private boolean attendingThisEvent = false;
+    private boolean attendingAnyEvent = false;
+    private boolean isCreator = false;
 
     public DetailsBottomSheetFragment() {
     }
@@ -80,36 +65,29 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
     @SuppressLint("SetTextI18n")
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        view = inflater.inflate(R.layout.bottomsheet_participant, container, false);
+        binding = BottomsheetParticipantBinding.inflate(inflater, container, false);
+        view = binding.getRoot();
 
-        context = getContext();
-        activity = (Activity) context;
-
-        if (view != null) {
-            details_eventname = view.findViewById(R.id.event_details_eventname);
-            details_description = view.findViewById(R.id.event_details_description);
-            details_attendees = view.findViewById(R.id.event_details_attendees);
-            details_total_attendees = view.findViewById(R.id.event_details_total_attendee_count);
-            btn_attend_withdraw = view.findViewById(R.id.event_details_button);
-            details_genre = view.findViewById(R.id.event_details_genre);
-            btn_edit_event = view.findViewById(R.id.event_details_button_edit);
-        }
+        activity = (Activity) getContext();
 
         tryUpdateView();
 
         return view;
     }
 
-    public void update(Event event, boolean attending, boolean enableEdit, OnAttendWithdrawClickListener onClickAttendWithdrawListener, Consumer<Event> onClickEditEventListener) {
+    public void update(Event event, boolean attendingThisEvent, boolean attendingAnyEvent, boolean isCreator, OnAttendWithdrawClickListener onClickAttendWithdrawListener, Consumer<Event> onClickEditEventListener) {
         this.event = event;
-        this.attending = attending;
-        this.enableEdit = enableEdit;
+        this.attendingThisEvent = attendingThisEvent;
+        this.attendingAnyEvent = attendingAnyEvent;
+        this.isCreator = isCreator;
         this.onClickAttendWithdrawListener = onClickAttendWithdrawListener;
         this.onClickEditEventListener = onClickEditEventListener;
 
-        tryUpdateView();
+        if (this.isAdded()) {
+            tryUpdateView();
+        }
     }
 
     @Override
@@ -137,95 +115,113 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
      */
     @SuppressLint("SetTextI18n")
     private void tryUpdateView() {
-        if (details_eventname == null || details_description == null || details_attendees == null || event == null || btn_attend_withdraw == null || details_genre == null || view == null || btn_edit_event == null) {
+        if (view == null || binding == null || event == null || activity == null) {
             return;
         }
 
         // set content
-        details_eventname.setText(event.getName());
-        details_description.setText(event.getDescription());
-        details_genre.setText(event.getGenre());
+        binding.eventDetailsEventname.setText(event.getName());
+        binding.eventDetailsDescription.setText(event.getDescription());
+        binding.eventDetailsGenre.setText(event.getGenre());
 
         String totalAttendeeCount = "X";
-        details_total_attendees.setText(event.getAttendants().size() + " " + getResources().getString(R.string.event_details_total_attendees_count) + " " + totalAttendeeCount);
+        binding.eventDetailsTotalAttendeeCount.setText(event.getAttendants().size() + " " + view.getContext().getResources().getString(R.string.event_details_total_attendees_count) + " " + totalAttendeeCount);
 
-        if (details_attendees.getChildCount() >= 0){
-            details_attendees.removeAllViews();
-            for (int i = 0; i < event.getAttendants().size(); i++){
-                Attendant current = event.getAttendants().get(i);
-
-                @SuppressLint("InflateParams")
-                View ll_attendee = getLayoutInflater().inflate(R.layout.bottomsheet_participant_attendee, null);
-                LinearLayout ll_data = ll_attendee.findViewById(R.id.event_details_attendee_data_container);
-                TextView tv_role = ll_attendee.findViewById(R.id.event_details_attendee_role);
-                TextView tv_name = ll_attendee.findViewById(R.id.event_details_attendee_name);
-                ImageView iv_dismiss_user = ll_attendee.findViewById(R.id.event_details_attendee_dismiss);
-
-                // Set role of attendee
-                if (current.isCreator()) tv_role.setText(getResources().getString(R.string.event_details_label_role_creator));
-                else tv_role.setText(getResources().getString(R.string.event_details_label_role_attendee));
-
-                // Set name of attendee
-                tv_name.setText(current.getUserName());
-
-                // Fetch profile picture(s) separately and decode to a bitmap
-                Bitmap currentPicture = BitmapFactory.decodeResource(context.getResources(), R.drawable.img_placeholder_avatar);
-                if (current.getUserPicturePath() != null && !current.getUserPicturePath().equals("")){
-                    //TODO: Load Image from Firebase
-                }
-
-                // Create a UserProfile out of all attendee data
-                UserProfile attendeeProfile = new UserProfile(current.getUserId(), current.getUserName(), current.getUserGender(), current.getUserBirthdate(), current.getUserCourse(), currentPicture);
-
-                // Add functionality for the on click
-                ll_data.setTag(attendeeProfile);
-                iv_dismiss_user.setTag(attendeeProfile);
-
-                ll_data.setOnClickListener(v -> {
-                    // When clicked on the data, show servus card
-                    ProfileCardFragment servusCard = ProfileCardFragment.newInstance((UserProfile) v.getTag());
-
-                    FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
-                    transaction.add(servusCard, servusCard.getTag());
-                    transaction.addToBackStack(null);
-                    transaction.commit();
-                });
-
-                iv_dismiss_user.setOnClickListener(v -> {
-                    UserProfile user = (UserProfile) v.getTag();
-
-                    // TODO: Replace Toast with actual removement
-                    Toast.makeText(activity, "User " + user.getUserID() + " is not yet able to be removed", Toast.LENGTH_SHORT).show();
-                });
-
-                details_attendees.addView(ll_attendee, i);
+        if (binding.eventDetailsAttendeesContainer.getChildCount() >= 0) {
+            binding.eventDetailsAttendeesContainer.removeAllViews();
+            for (int i = 0; i < event.getAttendants().size(); i++) {
+                Attendant attendant = event.getAttendants().get(i);
+                var listItem = createAttendantDetailsItem(attendant);
+                binding.eventDetailsAttendeesContainer.addView(listItem, i);
             }
         }
 
         // set listeners
-        btn_attend_withdraw.setOnClickListener(v -> {
+        binding.eventDetailsButton.setOnClickListener(v -> {
             if (onClickAttendWithdrawListener != null) {
-                onClickAttendWithdrawListener.accept(event, attending);
+                onClickAttendWithdrawListener.accept(event, attendingThisEvent);
             }
         });
 
-        btn_edit_event.setOnClickListener(v -> {
+        binding.eventDetailsButtonEdit.setOnClickListener(v -> {
             if (onClickEditEventListener != null) {
                 onClickEditEventListener.accept(event);
             }
         });
 
         // style views
-        if (attending) {
-            btn_attend_withdraw.setText(R.string.event_details_button_withdraw);
-            btn_attend_withdraw.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
-            btn_attend_withdraw.setTextColor(view.getContext().getResources().getColor(R.color.servus_pink, view.getContext().getTheme()));
+        // not attending an event => show attend button
+        // attending an event AND attending this event => show withdraw button
+        // attending an event AND NOT attending this event => show no button (for now)
+        if (!attendingAnyEvent) {
+            binding.eventDetailsButton.setVisibility(View.VISIBLE);
+            binding.eventDetailsButton.setText(R.string.event_details_button_attend);
+            binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners);
+            binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
+        } else if (attendingThisEvent) {
+            binding.eventDetailsButton.setVisibility(View.VISIBLE);
+            binding.eventDetailsButton.setText(R.string.event_details_button_withdraw);
+            binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
+            binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_pink, view.getContext().getTheme()));
         } else {
-            btn_attend_withdraw.setText(R.string.event_details_button_attend);
-            btn_attend_withdraw.setBackgroundResource(R.drawable.style_btn_roundedcorners);
-            btn_attend_withdraw.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
+            binding.eventDetailsButton.setVisibility(View.GONE);
         }
 
-        btn_edit_event.setVisibility(enableEdit ? View.VISIBLE : View.GONE);
+        binding.eventDetailsButtonEdit.setVisibility(isCreator ? View.VISIBLE : View.GONE);
+    }
+
+    private View createAttendantDetailsItem(Attendant attendant) {
+        assert activity != null;
+        assert view != null;
+
+        BottomsheetParticipantAttendeeBinding attendeeBinding = BottomsheetParticipantAttendeeBinding.inflate(getLayoutInflater());
+        View attendeeItem = attendeeBinding.getRoot();
+
+        // Set role of attendee
+        if (attendant.isCreator()) {
+            attendeeBinding.eventDetailsAttendeeRole.setText(view.getContext().getResources().getString(R.string.event_details_label_role_creator));
+        } else {
+            attendeeBinding.eventDetailsAttendeeRole.setText(view.getContext().getResources().getString(R.string.event_details_label_role_attendee));
+        }
+
+        // dismiss button is visible, if user is creator and attendant is not creator
+        if(isCreator && !attendant.isCreator()) {
+            attendeeBinding.eventDetailsAttendeeDismiss.setVisibility(View.VISIBLE);
+        }
+
+        // Set name of attendee
+        attendeeBinding.eventDetailsAttendeeName.setText(attendant.getUserName());
+
+        // Fetch profile picture(s) separately and decode to a bitmap
+        Bitmap currentPicture = BitmapFactory.decodeResource(view.getContext().getResources(), R.drawable.img_placeholder_avatar);
+        if (attendant.getUserPicturePath() != null && !attendant.getUserPicturePath().equals("")) {
+            //TODO: Load Image from Firebase
+        }
+
+        // Create a UserProfile out of all attendee data
+        UserProfile attendeeProfile = new UserProfile(attendant.getUserId(), attendant.getUserName(), attendant.getUserGender(), attendant.getUserBirthdate(), attendant.getUserCourse(), currentPicture);
+
+        // Add functionality for the on click
+        attendeeBinding.eventDetailsAttendeeDataContainer.setTag(attendeeProfile);
+        attendeeBinding.eventDetailsAttendeeDismiss.setTag(attendeeProfile);
+
+        attendeeBinding.eventDetailsAttendeeDataContainer.setOnClickListener(v -> {
+            // When clicked on the data, show servus card
+            ProfileCardFragment servusCard = ProfileCardFragment.newInstance((UserProfile) v.getTag());
+
+            FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+            transaction.add(servusCard, servusCard.getTag());
+            transaction.addToBackStack(null);
+            transaction.commit();
+        });
+
+        attendeeBinding.eventDetailsAttendeeDismiss.setOnClickListener(v -> {
+            UserProfile user = (UserProfile) v.getTag();
+
+            // TODO: Replace Toast with actual removement
+            Toast.makeText(activity, "User " + user.getUserID() + " is not yet able to be removed", Toast.LENGTH_SHORT).show();
+        });
+
+        return attendeeItem;
     }
 }
