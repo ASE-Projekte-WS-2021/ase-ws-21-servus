@@ -19,6 +19,18 @@ public class Attendant {
         this.userPicturePath = userPicturePath;
     }
 
+    public static Attendant fromUserProfile(UserProfile userProfile, boolean isCreator, String userPicturePath) {
+        return new Attendant(
+                userProfile.getUserID(),
+                isCreator,
+                userProfile.getUserName(),
+                userProfile.getUserGender(),
+                userProfile.getUserBirthdate(),
+                userProfile.getUserCourse(),
+                userPicturePath
+        );
+    }
+
     public boolean isCreator() {
         return isCreator;
     }

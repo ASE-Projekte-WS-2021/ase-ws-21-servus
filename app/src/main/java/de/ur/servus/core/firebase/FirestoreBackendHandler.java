@@ -95,22 +95,6 @@ public class FirestoreBackendHandler implements BackendHandler {
         return registration::remove;
     }
 
-    public void incrementEventAttendants(String eventId, @Nullable EventListener<Void> listener) {
-        var task = db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.increment(1));
-        if (listener != null) {
-            task.addOnSuccessListener(listener::onEvent)
-                    .addOnFailureListener(listener::onError);
-        }
-    }
-
-    public void decrementEventAttendants(String eventId, @Nullable EventListener<Void> listener) {
-        var task = db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.increment(-1));
-        if (listener != null) {
-            task.addOnSuccessListener(listener::onEvent)
-                    .addOnFailureListener(listener::onError);
-        }
-    }
-
     public Task<Void> addEventAttendant(String eventId, Attendant attendant) {
         var pojo = new AttendantPOJO(attendant);
         return db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.arrayUnion(pojo));
@@ -146,11 +130,6 @@ public class FirestoreBackendHandler implements BackendHandler {
 
 
     public void updateEvent(String eventId, Map<String, Object> newEventData, @Nullable Runnable listener) {
-//        EventPOJO pojo = new EventPOJO(newEventData);
-//        var dataMap = pojo.toFieldMap();
-        // remove id, because it is not saved directly in document
-//        dataMap.remove("id");
-
         db.collection(COLLECTION).document(eventId).update(newEventData)
                 .addOnSuccessListener(doc -> {
                     if (listener != null) {

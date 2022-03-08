@@ -1,4 +1,4 @@
-package de.ur.servus.SharedPreferencesHelpers;
+package de.ur.servus.utils;
 
 import androidx.annotation.Nullable;
 
