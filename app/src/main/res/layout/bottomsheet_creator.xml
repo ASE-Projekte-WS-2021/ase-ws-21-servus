@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/creator_bottomSheet"
     style="@style/mBottomSheets">
 
@@ -20,7 +21,8 @@
                 <EditText
                     android:id="@+id/event_creation_eventname"
                     style="@style/mEditTexts"
-                    android:text="@{eventCreationData.name}" />
+                    android:text="@{eventCreationData.name}"
+                    tools:ignore="Autofill,LabelFor" />
             </LinearLayout>
 
             <LinearLayout
@@ -35,7 +37,8 @@
                     android:id="@+id/event_creation_description"
                     style="@style/mEditTexts"
                     android:lines="5"
-                    android:text="@{eventCreationData.description}" />
+                    android:text="@{eventCreationData.description}"
+                    tools:ignore="Autofill,LabelFor" />
             </LinearLayout>
 
 
@@ -50,7 +53,10 @@
                 <Spinner
                     android:id="@+id/event_creation_genre_spinner"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:spinnerMode="dropdown"
+                    android:background="@android:color/transparent"
+                    android:dropDownSelector="@null" />
             </LinearLayout>
 
 
