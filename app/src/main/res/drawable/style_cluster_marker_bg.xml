@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/servus_pink"/>
-    <stroke android:color="@color/servus_stroke_transparent"
-            android:width="3dp"/>
-    <corners android:radius="48dp"/>
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <solid android:color="@android:color/transparent"/>
+            <stroke android:color="@color/servus_stroke_transparent" android:width="3dp" />
+            <corners android:radius="48dp" />
+            <padding android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp" />
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <solid android:color="@color/servus_pink"/>
+            <corners android:radius="46.5dp" />
+            <padding android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp" />
+        </shape>
+    </item>
+</layer-list>
