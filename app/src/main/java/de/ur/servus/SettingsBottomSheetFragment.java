@@ -341,7 +341,7 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
             return;
         }
 
-        name.setText(userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_NAME, getResources().getString(R.string.settings_profile_name)));
+        name.setText(userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_NAME, ""));
         String genderCase = userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_GENDER, getResources().getString(R.string.settings_gender));
         if (genderCase.equals(getResources().getString(R.string.settings_gender_male)))
             genderSelection = gender.findViewById(R.id.settings_gender_male);
@@ -360,7 +360,7 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
             birthday.init(bdYear, bdMonth, bdDay, (view, year, monthOfYear, dayOfMonth) -> {
             });
         }
-        course.setText(userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_COURSE, getResources().getString(R.string.settings_study_course)));
+        course.setText(userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_COURSE, ""));
 
         settingsProfilePicture.setImageBitmap(avatarEditor.loadProfilePicture());
     }
