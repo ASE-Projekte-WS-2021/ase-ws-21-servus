@@ -432,8 +432,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // style bottom button
                 eventHelpers.ifSubscribedToEvent(
-                        eventId -> setStyleClicked(),
-                        () -> setStyleDefault()
+                        eventId -> setBottomButtonStyle(false, true),
+                        null
                 );
             }
 
@@ -490,7 +490,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.e("LoadSingleEvent", e.getMessage() + Log.getStackTraceString(e));
                 eventHelpers.removeAttendingEvent();
                 detailsBottomSheetFragment.dismiss();
-                setStyleDefault();
+                setBottomButtonStyle(false, false);
             }
         });
     }
@@ -505,7 +505,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         var localProfile = userAccountHelpers.getOwnProfile(avatarEditor);
 
         if (localProfile.getUserID() != null) {
-            setStyleClicked();
+            setBottomButtonStyle(isCreator, true);
             var subscribedEventInfos = new CurrentSubscribedEventData(eventId);
             eventHelpers.saveAttendingEvent(subscribedEventInfos);
 
@@ -521,7 +521,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void leaveEvent(String eventId) {
         var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null);
         if (userId != null) {
-            setStyleDefault();
+            setBottomButtonStyle(false, false);
             eventHelpers.removeAttendingEvent();
             backendHandler.removeEventAttendantById(eventId, userId)
                     .addOnSuccessListener(unused -> redrawClusters());
@@ -550,16 +550,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
      * App Styling
      */
 
-    private void setStyleClicked() {
-        if (btn_creator != null) {
-            btn_creator.setText(R.string.event_details_button_withdraw);
+    private void setBottomButtonStyle(boolean isCreator, boolean isAttending) {
+        if (btn_creator == null) {
+            return;
+        }
+
+        if (isCreator) {
+            btn_creator.setText(R.string.main_bottom_button_view_own_event);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_pink, getTheme()));
-        }
-    }
-
-    private void setStyleDefault() {
-        if (btn_creator != null) {
+        } else if (isAttending) {
+            btn_creator.setText(R.string.main_bottom_button_view_event);
+            btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
+            btn_creator.setTextColor(getResources().getColor(R.color.servus_pink, getTheme()));
+        } else {
             btn_creator.setText(R.string.content_create_meetup);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_white, getTheme()));
