@@ -41,6 +41,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 import com.google.maps.android.clustering.Cluster;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import de.ur.servus.core.Attendant;
@@ -336,6 +337,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    private void onDetailsRemoveUserClicked(Event event, UserProfile user){
+        backendHandler.removeEventAttendantById(event.getId(), user.getUserID());
+    }
+
     private void onUserProfileSaved(UserProfile userProfile) {
         btn_settings.setImageBitmap(avatarEditor.loadProfilePicture());
     }
@@ -432,7 +437,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // style bottom button
                 eventHelpers.ifSubscribedToEvent(
-                        eventId -> setBottomButtonStyle(false, true),
+                        (subscribedEventData) -> {
+                            var event = events.stream().filter(e -> Objects.equals(e.getId(), subscribedEventData.eventId)).findFirst();
+                            if(event.isPresent()){
+                                var ownUserId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
+                                var isCreator = event.get().isUserOwner(ownUserId);
+                                setBottomButtonStyle(isCreator, true);
+                            }
+                        },
                         null
                 );
             }
@@ -454,6 +466,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @SuppressLint("SetTextI18n")
             @Override
             public void onEvent(Event event) {
+
+                // TODO find a better way to sync some local and remote data (use less local data?)
+                // if event is subscribed locally, but user is actually not attending it, local data is wrong (user might have been kicked)
+                // => fix local data (remove subscribed event)
+                var actuallyAttending = event.isUserAttending(userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, ""));
+                if(!actuallyAttending){
+                    eventHelpers.removeAttendingEvent();
+                }
+
                 var eventPreferences = eventHelpers.tryGetSubscribedEvent();
                 var attending = eventPreferences.eventId != null && eventPreferences.eventId.equals(event.getId());
                 var subscribedToAnyEvent = eventHelpers.tryGetSubscribedEvent().eventId != null;
@@ -469,7 +490,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             subscribedToAnyEvent,
                             isOwner,
                             (e, a, c) -> onDetailsAttendWithdrawClicked(e, a, c),
-                            e -> onDetailsEditEventClicked(e)
+                            e -> onDetailsEditEventClicked(e),
+                            (e,u) -> onDetailsRemoveUserClicked(e,u)
                     );
                 }
 

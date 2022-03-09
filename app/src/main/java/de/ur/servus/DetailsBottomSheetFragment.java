@@ -10,7 +10,6 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentTransaction;
@@ -18,6 +17,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
@@ -48,6 +48,8 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     @Nullable
     private Consumer<Event> onClickEditEventListener;
     @Nullable
+    private BiConsumer<Event, UserProfile> onClickRemoveUserListener;
+    @Nullable
     private Event event;
 
     private boolean attendingThisEvent = false;
@@ -77,13 +79,14 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         return view;
     }
 
-    public void update(Event event, boolean attendingThisEvent, boolean attendingAnyEvent, boolean isCreator, OnAttendWithdrawClickListener onClickAttendWithdrawListener, Consumer<Event> onClickEditEventListener) {
+    public void update(Event event, boolean attendingThisEvent, boolean attendingAnyEvent, boolean isCreator, OnAttendWithdrawClickListener onClickAttendWithdrawListener, Consumer<Event> onClickEditEventListener, BiConsumer<Event, UserProfile> onClickRemoveUserListener) {
         this.event = event;
         this.attendingThisEvent = attendingThisEvent;
         this.attendingAnyEvent = attendingAnyEvent;
         this.isCreator = isCreator;
         this.onClickAttendWithdrawListener = onClickAttendWithdrawListener;
         this.onClickEditEventListener = onClickEditEventListener;
+        this.onClickRemoveUserListener = onClickRemoveUserListener;
 
         if (this.isAdded()) {
             tryUpdateView();
@@ -223,8 +226,9 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         attendeeBinding.eventDetailsAttendeeDismiss.setOnClickListener(v -> {
             UserProfile user = (UserProfile) v.getTag();
 
-            // TODO: Replace Toast with actual removement
-            Toast.makeText(activity, "User " + user.getUserID() + " is not yet able to be removed", Toast.LENGTH_SHORT).show();
+            if (onClickRemoveUserListener != null) {
+                onClickRemoveUserListener.accept(event, user);
+            }
         });
 
         return attendeeItem;
