@@ -42,6 +42,7 @@
     <string name="event_details_label_role_attendee">Attendee</string>
     <string name="event_details_default_creator">%USERNAME%</string>
     <string name="event_details_button_attend">Attend to Meet-Up</string>
+    <string name="event_details_button_close_event">Close Meet-Up</string>
     <string name="event_details_button_withdraw">Withdraw attendance</string>
     <string name="event_details_button_edit">Edit Meet-Up</string>
 

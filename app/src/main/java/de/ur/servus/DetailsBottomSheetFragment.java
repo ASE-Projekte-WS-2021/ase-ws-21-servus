@@ -18,7 +18,6 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
@@ -28,8 +27,9 @@ import de.ur.servus.core.Event;
 import de.ur.servus.core.UserProfile;
 import de.ur.servus.databinding.BottomsheetParticipantAttendeeBinding;
 import de.ur.servus.databinding.BottomsheetParticipantBinding;
+import de.ur.servus.utils.TriConsumer;
 
-interface OnAttendWithdrawClickListener extends BiConsumer<Event, Boolean> {}
+interface OnAttendWithdrawClickListener extends TriConsumer<Event, Boolean, Boolean> {}
 
 public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     @Nullable
@@ -139,7 +139,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         // set listeners
         binding.eventDetailsButton.setOnClickListener(v -> {
             if (onClickAttendWithdrawListener != null) {
-                onClickAttendWithdrawListener.accept(event, attendingThisEvent);
+                onClickAttendWithdrawListener.accept(event, attendingThisEvent, isCreator);
             }
         });
 
@@ -151,7 +151,8 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
         // style views
         // not attending an event => show attend button
-        // attending an event AND attending this event => show withdraw button
+        // attending an event AND attending this event AND is the creator => show close button
+        // attending an event AND attending this event AND is NOT the creator => show withdraw button
         // attending an event AND NOT attending this event => show no button (for now)
         if (!attendingAnyEvent) {
             binding.eventDetailsButton.setVisibility(View.VISIBLE);
@@ -160,9 +161,13 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
             binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
         } else if (attendingThisEvent) {
             binding.eventDetailsButton.setVisibility(View.VISIBLE);
-            binding.eventDetailsButton.setText(R.string.event_details_button_withdraw);
             binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
             binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_pink, view.getContext().getTheme()));
+            if (isCreator) {
+                binding.eventDetailsButton.setText(R.string.event_details_button_close_event);
+            } else {
+                binding.eventDetailsButton.setText(R.string.event_details_button_withdraw);
+            }
         } else {
             binding.eventDetailsButton.setVisibility(View.GONE);
         }

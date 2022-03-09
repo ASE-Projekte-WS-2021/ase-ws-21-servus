@@ -278,13 +278,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void onDetailsAttendWithdrawClicked(Event event, boolean attending) {
-        if (context != null && onlyAllowIfAccountExists()) {
-            if (attending) {
-                leaveEvent(event.getId());
-            } else {
-                attendEvent(event.getId(), false);
-            }
+    private void onDetailsAttendWithdrawClicked(Event event, boolean attending, boolean isCreator) {
+        if (context == null || !onlyAllowIfAccountExists()) {
+            return;
+        }
+
+        if (attending && isCreator) {
+            backendHandler.deleteEvent(event.getId())
+                    .addOnSuccessListener(runnable -> leaveEvent(event.getId()));
+            detailsBottomSheetFragment.dismiss();
+        } else if (attending) {
+            leaveEvent(event.getId());
+        } else {
+            attendEvent(event.getId(), false);
         }
     }
 
@@ -462,7 +468,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             attending,
                             subscribedToAnyEvent,
                             isOwner,
-                            (e, a) -> onDetailsAttendWithdrawClicked(e, a),
+                            (e, a, c) -> onDetailsAttendWithdrawClicked(e, a, c),
                             e -> onDetailsEditEventClicked(e)
                     );
                 }
@@ -483,6 +489,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onError(Exception e) {
                 Log.e("LoadSingleEvent", e.getMessage() + Log.getStackTraceString(e));
                 eventHelpers.removeAttendingEvent();
+                detailsBottomSheetFragment.dismiss();
                 setStyleDefault();
             }
         });
