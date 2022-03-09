@@ -2,7 +2,6 @@ package de.ur.servus;
 
 import static android.content.Context.MODE_PRIVATE;
 
-import de.ur.servus.utils.UserAccountKeys;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -42,6 +41,7 @@ import javax.annotation.Nullable;
 import de.ur.servus.core.UserProfile;
 import de.ur.servus.utils.AvatarEditor;
 import de.ur.servus.utils.UserAccountHelpers;
+import de.ur.servus.utils.UserAccountKeys;
 
 public class SettingsBottomSheetFragment extends BottomSheetDialogFragment implements ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -350,13 +350,16 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
         else genderSelection = gender.findViewById(R.id.settings_gender_divers);
 
         if (genderSelection != null) genderSelection.setChecked(true);
-        String savedBirthdate = userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_AGE, getResources().getString(R.string.settings_age));
-        String[] separatedDate = savedBirthdate.split("\\.");
-        int bdDay = Integer.parseInt(separatedDate[0]);
-        int bdMonth = Integer.parseInt(separatedDate[1]) - 1;
-        int bdYear = Integer.parseInt(separatedDate[2]);
+        String savedBirthdate = userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_AGE, null);
+        if (savedBirthdate != null) {
+            String[] separatedDate = savedBirthdate.split("\\.");
+            int bdDay = Integer.parseInt(separatedDate[0]);
+            int bdMonth = Integer.parseInt(separatedDate[1]) - 1;
+            int bdYear = Integer.parseInt(separatedDate[2]);
 
-        birthday.init(bdYear, bdMonth, bdDay, (view, year, monthOfYear, dayOfMonth) -> {});
+            birthday.init(bdYear, bdMonth, bdDay, (view, year, monthOfYear, dayOfMonth) -> {
+            });
+        }
         course.setText(userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_COURSE, getResources().getString(R.string.settings_study_course)));
 
         settingsProfilePicture.setImageBitmap(avatarEditor.loadProfilePicture());
