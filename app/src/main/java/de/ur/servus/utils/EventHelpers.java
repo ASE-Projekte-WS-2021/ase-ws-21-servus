@@ -92,21 +92,23 @@ public class EventHelpers {
                 Log.e("eventCreation", "No location was provided.");
                 return;
             }
+
+            //get USER ID
             var profile = userAccountHelpers.getOwnProfile(avatarEditor);
+            var picture = profile.getUserPicture();
+
 
             if (profile.getUserID() == null) {
                 Log.e("eventCreation", "No own user id found.");
                 return;
             }
 
-            // TODO add profile picture path
-            var owner = Attendant.fromUserProfile(profile, true, "tbd");
             var attendants = new ArrayList<Attendant>();
-            attendants.add(owner);
 
             Event event = new Event(inputEventData.name, inputEventData.description, latLng.get(), attendants, inputEventData.genre);
 
-            FirestoreBackendHandler.getInstance().createNewEvent(event, afterCreationListener);
+            FirestoreBackendHandler.getInstance().createNewEvent(event,profile.getUserID(),picture, afterCreationListener);
+
         });
     }
 

@@ -1,5 +1,8 @@
 package de.ur.servus.core;
 
+import android.graphics.Bitmap;
+import android.net.Uri;
+
 import com.google.android.gms.tasks.Task;
 
 import java.util.List;
@@ -45,9 +48,11 @@ public interface BackendHandler {
      * Saves a new event to the database and returns its ID.
      *
      * @param event         The event to be saved.
+     * @param creatorID     UUID of user used as folder name and as filename of creator's uploaded picture
+     * @param creatorPicture Bitmap of user picture
      * @param eventListener A listener to get the Event's ID when it is created.
      */
-    void createNewEvent(Event event, EventListener<String> eventListener);
+    void createNewEvent(Event event,String creatorID,Bitmap creatorPicture, EventListener<String> eventListener);
 
     /**
      * Updates a event in the database.
@@ -56,4 +61,24 @@ public interface BackendHandler {
      * @param newEventData   The data to be updated.
      */
     void updateEvent(String eventId, Map<String, Object> newEventData, Runnable listener);
+
+    /**
+     * Creates a new folder in firebase storage with creator's profile picture in it
+     *
+     * @param eventID     event ID of corresponding firestore doc - used as folder name
+     * @param creatorID   UUID of creator, used as profile picture name
+     * @param creatorPicture Bitmap of user picture
+     */
+    void createNewEventStorageFolder(String eventID, String creatorID, Bitmap creatorPicture);
+
+
+    /**
+     * Returns download-url of a specific user picture inside a storage folder with a specific eventID
+     * @param eventID  event ID - used to search storage for specific event
+     * @param userID   userID - pictures are named as their corresponding user's id
+     * @return Uri
+     */
+    Task<Uri> getDownloadURLUserPicture(String eventID, String userID);
+
+
 }
