@@ -18,7 +18,7 @@
 
     <string name="content_create_meetup">Create a Meet-Up</string>
     <string name="main_bottom_button_view_event">View Meet-Up</string>
-    <string name="main_bottom_button_view_own_event">View your Meet-Up</string>
+    <string name="main_bottom_button_view_own_event">View Meet-Up</string>
     <string name="active_filter_indicator">0</string>
 
     <string name="event_creation_label_eventname">Name</string>
