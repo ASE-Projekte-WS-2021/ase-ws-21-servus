@@ -128,6 +128,10 @@ public class FirestoreBackendHandler implements BackendHandler {
                 });
     }
 
+    @Override
+    public Task<Void> deleteEvent(String eventId) {
+        return db.collection(COLLECTION).document(eventId).delete();
+    }
 
     public void updateEvent(String eventId, Map<String, Object> newEventData, @Nullable Runnable listener) {
         db.collection(COLLECTION).document(eventId).update(newEventData)

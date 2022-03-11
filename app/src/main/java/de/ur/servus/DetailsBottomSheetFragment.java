@@ -10,7 +10,6 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentTransaction;
@@ -28,8 +27,9 @@ import de.ur.servus.core.Event;
 import de.ur.servus.core.UserProfile;
 import de.ur.servus.databinding.BottomsheetParticipantAttendeeBinding;
 import de.ur.servus.databinding.BottomsheetParticipantBinding;
+import de.ur.servus.utils.TriConsumer;
 
-interface OnAttendWithdrawClickListener extends BiConsumer<Event, Boolean> {}
+interface OnAttendWithdrawClickListener extends TriConsumer<Event, Boolean, Boolean> {}
 
 public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     @Nullable
@@ -47,6 +47,8 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     private OnAttendWithdrawClickListener onClickAttendWithdrawListener;
     @Nullable
     private Consumer<Event> onClickEditEventListener;
+    @Nullable
+    private BiConsumer<Event, UserProfile> onClickRemoveUserListener;
     @Nullable
     private Event event;
 
@@ -77,13 +79,14 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         return view;
     }
 
-    public void update(Event event, boolean attendingThisEvent, boolean attendingAnyEvent, boolean isCreator, OnAttendWithdrawClickListener onClickAttendWithdrawListener, Consumer<Event> onClickEditEventListener) {
+    public void update(Event event, boolean attendingThisEvent, boolean attendingAnyEvent, boolean isCreator, OnAttendWithdrawClickListener onClickAttendWithdrawListener, Consumer<Event> onClickEditEventListener, BiConsumer<Event, UserProfile> onClickRemoveUserListener) {
         this.event = event;
         this.attendingThisEvent = attendingThisEvent;
         this.attendingAnyEvent = attendingAnyEvent;
         this.isCreator = isCreator;
         this.onClickAttendWithdrawListener = onClickAttendWithdrawListener;
         this.onClickEditEventListener = onClickEditEventListener;
+        this.onClickRemoveUserListener = onClickRemoveUserListener;
 
         if (this.isAdded()) {
             tryUpdateView();
@@ -139,7 +142,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         // set listeners
         binding.eventDetailsButton.setOnClickListener(v -> {
             if (onClickAttendWithdrawListener != null) {
-                onClickAttendWithdrawListener.accept(event, attendingThisEvent);
+                onClickAttendWithdrawListener.accept(event, attendingThisEvent, isCreator);
             }
         });
 
@@ -151,7 +154,8 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
         // style views
         // not attending an event => show attend button
-        // attending an event AND attending this event => show withdraw button
+        // attending an event AND attending this event AND is the creator => show close button
+        // attending an event AND attending this event AND is NOT the creator => show withdraw button
         // attending an event AND NOT attending this event => show no button (for now)
         if (!attendingAnyEvent) {
             binding.eventDetailsButton.setVisibility(View.VISIBLE);
@@ -160,9 +164,13 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
             binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
         } else if (attendingThisEvent) {
             binding.eventDetailsButton.setVisibility(View.VISIBLE);
-            binding.eventDetailsButton.setText(R.string.event_details_button_withdraw);
             binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
             binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_pink, view.getContext().getTheme()));
+            if (isCreator) {
+                binding.eventDetailsButton.setText(R.string.event_details_button_close_event);
+            } else {
+                binding.eventDetailsButton.setText(R.string.event_details_button_withdraw);
+            }
         } else {
             binding.eventDetailsButton.setVisibility(View.GONE);
         }
@@ -218,8 +226,9 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         attendeeBinding.eventDetailsAttendeeDismiss.setOnClickListener(v -> {
             UserProfile user = (UserProfile) v.getTag();
 
-            // TODO: Replace Toast with actual removement
-            Toast.makeText(activity, "User " + user.getUserID() + " is not yet able to be removed", Toast.LENGTH_SHORT).show();
+            if (onClickRemoveUserListener != null) {
+                onClickRemoveUserListener.accept(event, user);
+            }
         });
 
         return attendeeItem;

@@ -50,6 +50,13 @@ public interface BackendHandler {
     void createNewEvent(Event event, EventListener<String> eventListener);
 
     /**
+     * Deletes an event from the database.
+     *
+     * @param eventId         The id for the event to be deleted.
+     */
+    Task<Void> deleteEvent(String eventId);
+
+    /**
      * Updates a event in the database.
      *
      * @param eventId The ID of the event to update.
