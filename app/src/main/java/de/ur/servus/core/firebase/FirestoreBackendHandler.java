@@ -1,11 +1,17 @@
 package de.ur.servus.core.firebase;
 
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -24,7 +30,12 @@ public class FirestoreBackendHandler implements BackendHandler {
     private static final String COLLECTION = "mvp";
 
     private static BackendHandler instance = null;
+    //Firestore for documents aka events
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+    //Storage for folder with user pictures
+    private final FirebaseStorage storage = FirebaseStorage.getInstance();
+
+    //TODO: Write Delete-function for storage folder if event gets deleted
 
     public static BackendHandler getInstance() {
         if (FirestoreBackendHandler.instance == null) {
@@ -95,9 +106,16 @@ public class FirestoreBackendHandler implements BackendHandler {
         return registration::remove;
     }
 
-    public Task<Void> addEventAttendant(String eventId, Attendant attendant) {
+    public Task<Void> addEventAttendant(String eventId, Attendant attendant, Bitmap profilePicture) {
         var pojo = new AttendantPOJO(attendant);
-        return db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.arrayUnion(pojo));
+        var userID = pojo.getUserId();
+
+        return createNewEventStorageFolder(eventId, userID, profilePicture)
+                .continueWithTask(taskSnapshot -> getDownloadUrlFromStorage(eventId, userID)
+                        .continueWithTask(task -> {
+                            pojo.setUserPicturePath(task.getResult().toString());
+                            return db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.arrayUnion(pojo));
+                        }));
     }
 
     public Task<Void> removeEventAttendantById(String eventId, String attendantId) {
@@ -108,6 +126,7 @@ public class FirestoreBackendHandler implements BackendHandler {
 
                 if (attendant.isPresent()) {
                     db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.arrayRemove(attendant.get()));
+                    deleteStorageFolderEntry(eventId, attendantId);
                 }
             }
         }).continueWith(runnable -> null);
@@ -131,6 +150,26 @@ public class FirestoreBackendHandler implements BackendHandler {
     @Override
     public Task<Void> deleteEvent(String eventId) {
         return db.collection(COLLECTION).document(eventId).delete();
+    }
+
+    public UploadTask createNewEventStorageFolder(String eventID, String creatorID, Bitmap creatorPicture) {
+        //creates a new folder in storage with eventID as folder-name and adds creator's picture as attendant picture (filename is userID)
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        creatorPicture.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        byte[] data = baos.toByteArray();
+
+        StorageReference eventRef = storage.getReference().child(String.format("%s/%s.png", eventID, creatorID));
+        return eventRef.putBytes(data);
+    }
+
+    public Task<Uri> getDownloadUrlFromStorage(String eventID, String userID) {
+        StorageReference fileRef = storage.getReference().child(String.format("%s/%s.png", eventID, userID));
+        return fileRef.getDownloadUrl();
+    }
+
+    public void deleteStorageFolderEntry(String eventID, String userID) {
+        StorageReference fileRef = storage.getReference().child(String.format("%s/%s.png", eventID, userID));
+        fileRef.delete().addOnSuccessListener(unused -> Log.d("DELETE", String.format("UserPicture deleted: %s", userID)));
     }
 
     public void updateEvent(String eventId, Map<String, Object> newEventData, @Nullable Runnable listener) {

@@ -1,6 +1,9 @@
 package de.ur.servus.core;
 
+import android.graphics.Bitmap;
+
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.List;
 import java.util.Map;
@@ -28,9 +31,10 @@ public interface BackendHandler {
      *
      * @param eventId   The id of the Event.
      * @param attendant The attendant to add.
+     * @param profilePicture Bitmap of a user's picture
      * @return A Task to react, when the attendant was added.
      */
-    Task<Void> addEventAttendant(String eventId, Attendant attendant);
+    Task<Void> addEventAttendant(String eventId, Attendant attendant, Bitmap profilePicture);
 
     /**
      * Removes an Attendant from an Event.
@@ -63,4 +67,15 @@ public interface BackendHandler {
      * @param newEventData   The data to be updated.
      */
     void updateEvent(String eventId, Map<String, Object> newEventData, Runnable listener);
+
+    /**
+     * Creates a new folder in firebase storage with creator's profile picture in it
+     * @param eventID     event ID of corresponding firestore doc - used as folder name
+     * @param creatorID   UUID of creator, used as profile picture name
+     * @param creatorPicture Bitmap of user picture
+     * @return
+     */
+    UploadTask createNewEventStorageFolder(String eventID, String creatorID, Bitmap creatorPicture);
+
+
 }
