@@ -366,7 +366,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         markerManager = new MarkerManager(this, googleMap);
         markerManager.setClusterAlgorithm();
-        customMarkerRenderer = new CustomMarkerRenderer(this, sharedPreferences, mMap, markerManager.getClusterManager());
+        customMarkerRenderer = new CustomMarkerRenderer(this, mMap, markerManager.getClusterManager());
     }
 
     void animateZoomInCamera(LatLng latLng) {
