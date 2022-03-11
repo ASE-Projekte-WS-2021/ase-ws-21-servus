@@ -14,13 +14,19 @@ public class MarkerClusterItem implements ClusterItem, com.google.maps.android.c
     private final String mSnippet;
     private final String eventId;
     private final Genre genre;
+    private final int attendeesNumber;
 
-    public MarkerClusterItem(LatLng latLng, String title, String mSnippet, String eventId, String genreName){
+    public MarkerClusterItem(LatLng latLng, String title, String mSnippet, String eventId, String genreName, int attendeesNumber){
         this.latLng = latLng;
         this.title = title;
         this.mSnippet = mSnippet;
         this.eventId = eventId;
         this.genre = GenreData.getGenreFromName(genreName);
+        this.attendeesNumber = attendeesNumber;
+    }
+
+    public int getAttendeesNumber() {
+        return attendeesNumber;
     }
 
     public int getGenrePicture(){
