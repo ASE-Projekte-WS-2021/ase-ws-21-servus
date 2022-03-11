@@ -144,12 +144,15 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         String totalAttendeeCount = "X";
         binding.eventDetailsTotalAttendeeCount.setText(event.getAttendants().size() + " " + view.getContext().getResources().getString(R.string.event_details_total_attendees_count) + " " + totalAttendeeCount);
 
-        if (binding.eventDetailsAttendeesContainer.getChildCount() >= 0) {
-            binding.eventDetailsAttendeesContainer.removeAllViews();
+        //binding.eventDetailsAttendeesContainer.setVisibility(View.VISIBLE);
+        //Log.d("TEST", String.valueOf(binding.eventDetailsTotalAttendeeCount.getText()));
+
+        if (binding.eventDetailsAttendees.getChildCount() >= 0) {
+            binding.eventDetailsAttendees.removeAllViews();
             for (int i = 0; i < event.getAttendants().size(); i++) {
                 Attendant attendant = event.getAttendants().get(i);
                 var listItem = createAttendantDetailsItem(attendant);
-                binding.eventDetailsAttendeesContainer.addView(listItem, i);
+                binding.eventDetailsAttendees.addView(listItem, i);
             }
         }
 

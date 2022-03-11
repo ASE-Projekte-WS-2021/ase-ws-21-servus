@@ -55,7 +55,8 @@
                     android:layout_marginStart="8dp"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:text="@string/event_details_total_attendees" />
+                    android:text="@string/event_details_total_attendees"
+                    android:visibility="gone" />
 
                 <LinearLayout
                     style="@style/mLabelledTextViews"

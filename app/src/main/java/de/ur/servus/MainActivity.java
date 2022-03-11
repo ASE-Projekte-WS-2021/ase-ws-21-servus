@@ -400,6 +400,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public boolean onClusterItemClick(MarkerClusterItem markerClusterItem) {
+        animateZoomInCamera(markerClusterItem.getPosition());
         var eventId = markerClusterItem.getEvent().getId();
         subscribeEvent(eventId);
         // TODO wait before initial data was fetched before showing bottom sheet
