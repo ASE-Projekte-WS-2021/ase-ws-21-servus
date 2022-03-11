@@ -24,8 +24,6 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 import java.io.IOException;
 import java.net.URL;
@@ -40,7 +38,6 @@ import de.ur.servus.core.UserProfile;
 import de.ur.servus.databinding.BottomsheetParticipantAttendeeBinding;
 import de.ur.servus.databinding.BottomsheetParticipantBinding;
 import de.ur.servus.utils.AvatarEditor;
-import io.grpc.Context;
 import de.ur.servus.utils.TriConsumer;
 
 interface OnAttendWithdrawClickListener extends TriConsumer<Event, Boolean, Boolean> {}
