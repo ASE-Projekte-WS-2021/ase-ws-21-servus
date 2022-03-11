@@ -8,50 +8,42 @@ import com.google.android.gms.maps.model.LatLng;
 import de.ur.servus.eventgenres.Genre;
 import de.ur.servus.eventgenres.GenreData;
 
+import de.ur.servus.core.Event;
+
 public class MarkerClusterItem implements ClusterItem, com.google.maps.android.clustering.ClusterItem {
-    private final LatLng latLng;
-    private final String title;
-    private final String mSnippet;
-    private final String eventId;
     private final Genre genre;
-    private final int attendeesNumber;
+    private final Event event;
 
-    public MarkerClusterItem(LatLng latLng, String title, String mSnippet, String eventId, String genreName, int attendeesNumber){
-        this.latLng = latLng;
-        this.title = title;
-        this.mSnippet = mSnippet;
-        this.eventId = eventId;
-        this.genre = GenreData.getGenreFromName(genreName);
-        this.attendeesNumber = attendeesNumber;
-    }
 
-    public int getAttendeesNumber() {
-        return attendeesNumber;
+    public MarkerClusterItem(@NonNull Event event){
+        this.event = event;
+        this.genre = GenreData.getGenreFromName(event.getGenre());
     }
 
     public int getGenrePicture(){
         return genre.getImage();
     }
 
-    public String getEventId(){
-        return eventId;
+    public Event getEvent() {
+        return event;
     }
 
     @NonNull
     @Override
     public LatLng getPosition() {
-        return latLng;
+        return event.getLocation();
     }
 
     @Nullable
     @Override
     public String getTitle() {
-        return title;
+        return event.getName();
     }
 
     @Nullable
     @Override
     public String getSnippet() {
-        return mSnippet;
+        return "";
     }
+
 }

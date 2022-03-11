@@ -1,38 +1,45 @@
 package de.ur.servus;
 
 import android.app.Activity;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
-import de.ur.servus.SharedPreferencesHelpers.SubscribedEventHelpers;
+
+import java.util.Objects;
+
+import de.ur.servus.utils.EventHelpers;
+import de.ur.servus.utils.UserAccountHelpers;
 
 
 public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterItem> {
 
-    private final SubscribedEventHelpers subscribedEventHelpers;
+    private final EventHelpers eventHelpers;
+    private final UserAccountHelpers userAccountHelpers;
     private final IconGenerator iconGenerator;
     private final ImageView imageView;
     private final int markerWidth;
     private final int markerHeight;
     private final Activity activity;
 
-    public CustomMarkerRenderer(Activity activity, SharedPreferences sharedPreferences, GoogleMap map, ClusterManager<MarkerClusterItem> clusterManager) {
+    public CustomMarkerRenderer(Activity activity, GoogleMap map, ClusterManager<MarkerClusterItem> clusterManager) {
         super(activity, map, clusterManager);
-        this.subscribedEventHelpers = new SubscribedEventHelpers(activity);
+        this.eventHelpers = new EventHelpers(activity);
+        this.userAccountHelpers = new UserAccountHelpers(activity);
         this.activity = activity;
 
         iconGenerator = new IconGenerator(activity.getApplicationContext());
@@ -51,11 +58,8 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
     protected void onBeforeClusterItemRendered(@NonNull MarkerClusterItem item, @NonNull MarkerOptions markerOptions) {
         super.onBeforeClusterItemRendered(item, markerOptions);
 
-        subscribedEventHelpers.ifSubscribedToEvent(currentSubscribedEventData -> {
-            if(!item.getEventId().equals(currentSubscribedEventData.eventId)){
-                markerOptions.alpha(0.5f);
-            }
-        }, null);
+        var alpha = getAlphaForClusterItem(item);
+        markerOptions.alpha(alpha);
 
         imageView.setBackgroundResource(item.getGenrePicture());
         Bitmap icon = iconGenerator.makeIcon();
@@ -63,8 +67,17 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
     }
 
+    @Override
+    protected void onClusterItemUpdated(@NonNull MarkerClusterItem item, @NonNull Marker marker) {
+        super.onClusterItemUpdated(item, marker);
+
+        var alpha = getAlphaForClusterItem(item);
+
+        marker.setAlpha(alpha);
+    }
+
     private void drawOnCanvas (MarkerClusterItem item, Bitmap icon){
-        int numberOfAttendees = item.getAttendeesNumber();
+        int numberOfAttendees = item.getEvent().getAttendants().size();
         //Create a canvas to draw the circle to display the number of attendees on the icon
         Canvas canvas = new Canvas(icon);
         //Paint for the circle
@@ -86,7 +99,7 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
         if(attendeesString.length() > 1){
             canvas.drawText(attendeesString, x * 4.3f, y *4.1f , textPaint);
         } else {
-            canvas.drawText(attendeesString, x * 4.6f, y *4.1f , textPaint);
+            canvas.drawText(attendeesString, x * 4.4f, y *4.1f , textPaint);
         }
     }
 
@@ -97,11 +110,39 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
 
     @Override
     protected int getColor(int clusterSize) {
-       if(clusterSize < 10 ){
+        if(clusterSize < 10 ){
             return ContextCompat.getColor(activity.getApplicationContext(), R.color.servus_violet);
         } else {
             return ContextCompat.getColor(activity.getApplicationContext(), R.color.servus_blue);
         }
 
+    }
+
+    /**
+     * Generate alpha value for marker, depending on the user attending the event.
+     *
+     * @param item
+     * @return
+     */
+    private float getAlphaForClusterItem(MarkerClusterItem item) {
+        var event = item.getEvent();
+
+        var currentSubscribedEventData = eventHelpers.tryGetSubscribedEvent();
+
+        // event does not exist!? just don't show it. Should not happen.
+        if (event.getId() == null) {
+            return 0f;
+        }
+
+        // if user is subscribed to an event, return every other half transparent
+        if (currentSubscribedEventData.eventId != null) {
+            if (Objects.equals(currentSubscribedEventData.eventId, event.getId())) {
+                return 1f;
+            } else {
+                return 0.5f;
+            }
+        }
+
+        return 1f;
     }
 }

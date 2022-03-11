@@ -7,7 +7,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -41,6 +40,8 @@ import javax.annotation.Nullable;
 
 import de.ur.servus.core.UserProfile;
 import de.ur.servus.utils.AvatarEditor;
+import de.ur.servus.utils.UserAccountHelpers;
+import de.ur.servus.utils.UserAccountKeys;
 
 public class SettingsBottomSheetFragment extends BottomSheetDialogFragment implements ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -81,16 +82,7 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
     private Consumer<UserProfile> onProfileSavedListener;
 
     @Nullable
-    private SharedPreferences sharedPreferences;
-
-    public static final String ACCOUNT = "userAccount";
-    public static final String ACCOUNT_ITEM_NAME = "Username";
-    public static final String ACCOUNT_ITEM_AGE = "Birthday";
-    public static final String ACCOUNT_ITEM_GENDER = "Gender";
-    public static final String ACCOUNT_ITEM_COURSE = "CourseOfStudy";
-    public static final String ACCOUNT_ITEM_ID = "UserId";
-
-    public static final String ACCOUNT_EXISTS = "accountExists";
+    private UserAccountHelpers userAccountHelpers;
 
     public static final int PICK_IMAGE = 3;
 
@@ -114,9 +106,7 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
 
         if (activity != null) {
             avatarEditor = new AvatarEditor(activity);
-            if (context != null) {
-                sharedPreferences = activity.getSharedPreferences(ACCOUNT, MODE_PRIVATE);
-            }
+            userAccountHelpers = new UserAccountHelpers(activity);
 
             if (view != null) {
                 name = view.findViewById(R.id.settings_profile_name);
@@ -146,7 +136,7 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
             if (activity != null) {
                 activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
             }
-            int maxHeight = (int) (displayMetrics.heightPixels - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,128, displayMetrics));
+            int maxHeight = (int) (displayMetrics.heightPixels - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 128, displayMetrics));
 
             behavior.setSkipCollapsed(true);
             behavior.setMaxHeight(maxHeight);
@@ -169,9 +159,9 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
                 activity == null ||
                 context == null ||
                 btn_preview == null ||
-                sharedPreferences == null ||
+                userAccountHelpers == null ||
                 avatarEditor == null ||
-                birthday == null){
+                birthday == null) {
             return;
         }
 
@@ -183,7 +173,8 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
 
         //Init to TODAY 18 years ago - uncommon to have students below 18y' old
         //  --> Will be always set to saved date of birth, if any is set
-        birthday.init(cYear - 18, cMonth, cDay, (view, year, monthOfYear, dayOfMonth) -> {});
+        birthday.init(cYear - 18, cMonth, cDay, (view, year, monthOfYear, dayOfMonth) -> {
+        });
         calendar.set(cYear, cMonth, cDay);
         birthday.setMaxDate(calendar.getTimeInMillis());
 
@@ -193,7 +184,8 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
         ll_select_picture.setOnClickListener(v -> checkAndAskStoragePermission());
 
         btn_preview.setOnClickListener(v -> {
-            if (saveInputs()){UserProfile ownProfile = Helpers.loadLocalAccountDataIntoUserProfile(activity);
+            if (saveInputs()){
+                UserProfile ownProfile = userAccountHelpers.getOwnProfile(avatarEditor);
                 ProfileCardFragment servusCard = ProfileCardFragment.newInstance(ownProfile);
 
                 FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
@@ -224,14 +216,8 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
     }
 
 
-
     /**
-     *
-     *
-     *      Permissions functionality
-     *
-     *
-     *
+     * Permissions functionality
      */
 
     private final ActivityResultLauncher<String> requestStoragePermissionLauncher =
@@ -247,7 +233,7 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
                 }
             });
 
-    private void checkAndAskStoragePermission(){
+    private void checkAndAskStoragePermission() {
         if (context != null) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                 // You can use the API that requires the permission.
@@ -274,27 +260,20 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
     }
 
 
-
     /**
-     *
-     *
-     *      Profile input functionality
-     *
-     *
-     *
+     * Profile input functionality
      */
 
     public boolean saveInputs() {
-        if (sharedPreferences == null || avatarEditor == null) return false;
+        if (userAccountHelpers == null || avatarEditor == null) return false;
 
-        SharedPreferences.Editor editor = sharedPreferences.edit();
         boolean[] requiredFieldFilled = {false, false, false};
 
         if (name != null) {
-            if (name.getText() == null || String.valueOf(name.getText()).equals("")){
+            if (name.getText() == null || String.valueOf(name.getText()).equals("")) {
                 requiredFieldFilled[0] = false; // Necessary for possible secondary changes after initial account creation
             } else {
-                editor.putString(ACCOUNT_ITEM_NAME, String.valueOf(name.getText()));
+                userAccountHelpers.saveStringValue(UserAccountKeys.ACCOUNT_ITEM_NAME, String.valueOf(name.getText()));
                 requiredFieldFilled[0] = true;
             }
         }
@@ -304,8 +283,8 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
             genderSelection = gender.findViewById(selectedId);
 
             if (genderSelection != null) {
-                if (genderSelection.getText() != null){
-                    editor.putString(ACCOUNT_ITEM_GENDER, String.valueOf(genderSelection.getText()));
+                if (genderSelection.getText() != null) {
+                    userAccountHelpers.saveStringValue(UserAccountKeys.ACCOUNT_ITEM_GENDER, String.valueOf(genderSelection.getText()));
                     requiredFieldFilled[1] = true;
                 }
             }
@@ -317,12 +296,12 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
             int year = birthday.getYear();
             String birthdate = day + "." + month + "." + year;
 
-            editor.putString(ACCOUNT_ITEM_AGE, birthdate);
+            userAccountHelpers.saveStringValue(UserAccountKeys.ACCOUNT_ITEM_AGE, birthdate);
             requiredFieldFilled[2] = true; // No further if needed -> Always takes currently initialized date as default
         }
 
         if (course != null) {
-            editor.putString(ACCOUNT_ITEM_COURSE, String.valueOf(course.getText()));
+            userAccountHelpers.saveStringValue(UserAccountKeys.ACCOUNT_ITEM_COURSE, String.valueOf(course.getText()));
         }
 
         if (selectedImage != null) {
@@ -343,52 +322,45 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
         }
 
         if (requirementPassed) {
-            editor.putBoolean(ACCOUNT_EXISTS, true);
-            editor.apply();
+            userAccountHelpers.saveBooleanValue(UserAccountKeys.ACCOUNT_EXISTS, true);
             return true;
-        }
-        else {
+        } else {
             Toast.makeText(activity, getResources().getString(R.string.toast_fill_required_fields), Toast.LENGTH_LONG).show();
             return false;
         }
     }
 
     private void loadAccountDetails() {
-        if (sharedPreferences == null ||
+        if (userAccountHelpers == null ||
                 name == null ||
                 gender == null ||
                 birthday == null ||
                 course == null ||
                 settingsProfilePicture == null ||
-                avatarEditor == null){
+                avatarEditor == null) {
             return;
         }
 
-        if (sharedPreferences.contains(ACCOUNT_ITEM_NAME)) {
-            name.setText(sharedPreferences.getString(ACCOUNT_ITEM_NAME, getResources().getString(R.string.settings_profile_name)));
-        }
-        if (sharedPreferences.contains(ACCOUNT_ITEM_GENDER)) {
-            String genderCase = sharedPreferences.getString(ACCOUNT_ITEM_GENDER, getResources().getString(R.string.settings_gender));
-            if (genderCase.equals(getResources().getString(R.string.settings_gender_male)))
-                genderSelection = gender.findViewById(R.id.settings_gender_male);
-            else if (genderCase.equals(getResources().getString(R.string.settings_gender_female)))
-                genderSelection = gender.findViewById(R.id.settings_gender_female);
-            else genderSelection = gender.findViewById(R.id.settings_gender_divers);
+        name.setText(userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_NAME, ""));
+        String genderCase = userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_GENDER, getResources().getString(R.string.settings_gender));
+        if (genderCase.equals(getResources().getString(R.string.settings_gender_male)))
+            genderSelection = gender.findViewById(R.id.settings_gender_male);
+        else if (genderCase.equals(getResources().getString(R.string.settings_gender_female)))
+            genderSelection = gender.findViewById(R.id.settings_gender_female);
+        else genderSelection = gender.findViewById(R.id.settings_gender_divers);
 
-            if (genderSelection != null) genderSelection.setChecked(true);
-        }
-        if (sharedPreferences.contains(ACCOUNT_ITEM_AGE)) {
-            String savedBirthdate = sharedPreferences.getString(ACCOUNT_ITEM_AGE, getResources().getString(R.string.settings_age));
+        if (genderSelection != null) genderSelection.setChecked(true);
+        String savedBirthdate = userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_AGE, null);
+        if (savedBirthdate != null) {
             String[] separatedDate = savedBirthdate.split("\\.");
             int bdDay = Integer.parseInt(separatedDate[0]);
             int bdMonth = Integer.parseInt(separatedDate[1]) - 1;
             int bdYear = Integer.parseInt(separatedDate[2]);
 
-            birthday.init(bdYear, bdMonth, bdDay, (view, year, monthOfYear, dayOfMonth) -> {});
+            birthday.init(bdYear, bdMonth, bdDay, (view, year, monthOfYear, dayOfMonth) -> {
+            });
         }
-        if (sharedPreferences.contains(ACCOUNT_ITEM_COURSE)) {
-            course.setText(sharedPreferences.getString(ACCOUNT_ITEM_COURSE, getResources().getString(R.string.settings_study_course)));
-        }
+        course.setText(userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_COURSE, ""));
 
         settingsProfilePicture.setImageBitmap(avatarEditor.loadProfilePicture());
     }

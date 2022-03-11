@@ -2,8 +2,10 @@ package de.ur.servus.core;
 
 import android.graphics.Bitmap;
 
-public class UserProfile {
+import androidx.annotation.Nullable;
 
+public class UserProfile {
+    @Nullable
     private final String userID;
     private final String name;
     private final String gender;
@@ -11,7 +13,7 @@ public class UserProfile {
     private final String course;
     private final Bitmap picture;
 
-    public UserProfile(String userID, String name, String gender, String birthdate, String course, Bitmap picture) {
+    public UserProfile(@Nullable String userID, String name, String gender, String birthdate, String course, Bitmap picture) {
         this.userID = userID;
         this.name = name;
         this.gender = gender;
