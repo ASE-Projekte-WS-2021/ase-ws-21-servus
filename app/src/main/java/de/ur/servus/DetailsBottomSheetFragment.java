@@ -4,8 +4,11 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,9 +18,18 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -28,8 +40,11 @@ import de.ur.servus.core.Event;
 import de.ur.servus.core.UserProfile;
 import de.ur.servus.databinding.BottomsheetParticipantAttendeeBinding;
 import de.ur.servus.databinding.BottomsheetParticipantBinding;
+import de.ur.servus.utils.AvatarEditor;
+import io.grpc.Context;
 
-interface OnAttendWithdrawClickListener extends BiConsumer<Event, Boolean> {}
+interface OnAttendWithdrawClickListener extends BiConsumer<Event, Boolean> {
+}
 
 public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     @Nullable
@@ -49,6 +64,8 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
     private Consumer<Event> onClickEditEventListener;
     @Nullable
     private Event event;
+
+    AvatarEditor avatarEditor;
 
     private boolean attendingThisEvent = false;
     private boolean attendingAnyEvent = false;
@@ -71,6 +88,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         view = binding.getRoot();
 
         activity = (Activity) getContext();
+        avatarEditor = new AvatarEditor(activity);
 
         tryUpdateView();
 
@@ -102,7 +120,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
             if (activity != null) {
                 activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
             }
-            int maxHeight = (int) (displayMetrics.heightPixels - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,128, displayMetrics));
+            int maxHeight = (int) (displayMetrics.heightPixels - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 128, displayMetrics));
 
             behavior.setSkipCollapsed(true);
             behavior.setMaxHeight(maxHeight);
@@ -185,7 +203,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         }
 
         // dismiss button is visible, if user is creator and attendant is not creator
-        if(isCreator && !attendant.isCreator()) {
+        if (isCreator && !attendant.isCreator()) {
             attendeeBinding.eventDetailsAttendeeDismiss.setVisibility(View.VISIBLE);
         }
 
@@ -194,9 +212,6 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
         // Fetch profile picture(s) separately and decode to a bitmap
         Bitmap currentPicture = BitmapFactory.decodeResource(view.getContext().getResources(), R.drawable.img_placeholder_avatar);
-        if (attendant.getUserPicturePath() != null && !attendant.getUserPicturePath().equals("")) {
-            //TODO: Load Image from Firebase
-        }
 
         // Create a UserProfile out of all attendee data
         UserProfile attendeeProfile = new UserProfile(attendant.getUserId(), attendant.getUserName(), attendant.getUserGender(), attendant.getUserBirthdate(), attendant.getUserCourse(), currentPicture);
@@ -205,15 +220,40 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         attendeeBinding.eventDetailsAttendeeDataContainer.setTag(attendeeProfile);
         attendeeBinding.eventDetailsAttendeeDismiss.setTag(attendeeProfile);
 
-        attendeeBinding.eventDetailsAttendeeDataContainer.setOnClickListener(v -> {
-            // When clicked on the data, show servus card
-            ProfileCardFragment servusCard = ProfileCardFragment.newInstance((UserProfile) v.getTag());
+        attendeeBinding.eventDetailsAttendeeDataContainer.setOnClickListener(v -> onAttendantClicked(attendeeProfile));
 
-            FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
-            transaction.add(servusCard, servusCard.getTag());
-            transaction.addToBackStack(null);
-            transaction.commit();
-        });
+        if (attendant.getUserPicturePath() != null && !attendant.getUserPicturePath().equals("")) {
+            //TODO: Load Image from Firebase
+
+            try {
+                URL url = new URL(attendant.getUserPicturePath());
+                Glide.with(this)
+                        .load(url)
+                        .addListener(new RequestListener<Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@androidx.annotation.Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                BitmapDrawable drawable = (BitmapDrawable) resource;
+                                Bitmap bitmap = drawable.getBitmap();
+                                UserProfile attendeeProfile = new UserProfile(attendant.getUserId(), attendant.getUserName(), attendant.getUserGender(), attendant.getUserBirthdate(), attendant.getUserCourse(), bitmap);
+                                attendeeBinding.eventDetailsAttendeeDataContainer.setOnClickListener(v -> onAttendantClicked(attendeeProfile));
+                                return false;
+                            }
+                        })
+                        .centerCrop()
+                        .placeholder(R.drawable.img_placeholder_avatar)
+                        .into(attendeeBinding.eventDetailsAttendeeImage);
+
+            }catch (IOException e) {
+                Log.e("GLIDE", e.getMessage());
+            }
+
+
+        }
 
         attendeeBinding.eventDetailsAttendeeDismiss.setOnClickListener(v -> {
             UserProfile user = (UserProfile) v.getTag();
@@ -224,4 +264,16 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
         return attendeeItem;
     }
+
+    private void onAttendantClicked(UserProfile profile){
+        // When clicked on the data, show servus card
+        ProfileCardFragment servusCard = ProfileCardFragment.newInstance(profile);
+
+        FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+        transaction.add(servusCard, servusCard.getTag());
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
 }
+

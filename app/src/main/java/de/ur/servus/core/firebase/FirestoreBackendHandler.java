@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.util.Log;
 
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -107,10 +106,16 @@ public class FirestoreBackendHandler implements BackendHandler {
         return registration::remove;
     }
 
-    public Task<Void> addEventAttendant(String eventId, Attendant attendant) {
+    public Task<Void> addEventAttendant(String eventId, Attendant attendant, Bitmap profilePicture) {
         var pojo = new AttendantPOJO(attendant);
-        //TODO:
-        return db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.arrayUnion(pojo));
+        var userID = pojo.getUserId();
+
+        return createNewEventStorageFolder(eventId, userID, profilePicture)
+                .continueWithTask(taskSnapshot -> getDownloadUrlFromStorage(eventId, userID)
+                        .continueWithTask(task -> {
+                            pojo.setUserPicturePath(task.getResult().toString());
+                            return db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.arrayUnion(pojo));
+                        }));
     }
 
     public Task<Void> removeEventAttendantById(String eventId, String attendantId) {
@@ -121,16 +126,16 @@ public class FirestoreBackendHandler implements BackendHandler {
 
                 if (attendant.isPresent()) {
                     db.collection(COLLECTION).document(eventId).update("attendants", FieldValue.arrayRemove(attendant.get()));
+                    deleteStorageFolderEntry(eventId, attendantId);
                 }
             }
         }).continueWith(runnable -> null);
     }
 
-    public void createNewEvent(Event event,String creatorID,Bitmap creatorPicture, @Nullable EventListener<String> listener) {
+    public void createNewEvent(Event event, @Nullable EventListener<String> listener) {
         EventPOJO pojo = new EventPOJO(event);
         db.collection(COLLECTION).add(pojo)
                 .addOnSuccessListener(doc -> {
-                    createNewEventStorageFolder(doc.getId(),creatorID,creatorPicture);
                     if (listener != null) {
                         listener.onEvent(doc.getId());
                     }
@@ -142,32 +147,24 @@ public class FirestoreBackendHandler implements BackendHandler {
                 });
     }
 
-    public void createNewEventStorageFolder(String eventID,String creatorID, Bitmap creatorPicture){
+    public UploadTask createNewEventStorageFolder(String eventID, String creatorID, Bitmap creatorPicture) {
         //creates a new folder in storage with eventID as folder-name and adds creator's picture as attendant picture (filename is userID)
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        creatorPicture.compress(Bitmap.CompressFormat.PNG,100,baos);
+        creatorPicture.compress(Bitmap.CompressFormat.PNG, 100, baos);
         byte[] data = baos.toByteArray();
 
-        StorageReference eventRef = storage.getReference().child(String.format("%s/%s.png",eventID,creatorID));
-        var uploadTask = eventRef.putBytes(data);
-
-        uploadTask.addOnSuccessListener(taskSnapshot -> {
-            Log.d(null,"Finished upload task successfully");
-            getDownloadURLUserPicture(eventID,creatorID);
-        });
+        StorageReference eventRef = storage.getReference().child(String.format("%s/%s.png", eventID, creatorID));
+        return eventRef.putBytes(data);
     }
 
-    public Task<Uri> getDownloadURLUserPicture(String eventID, String userID){
-
-        StorageReference pictureRef = storage.getReference().child(String.format("%s/%s.png",eventID,userID));
-        return pictureRef.getDownloadUrl().addOnSuccessListener(uri -> {
-            Log.d("LINK",uri.toString());
-        });
+    public Task<Uri> getDownloadUrlFromStorage(String eventID, String userID) {
+        StorageReference fileRef = storage.getReference().child(String.format("%s/%s.png", eventID, userID));
+        return fileRef.getDownloadUrl();
     }
 
-    public void updateAttendantUri(String eventID, String userID, Uri pictureLink){
-        //removeEventAttendantById() und dann addEventAttendant
-
+    public void deleteStorageFolderEntry(String eventID, String userID) {
+        StorageReference fileRef = storage.getReference().child(String.format("%s/%s.png", eventID, userID));
+        fileRef.delete().addOnSuccessListener(unused -> Log.d("DELETE", String.format("UserPicture deleted: %s", userID)));
     }
 
     public void updateEvent(String eventId, Map<String, Object> newEventData, @Nullable Runnable listener) {

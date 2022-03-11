@@ -95,7 +95,6 @@ public class EventHelpers {
 
             //get USER ID
             var profile = userAccountHelpers.getOwnProfile(avatarEditor);
-            var picture = profile.getUserPicture();
 
 
             if (profile.getUserID() == null) {
@@ -107,7 +106,7 @@ public class EventHelpers {
 
             Event event = new Event(inputEventData.name, inputEventData.description, latLng.get(), attendants, inputEventData.genre);
 
-            FirestoreBackendHandler.getInstance().createNewEvent(event,profile.getUserID(),picture, afterCreationListener);
+            FirestoreBackendHandler.getInstance().createNewEvent(event, afterCreationListener);
 
         });
     }
