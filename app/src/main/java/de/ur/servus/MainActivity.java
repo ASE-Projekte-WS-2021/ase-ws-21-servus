@@ -41,6 +41,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 import com.google.maps.android.clustering.Cluster;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import de.ur.servus.core.Attendant;
@@ -278,13 +279,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void onDetailsAttendWithdrawClicked(Event event, boolean attending) {
-        if (context != null && onlyAllowIfAccountExists()) {
-            if (attending) {
-                leaveEvent(event.getId());
-            } else {
-                attendEvent(event.getId(), false);
-            }
+    private void onDetailsAttendWithdrawClicked(Event event, boolean attending, boolean isCreator) {
+        if (context == null || !onlyAllowIfAccountExists()) {
+            return;
+        }
+
+        if (attending && isCreator) {
+            backendHandler.deleteEvent(event.getId())
+                    .addOnSuccessListener(runnable -> leaveEvent(event.getId()));
+            detailsBottomSheetFragment.dismiss();
+        } else if (attending) {
+            leaveEvent(event.getId());
+        } else {
+            attendEvent(event.getId(), false);
         }
     }
 
@@ -328,6 +335,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             detailsBottomSheetFragment.dismiss();
             showBottomSheet(eventCreationBottomSheetFragment);
         }
+    }
+
+    private void onDetailsRemoveUserClicked(Event event, UserProfile user){
+        backendHandler.removeEventAttendantById(event.getId(), user.getUserID());
     }
 
     private void onUserProfileSaved(UserProfile userProfile) {
@@ -426,8 +437,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // style bottom button
                 eventHelpers.ifSubscribedToEvent(
-                        eventId -> setStyleClicked(),
-                        () -> setStyleDefault()
+                        (subscribedEventData) -> {
+                            var event = events.stream().filter(e -> Objects.equals(e.getId(), subscribedEventData.eventId)).findFirst();
+                            if(event.isPresent()){
+                                var ownUserId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
+                                var isCreator = event.get().isUserOwner(ownUserId);
+                                setBottomButtonStyle(isCreator, true);
+                            }
+                        },
+                        null
                 );
             }
 
@@ -448,6 +466,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @SuppressLint("SetTextI18n")
             @Override
             public void onEvent(Event event) {
+
+                // TODO find a better way to sync some local and remote data (use less local data?)
+                // if event is subscribed locally, but user is actually not attending it, local data is wrong (user might have been kicked)
+                // => fix local data (remove subscribed event)
+                var actuallyAttending = event.isUserAttending(userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, ""));
+                if(!actuallyAttending){
+                    eventHelpers.removeAttendingEvent();
+                }
+
                 var eventPreferences = eventHelpers.tryGetSubscribedEvent();
                 var attending = eventPreferences.eventId != null && eventPreferences.eventId.equals(event.getId());
                 var subscribedToAnyEvent = eventHelpers.tryGetSubscribedEvent().eventId != null;
@@ -462,8 +489,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             attending,
                             subscribedToAnyEvent,
                             isOwner,
-                            (e, a) -> onDetailsAttendWithdrawClicked(e, a),
-                            e -> onDetailsEditEventClicked(e)
+                            (e, a, c) -> onDetailsAttendWithdrawClicked(e, a, c),
+                            e -> onDetailsEditEventClicked(e),
+                            (e,u) -> onDetailsRemoveUserClicked(e,u)
                     );
                 }
 
@@ -483,7 +511,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onError(Exception e) {
                 Log.e("LoadSingleEvent", e.getMessage() + Log.getStackTraceString(e));
                 eventHelpers.removeAttendingEvent();
-                setStyleDefault();
+                detailsBottomSheetFragment.dismiss();
+                setBottomButtonStyle(false, false);
             }
         });
     }
@@ -498,7 +527,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         var localProfile = userAccountHelpers.getOwnProfile(avatarEditor);
 
         if (localProfile.getUserID() != null) {
-            setStyleClicked();
+            setBottomButtonStyle(isCreator, true);
             var subscribedEventInfos = new CurrentSubscribedEventData(eventId);
             eventHelpers.saveAttendingEvent(subscribedEventInfos);
 
@@ -515,7 +544,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void leaveEvent(String eventId) {
         var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null);
         if (userId != null) {
-            setStyleDefault();
+            setBottomButtonStyle(false, false);
             eventHelpers.removeAttendingEvent();
             backendHandler.removeEventAttendantById(eventId, userId)
                     .addOnSuccessListener(unused -> redrawClusters());
@@ -544,16 +573,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
      * App Styling
      */
 
-    private void setStyleClicked() {
-        if (btn_creator != null) {
-            btn_creator.setText(R.string.event_details_button_withdraw);
+    private void setBottomButtonStyle(boolean isCreator, boolean isAttending) {
+        if (btn_creator == null) {
+            return;
+        }
+
+        if (isCreator) {
+            btn_creator.setText(R.string.main_bottom_button_view_own_event);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_pink, getTheme()));
-        }
-    }
-
-    private void setStyleDefault() {
-        if (btn_creator != null) {
+        } else if (isAttending) {
+            btn_creator.setText(R.string.main_bottom_button_view_event);
+            btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
+            btn_creator.setTextColor(getResources().getColor(R.color.servus_pink, getTheme()));
+        } else {
             btn_creator.setText(R.string.content_create_meetup);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_white, getTheme()));

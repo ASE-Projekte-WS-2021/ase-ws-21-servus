@@ -147,6 +147,11 @@ public class FirestoreBackendHandler implements BackendHandler {
                 });
     }
 
+    @Override
+    public Task<Void> deleteEvent(String eventId) {
+        return db.collection(COLLECTION).document(eventId).delete();
+    }
+
     public UploadTask createNewEventStorageFolder(String eventID, String creatorID, Bitmap creatorPicture) {
         //creates a new folder in storage with eventID as folder-name and adds creator's picture as attendant picture (filename is userID)
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
