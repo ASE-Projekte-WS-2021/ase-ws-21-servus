@@ -55,7 +55,6 @@ import de.ur.servus.core.firebase.FirestoreBackendHandler;
 import de.ur.servus.eventcreationbottomsheet.EventCreationBottomSheetFragment;
 import de.ur.servus.eventcreationbottomsheet.EventCreationData;
 import de.ur.servus.utils.AvatarEditor;
-import de.ur.servus.utils.CurrentSubscribedEventData;
 import de.ur.servus.utils.EventHelpers;
 import de.ur.servus.utils.UserAccountHelpers;
 
@@ -67,6 +66,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private final BackendHandler backendHandler = FirestoreBackendHandler.getInstance();
     private EventHelpers eventHelpers;
     private UserAccountHelpers userAccountHelpers;
+    private EventList eventList;
     Context context;
     SharedPreferences sharedPreferences;
     CustomLocationManager customLocationManager;
@@ -110,6 +110,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         customLocationManager = new CustomLocationManager(this);
         avatarEditor = new AvatarEditor(this);
         eventHelpers = new EventHelpers(this);
+        eventList = new EventList();
         userAccountHelpers = new UserAccountHelpers(this);
 
         userAccountHelpers.saveNewUserIdIfNotExisting();
@@ -140,9 +141,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         btn_creator = findViewById(R.id.btn_meetup);
         btn_creator.setOnClickListener(v -> {
             if (onlyAllowIfAccountExists()) {
-                eventHelpers.ifSubscribedToEvent(
-                        preferences -> {
-                            subscribeEvent(preferences.eventId);
+                var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
+                eventList.ifUserIsSubscribedToEvents(userId,
+                        attendedEvents -> {
+                            subscribeEvent(attendedEvents.get(0).getId());
                             showBottomSheet(detailsBottomSheetFragment);
                         },
                         () -> {
@@ -158,8 +160,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         settingsBottomSheetFragment.update(this::onUserProfileSaved);
 
-        eventHelpers.ifSubscribedToEvent(
-                currentSubscribedEventData -> this.subscribeEvent(currentSubscribedEventData.eventId),
+        var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
+        eventList.ifUserIsSubscribedToEvents(userId,
+                events -> this.subscribeEvent(events.get(0).getId()),
                 null
         );
 
@@ -366,7 +369,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         markerManager = new MarkerManager(this, googleMap);
         markerManager.setClusterAlgorithm();
-        customMarkerRenderer = new CustomMarkerRenderer(this, mMap, markerManager.getClusterManager());
+        customMarkerRenderer = new CustomMarkerRenderer(this, mMap, markerManager.getClusterManager(), eventList);
     }
 
     void animateZoomInCamera(LatLng latLng) {
@@ -423,6 +426,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onEvent(List<Event> events) {
                 // Log all event names to console
                 Log.d("LoadAllEvents", events.stream().map(event -> event.getName() + ": " + event.getId()).collect(Collectors.joining(", ")));
+                eventList.setEvents(events);
+
                 if (markerManager != null) {
                     var clusterManager = markerManager.getClusterManager();
                     clusterManager.clearItems();
@@ -437,10 +442,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 // style bottom button
-                eventHelpers.ifSubscribedToEvent(
-                        (subscribedEventData) -> {
-                            var event = events.stream().filter(e -> Objects.equals(e.getId(), subscribedEventData.eventId)).findFirst();
-                            if(event.isPresent()){
+                var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
+                eventList.ifUserIsSubscribedToEvents(userId,
+                        attendedEvents -> {
+                            var event = attendedEvents.stream().filter(e -> Objects.equals(e.getId(), attendedEvents.get(0).getId())).findFirst();
+                            if (event.isPresent()) {
                                 var ownUserId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
                                 var isCreator = event.get().isUserOwner(ownUserId);
                                 setBottomButtonStyle(isCreator, true);
@@ -467,22 +473,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @SuppressLint("SetTextI18n")
             @Override
             public void onEvent(Event event) {
-
-                // TODO find a better way to sync some local and remote data (use less local data?)
-                // if event is subscribed locally, but user is actually not attending it, local data is wrong (user might have been kicked)
-                // => fix local data (remove subscribed event)
-                var actuallyAttending = event.isUserAttending(userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, ""));
-                if(!actuallyAttending){
-                    eventHelpers.removeAttendingEvent();
+                if (markerManager == null) {
+                    return;
                 }
+                var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
 
-                var eventPreferences = eventHelpers.tryGetSubscribedEvent();
-                var attending = eventPreferences.eventId != null && eventPreferences.eventId.equals(event.getId());
-                var subscribedToAnyEvent = eventHelpers.tryGetSubscribedEvent().eventId != null;
+                var attending = event.isUserAttending(userId);
+                var subscribedToAnyEvent = eventList.isUserAttendingAnyEvent(userId);
 
                 // update details sheet
                 if (detailsBottomSheetFragment != null) {
-                    // check, if user is owner of event
                     boolean isOwner = event.isUserOwner(userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null));
 
                     detailsBottomSheetFragment.update(
@@ -511,7 +511,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onError(Exception e) {
                 Log.e("LoadSingleEvent", e.getMessage() + Log.getStackTraceString(e));
-                eventHelpers.removeAttendingEvent();
                 detailsBottomSheetFragment.dismiss();
                 setBottomButtonStyle(false, false);
             }
@@ -529,9 +528,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         if (localProfile.getUserID() != null) {
             setBottomButtonStyle(isCreator, true);
-            var subscribedEventInfos = new CurrentSubscribedEventData(eventId);
-            eventHelpers.saveAttendingEvent(subscribedEventInfos);
-
 
             // TODO add profile picture path
             var attendant = new Attendant(localProfile.getUserID(), isCreator, localProfile.getUserName(), localProfile.getUserGender(), localProfile.getUserBirthdate(), localProfile.getUserCourse(), "tbd");
@@ -546,7 +542,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null);
         if (userId != null) {
             setBottomButtonStyle(false, false);
-            eventHelpers.removeAttendingEvent();
             backendHandler.removeEventAttendantById(eventId, userId)
                     .addOnSuccessListener(unused -> redrawClusters());
 

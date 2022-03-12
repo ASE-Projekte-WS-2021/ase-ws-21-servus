@@ -1,5 +1,7 @@
 package de.ur.servus;
 
+import static de.ur.servus.utils.UserAccountKeys.ACCOUNT_ITEM_ID;
+
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -35,12 +37,14 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
     private final int markerWidth;
     private final int markerHeight;
     private final Activity activity;
+    private final EventList eventList;
 
-    public CustomMarkerRenderer(Activity activity, GoogleMap map, ClusterManager<MarkerClusterItem> clusterManager) {
+    public CustomMarkerRenderer(Activity activity, GoogleMap map, ClusterManager<MarkerClusterItem> clusterManager, EventList eventList) {
         super(activity, map, clusterManager);
         this.eventHelpers = new EventHelpers(activity);
         this.userAccountHelpers = new UserAccountHelpers(activity);
         this.activity = activity;
+        this.eventList = eventList;
 
         iconGenerator = new IconGenerator(activity.getApplicationContext());
         imageView = new ImageView(activity.getApplicationContext());
@@ -126,8 +130,8 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
      */
     private float getAlphaForClusterItem(MarkerClusterItem item) {
         var event = item.getEvent();
-
-        var currentSubscribedEventData = eventHelpers.tryGetSubscribedEvent();
+        var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
+        var isAttendingCurrentEvent = eventList.getEventsAttendedByUser(userId).stream().anyMatch(e -> Objects.equals(e.getId(), event.getId()));
 
         // event does not exist!? just don't show it. Should not happen.
         if (event.getId() == null) {
@@ -135,8 +139,8 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
         }
 
         // if user is subscribed to an event, return every other half transparent
-        if (currentSubscribedEventData.eventId != null) {
-            if (Objects.equals(currentSubscribedEventData.eventId, event.getId())) {
+        if (eventList.isUserAttendingAnyEvent(userId)) {
+            if (isAttendingCurrentEvent) {
                 return 1f;
             } else {
                 return 0.5f;

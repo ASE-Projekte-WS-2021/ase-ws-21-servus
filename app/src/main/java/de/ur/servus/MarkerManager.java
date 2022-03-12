@@ -7,11 +7,11 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.algo.NonHierarchicalDistanceBasedAlgorithm;
 
 public class MarkerManager {
-    private ClusterManager<MarkerClusterItem> clusterManager;
-    private NonHierarchicalDistanceBasedAlgorithm<MarkerClusterItem> algorithm;
+    private final ClusterManager<MarkerClusterItem> clusterManager;
 
     public MarkerManager(ClusterManagerContext context, GoogleMap map) {
         this.clusterManager = new ClusterManager<>((Context) context, map);
+
         this.clusterManager.setOnClusterClickListener(context);
         this.clusterManager.setOnClusterItemClickListener(context);
         map.setOnCameraIdleListener(clusterManager);
@@ -24,9 +24,9 @@ public class MarkerManager {
     }
 
     public void setClusterAlgorithm() {
-        this.algorithm = new NonHierarchicalDistanceBasedAlgorithm<>();
-        this.algorithm.setMaxDistanceBetweenClusteredItems(20);
-        clusterManager.setAlgorithm(this.algorithm);
+        NonHierarchicalDistanceBasedAlgorithm<MarkerClusterItem> algorithm = new NonHierarchicalDistanceBasedAlgorithm<>();
+        algorithm.setMaxDistanceBetweenClusteredItems(20);
+        clusterManager.setAlgorithm(algorithm);
     }
 
 }
