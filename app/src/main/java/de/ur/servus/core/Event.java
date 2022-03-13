@@ -2,20 +2,26 @@ package de.ur.servus.core;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.List;
+import java.util.Objects;
+
 import javax.annotation.Nullable;
 
 public class Event {
     private final String name;
     private final String description;
-    private @Nullable String id;
+    private @Nullable
+    String id;
     private final LatLng location;
-    private final int attendants;
+    private final String genre;
+    private final List<Attendant> attendants;
 
-    public Event(String name, String description, LatLng location, int attendants) {
+    public Event(String name, String description, LatLng location, List<Attendant> attendants, String genre) {
         this.name = name;
         this.description = description;
         this.location = location;
         this.attendants = attendants;
+        this.genre = genre;
     }
 
     public LatLng getLocation() {
@@ -30,17 +36,30 @@ public class Event {
         return description;
     }
 
+    public String getGenre() {
+        return genre;
+    }
 
     @Nullable
     public String getId() {
         return id;
     }
 
-    public int getAttendants() {
+    public List<Attendant> getAttendants() {
         return attendants;
     }
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public boolean isUserOwner(String userId) {
+        var user = attendants.stream().filter(attendant -> Objects.equals(attendant.getUserId(), userId)).findFirst();
+        return user.isPresent() && user.get().isCreator();
+    }
+
+    public boolean isUserAttending(String userId) {
+        var user = attendants.stream().filter(attendant -> Objects.equals(attendant.getUserId(), userId)).findFirst();
+        return user.isPresent();
     }
 }

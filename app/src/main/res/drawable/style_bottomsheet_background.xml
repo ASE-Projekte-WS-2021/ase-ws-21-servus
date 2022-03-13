@@ -1,25 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape>
-            <gradient
-                android:type="linear"
-                android:angle="90"
-                android:startColor="@color/servus_black"
-                android:endColor="@color/servus_black_transparent" />
-            <corners android:topLeftRadius="24dp" android:topRightRadius="24dp"
-                android:bottomLeftRadius="0dp" android:bottomRightRadius="0dp"/>
-        </shape>
-    </item>
-    <item
-        android:left="0dp"
-        android:right="0dp"
-        android:top="16dp"
-        android:bottom="0dp">
-        <shape>
-            <solid android:color="?android:colorBackground"/>
-            <corners android:topLeftRadius="24dp" android:topRightRadius="24dp"
-                android:bottomLeftRadius="0dp" android:bottomRightRadius="0dp"/>
-        </shape>
-    </item>
-</layer-list>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/servus_white"/>
+    <corners android:topLeftRadius="16dp" android:topRightRadius="16dp"
+        android:bottomLeftRadius="0dp" android:bottomRightRadius="0dp"/>
+</shape>

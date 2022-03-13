@@ -1,44 +1,32 @@
 package de.ur.servus;
 
-import com.google.android.gms.maps.model.Marker;
+import android.content.Context;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.algo.NonHierarchicalDistanceBasedAlgorithm;
 
 public class MarkerManager {
-    private List<Marker> markers;
+    private final ClusterManager<MarkerClusterItem> clusterManager;
 
+    public MarkerManager(ClusterManagerContext context, GoogleMap map) {
+        this.clusterManager = new ClusterManager<>((Context) context, map);
 
-    public List<Marker> getMarkers() {
-        return markers;
+        this.clusterManager.setOnClusterClickListener(context);
+        this.clusterManager.setOnClusterItemClickListener(context);
+        map.setOnCameraIdleListener(clusterManager);
+        map.setOnMarkerClickListener(clusterManager);
+        clusterManager.setAnimation(true);
     }
 
-    public Optional<Marker> getMarkerForId(String eventId) {
-        return markers.stream().filter(marker -> {
-            String markerId = Objects.requireNonNull(marker.getTag()).toString();
-            return markerId.equals(eventId);
-        }).findFirst();
+    public ClusterManager<MarkerClusterItem> getClusterManager() {
+        return clusterManager;
     }
 
-    public void setMarkers(List<Marker> markers) {
-        this.markers = markers;
-    }
-
-    public void showAllMarkers() {
-        markers.forEach(marker -> marker.setVisible(true));
-    }
-
-    public void hideAllMarkers() {
-        markers.forEach(marker -> marker.setVisible(false));
-    }
-
-    public void showSingleMarker(String eventId) {
-        var marker = getMarkerForId(eventId);
-        if (marker.isPresent()) {
-            hideAllMarkers();
-            marker.get().setVisible(true);
-        }
+    public void setClusterAlgorithm() {
+        NonHierarchicalDistanceBasedAlgorithm<MarkerClusterItem> algorithm = new NonHierarchicalDistanceBasedAlgorithm<>();
+        algorithm.setMaxDistanceBetweenClusteredItems(20);
+        clusterManager.setAlgorithm(algorithm);
     }
 
 }

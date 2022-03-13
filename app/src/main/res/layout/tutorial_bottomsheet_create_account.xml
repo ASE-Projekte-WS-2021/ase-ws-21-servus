@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/mBottomSheets"
+    android:id="@+id/tutorial_bottomSheet" >
+
+    <include layout="@layout/bottomsheet_settings_content" />
+</LinearLayout>

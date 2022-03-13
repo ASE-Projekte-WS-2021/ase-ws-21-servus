@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@drawable/style_fragment_profilecard"
+    tools:context=".ProfileCardFragment">
+
+    <LinearLayout
+        android:id="@+id/profilecard_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:orientation="horizontal"
+        android:paddingVertical="12dp"
+        android:paddingEnd="12dp"
+        android:paddingStart="16dp"
+        tools:ignore="DisableBaselineAlignment,KeyboardInaccessibleWidget,RtlSymmetry">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/profilecard_name_container"
+                style="@style/mLabelContainer" >
+
+                <TextView
+                    style="@style/mProfileCardLabels"
+                    android:text="@string/profilecard_name_label" />
+
+                <TextView
+                    android:id="@+id/profilecard_name"
+                    style="@style/mProfileCardLabelledTextViews"
+                    android:layout_width="match_parent"
+                    android:text="@string/profilecard_name" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/profilecard_birthdate_container"
+                style="@style/mLabelContainer" >
+
+                <TextView
+                    style="@style/mProfileCardLabels"
+                    android:text="@string/profilecard_birthdate_label" />
+
+                <TextView
+                    android:id="@+id/profilecard_birthdate"
+                    style="@style/mProfileCardLabelledTextViews"
+                    android:text="@string/profilecard_birthdate" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/profilecard_course_container"
+                style="@style/mLabelContainer"
+                android:layout_marginBottom="0dp">
+
+                <TextView
+                    style="@style/mProfileCardLabels"
+                    android:text="@string/profilecard_course_label" />
+
+                <TextView
+                    android:id="@+id/profilecard_course"
+                    style="@style/mProfileCardLabelledTextViews"
+                    android:text="@string/profilecard_course" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="end"
+            android:orientation="vertical">
+
+            <de.ur.servus.utils.RoundishImageView
+                android:id="@+id/profilecard_picture"
+                android:layout_width="128dp"
+                android:layout_height="128dp"
+                android:adjustViewBounds="true"
+                android:elevation="2dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/img_placeholder_avatar"
+                app:cornerRadius="@dimen/round_corner_radius"
+                app:roundedCorners="topRight|bottomLeft" />
+
+            <!-- Spacing View -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/profilecard_gender_indicator"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_placeholder"
+                tools:ignore="ContentDescription" />
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>

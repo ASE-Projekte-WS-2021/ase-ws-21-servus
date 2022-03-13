@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/event_details_creator_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp"
+    android:layout_marginBottom="32dp" >
+
+    <LinearLayout
+        android:id="@+id/event_details_attendee_data_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/event_details_attendee_image"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="8dp"
+            android:elevation="2dp"
+            android:src="@drawable/img_placeholder_avatar"
+            app:shapeAppearanceOverlay="@style/roundedImageView"
+            android:background="@drawable/style_imageview_roundedcorners" />
+
+        <LinearLayout
+            style="@style/mLabelContainer"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="0dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp">
+
+            <TextView
+                android:id="@+id/event_details_attendee_role"
+                style="@style/mLabels"
+                android:text="@string/event_details_label_role_attendee" />
+
+            <TextView
+                android:id="@+id/event_details_attendee_name"
+                style="@style/mLabelledTextViews"
+                android:text="@string/event_details_default_creator" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/event_details_attendee_dismiss"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        android:elevation="2dp"
+        android:src="@drawable/ic_close"
+        tools:ignore="ContentDescription"
+        android:visibility="gone"/>
+
+</LinearLayout>

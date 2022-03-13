@@ -6,7 +6,92 @@
     <androidx.core.widget.NestedScrollView
         style="@style/mScrollViews">
 
-        <include layout="@layout/bottomsheet_participant_content" />
+        <LinearLayout
+            style="@style/mBottomSheetsContents"
+            android:orientation="vertical">
+
+            <LinearLayout
+                style="@style/mLabelContainer"
+                android:id="@+id/event_details_eventname_container" >
+
+                <TextView
+                    style="@style/mLabels"
+                    android:text="@string/event_details_label_eventname" />
+
+                <TextView
+                    style="@style/mLabelledTextViews"
+                    android:id="@+id/event_details_eventname"
+                    android:text="@string/event_details_default_eventname" />
+            </LinearLayout>
+
+            <LinearLayout
+                style="@style/mLabelContainer"
+                android:id="@+id/event_details_description_container" >
+
+                <TextView
+                    style="@style/mLabels"
+                    android:text="@string/event_details_label_description" />
+
+                <TextView
+                    style="@style/mLabelledTextViews"
+                    android:id="@+id/event_details_description"
+                    android:text="@string/event_details_default_description" />
+            </LinearLayout>
+
+            <LinearLayout
+                style="@style/mLabelContainer"
+                android:id="@+id/event_details_attendees_container" >
+
+                <TextView
+                    style="@style/mLabels"
+                    android:layout_width="wrap_content"
+                    android:text="@string/event_details_label_attendees" />
+
+                <TextView
+                    android:id="@+id/event_details_total_attendee_count"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginStart="8dp"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:text="@string/event_details_total_attendees"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    style="@style/mLabelledTextViews"
+                    android:id="@+id/event_details_attendees"
+                    android:orientation="vertical">
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                style="@style/mLabelContainer"
+                android:id="@+id/event_details_genre_container" >
+
+                <TextView
+                    style="@style/mLabels"
+                    android:text="@string/event_details_label_genre" />
+
+                <TextView
+                    style="@style/mLabelledTextViews"
+                    android:id="@+id/event_details_genre"
+                    android:text="@string/event_details_default_genre" />
+            </LinearLayout>
+
+            <Button
+                style="@style/mButtons"
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/event_details_button_attend"
+                android:id="@+id/event_details_button" />
+
+            <Button
+                android:id="@+id/event_details_button_edit"
+                style="@style/mButtons"
+                android:layout_marginBottom="16dp"
+                android:text="@string/event_details_button_edit" />
+        </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

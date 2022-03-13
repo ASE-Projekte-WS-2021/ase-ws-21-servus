@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/mSpinnerItems">
+
+    <ImageView
+        android:id="@+id/spinnerImage"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/ic_event_creation_genre_activity"
+        app:tint="@color/colorPrimary"
+        tools:ignore="ContentDescription" />
+
+    <TextView
+        android:id="@+id/event_spinner_genreName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="16dp"
+        android:layout_toEndOf="@+id/spinnerImage"
+        android:text="@string/event_creation_genre_activity" />
+
+</RelativeLayout>
