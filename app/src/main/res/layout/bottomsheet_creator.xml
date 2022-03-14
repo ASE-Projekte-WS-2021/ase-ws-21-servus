@@ -59,6 +59,10 @@
                     android:dropDownSelector="@null" />
             </LinearLayout>
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/event_creation_hint"/>
 
             <Button
                 android:id="@+id/event_create_button"
