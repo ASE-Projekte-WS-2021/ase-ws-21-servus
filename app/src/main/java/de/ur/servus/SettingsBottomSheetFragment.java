@@ -196,6 +196,8 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
                 if (onProfileSavedListener != null) {
                     onProfileSavedListener.accept(ownProfile);
                 }
+
+                this.dismiss();
             }
         });
 
