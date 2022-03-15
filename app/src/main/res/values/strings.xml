@@ -24,14 +24,15 @@
     <string name="event_creation_label_eventname">Name</string>
     <string name="event_creation_label_description">Description</string>
     <string name="event_creation_label_genre">What do you want to do?</string>
-    <string name="event_creation_button_create">Create</string>
+    <string name="event_creation_button_create">Create your own Meet-Up</string>
     <string name="event_creation_genre_sport">Sport</string>
     <string name="event_creation_genre_party">Party</string>
     <string name="event_creation_genre_food">Food</string>
     <string name="event_creation_genre_activity">Others</string>
     <string name="event_creation_genre_hangout">Hang-out</string>
     <string name="event_creation_button_edit">Save</string>
-    <string name="event_creation_hint">Please note that the event will be created at your current location.</string>
+    <string name="event_creation_hint_label">Note:</string>
+    <string name="event_creation_hint">Please note that the event will be created at your current location. This information will be shared with other users when creating the Meet-Up.</string>
 
 
     <string name="event_details_label_eventname">Name</string>

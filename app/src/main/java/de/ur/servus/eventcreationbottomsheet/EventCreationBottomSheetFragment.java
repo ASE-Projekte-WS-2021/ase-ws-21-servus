@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -144,16 +145,39 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
 
         // set listeners
         binding.eventCreateButton.setOnClickListener(v -> {
-            var name = binding.eventCreationEventname.getText().toString();
-            var description = binding.eventCreationDescription.getText().toString();
-            if (eventToEdit != null) {
-                if (onEditEventClickListener != null) {
-                    onEditEventClickListener.accept(eventToEdit, new EventCreationData(name, description, selectedGenre));
+            // Required field check is i analogously to the settings bottomsheet as an array
+            // in case we decide to add further mandatory fields besides one
+
+            boolean[] requiredFieldFilled = {false};
+            boolean requirementPassed = false;
+
+            if (binding.eventCreationEventname.getText().toString()  != null && !binding.eventCreationEventname.getText().toString().equals("")){
+                requiredFieldFilled[0] = true;
+            }
+
+            for (boolean b : requiredFieldFilled) {
+                if (b) {
+                    requirementPassed = true;
+                } else {
+                    requirementPassed = false;
+                    break;
+                }
+            }
+
+            if (requirementPassed) {
+                var name = binding.eventCreationEventname.getText().toString();
+                var description = binding.eventCreationDescription.getText().toString();
+                if (eventToEdit != null) {
+                    if (onEditEventClickListener != null) {
+                        onEditEventClickListener.accept(eventToEdit, new EventCreationData(name, description, selectedGenre));
+                    }
+                } else {
+                    if (onCreateEventClickListener != null) {
+                        onCreateEventClickListener.accept(new EventCreationData(name, description, selectedGenre));
+                    }
                 }
             } else {
-                if (onCreateEventClickListener != null) {
-                    onCreateEventClickListener.accept(new EventCreationData(name, description, selectedGenre));
-                }
+                Toast.makeText(activity, getResources().getString(R.string.toast_fill_required_fields), Toast.LENGTH_LONG).show();
             }
         });
 

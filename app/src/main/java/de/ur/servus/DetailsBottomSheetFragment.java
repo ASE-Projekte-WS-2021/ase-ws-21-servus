@@ -230,13 +230,11 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         attendeeBinding.eventDetailsAttendeeDataContainer.setOnClickListener(v -> onAttendantClicked(attendeeProfile));
 
         if (attendant.getUserPicturePath() != null && !attendant.getUserPicturePath().equals("")) {
-            //TODO: Load Image from Firebase
-
             try {
                 URL url = new URL(attendant.getUserPicturePath());
                 Glide.with(this)
                         .load(url)
-                        .addListener(new RequestListener<Drawable>() {
+                        .addListener(new RequestListener<>() {
                             @Override
                             public boolean onLoadFailed(@androidx.annotation.Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
                                 return false;
