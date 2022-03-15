@@ -138,14 +138,19 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
         // set content
         binding.eventDetailsEventname.setText(event.getName());
-        binding.eventDetailsDescription.setText(event.getDescription());
+
+        if (event.getDescription() == null || event.getDescription().equals("")){
+            binding.eventDetailsDescriptionContainer.setVisibility(View.GONE);
+        } else {
+            binding.eventDetailsDescriptionContainer.setVisibility(View.VISIBLE);
+            binding.eventDetailsDescription.setText(event.getDescription());
+        }
+
         binding.eventDetailsGenre.setText(event.getGenre());
 
         String totalAttendeeCount = "X";
         binding.eventDetailsTotalAttendeeCount.setText(event.getAttendants().size() + " " + view.getContext().getResources().getString(R.string.event_details_total_attendees_count) + " " + totalAttendeeCount);
-
-        //binding.eventDetailsAttendeesContainer.setVisibility(View.VISIBLE);
-        //Log.d("TEST", String.valueOf(binding.eventDetailsTotalAttendeeCount.getText()));
+        binding.eventDetailsAttendeesContainer.setVisibility(View.VISIBLE);
 
         if (binding.eventDetailsAttendees.getChildCount() >= 0) {
             binding.eventDetailsAttendees.removeAllViews();

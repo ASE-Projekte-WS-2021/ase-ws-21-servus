@@ -75,6 +75,21 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/event_creation_attendee_count_container"
+                style="@style/mLabelContainer">
+
+                <TextView
+                    style="@style/mLabels"
+                    android:text="@string/event_creation_label_attendee_count" />
+
+                <NumberPicker
+                    android:id="@+id/event_creation_attendee_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"/>
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
