@@ -247,6 +247,10 @@
         <item name="android:colorControlNormal">@color/servus_pink</item>
     </style>
 
+    <style name="mUserState" parent="Theme.MyApplication">
+        <item name="android:background">@drawable/style_userstate_light</item>
+    </style>
+
     <style name="Theme.MyApplication.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
     <style name="Theme.MyApplication.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
 </resources>

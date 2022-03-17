@@ -121,7 +121,7 @@
     <string name="event_details_total_attendees">[X / Y]</string>
     <string name="event_details_total_attendees_count">out of</string>
 
-    <string name="userstate_attendee">Currently participating</string>
-    <string name="userstate_creator">Currently hosting</string>
+    <string name="userstate_attendee">You are participating in an event.</string>
+    <string name="userstate_creator">You are hosting an event.</string>
 
 </resources>
