@@ -19,6 +19,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -102,6 +103,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     Button btn_creator;
     ShapeableImageView btn_filter;
     LinearLayout error_message;
+    LinearLayout userstate_container;
+    TextView userstate;
 
 
     /**
@@ -122,6 +125,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         userAccountHelpers = new UserAccountHelpers(this);
 
         userAccountHelpers.saveNewUserIdIfNotExisting();
+
+        userstate_container = findViewById(R.id.userstate_container);
+        userstate = findViewById(R.id.userstate);
 
         // when GPS is turned off, ask to turn it on. Starting to listen needs to be done in onCreate
         customLocationManager.addOnProviderDisabledListener(customLocationManager::showEnableGpsDialogIfNecessary);
@@ -611,14 +617,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             btn_creator.setText(R.string.main_bottom_button_view_own_event);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_pink, getTheme()));
+
+            userstate_container.setVisibility(View.VISIBLE);
+            userstate.setText(getResources().getString(R.string.userstate_creator));
         } else if (isAttending) {
             btn_creator.setText(R.string.main_bottom_button_view_event);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_pink, getTheme()));
+
+            userstate_container.setVisibility(View.VISIBLE);
+            userstate.setText(getResources().getString(R.string.userstate_attendee));
         } else {
             btn_creator.setText(R.string.content_create_meetup);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_white, getTheme()));
+
+            userstate_container.setVisibility(View.GONE);
         }
     }
 
