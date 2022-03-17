@@ -238,6 +238,15 @@
         <item name="android:background">@color/servus_darkmode_grey</item>
     </style>
 
+    <style name="mNumberPickerStyle" parent="@style/Theme.MyApplication">
+        <item name="android:theme">@style/Theme.MyApplication</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="colorControlNormal">@color/servus_pink</item>
+        <item name="android:colorControlNormal">@color/servus_pink</item>
+    </style>
+
     <style name="Theme.MyApplication.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
     <style name="Theme.MyApplication.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
 </resources>

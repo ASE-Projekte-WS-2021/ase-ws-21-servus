@@ -148,7 +148,17 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
         binding.eventDetailsGenre.setText(event.getGenre());
 
-        String totalAttendeeCount = "X";
+
+        String totalAttendeeCount;
+        if (event.getMaxAttendees() != null ){
+            if (event.getMaxAttendees().equals("0")){
+                totalAttendeeCount = "∞";
+            } else{
+                totalAttendeeCount = event.getMaxAttendees();
+            }
+        } else {
+            totalAttendeeCount = "N/A";
+        }
         binding.eventDetailsTotalAttendeeCount.setText(event.getAttendants().size() + " " + view.getContext().getResources().getString(R.string.event_details_total_attendees_count) + " " + totalAttendeeCount);
         binding.eventDetailsAttendeesContainer.setVisibility(View.VISIBLE);
 
