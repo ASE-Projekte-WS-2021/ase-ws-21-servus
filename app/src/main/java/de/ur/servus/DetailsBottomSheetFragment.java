@@ -67,6 +67,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
     private boolean attendingThisEvent = false;
     private boolean attendingAnyEvent = false;
+    private boolean isLoading = false;
     private boolean isCreator = false;
 
     public DetailsBottomSheetFragment() {
@@ -97,6 +98,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         this.event = event;
         this.attendingThisEvent = attendingThisEvent;
         this.attendingAnyEvent = attendingAnyEvent;
+        this.isLoading = false;
         this.isCreator = isCreator;
         this.onClickAttendWithdrawListener = onClickAttendWithdrawListener;
         this.onClickEditEventListener = onClickEditEventListener;
@@ -174,6 +176,8 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         // set listeners
         binding.eventDetailsButton.setOnClickListener(v -> {
             if (onClickAttendWithdrawListener != null) {
+                this.isLoading = true;
+                tryUpdateView();
                 onClickAttendWithdrawListener.accept(event, attendingThisEvent, isCreator);
             }
         });
@@ -205,6 +209,14 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
             }
         } else {
             binding.eventDetailsButton.setVisibility(View.GONE);
+        }
+
+        if(isLoading){
+            // change button style to loading inidcator
+            binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners_loading);
+            binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_pink, view.getContext().getTheme()));
+            binding.eventDetailsButton.setText(R.string.event_details_button_attend_loading);
+            binding.eventDetailsButton.setOnClickListener(null);
         }
 
         binding.eventDetailsButtonEdit.setVisibility(isCreator ? View.VISIBLE : View.GONE);

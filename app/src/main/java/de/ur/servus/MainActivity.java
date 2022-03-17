@@ -5,7 +5,6 @@ import static de.ur.servus.utils.UserAccountKeys.ACCOUNT_EXISTS;
 import static de.ur.servus.utils.UserAccountKeys.ACCOUNT_ITEM_ID;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -67,6 +66,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private EventHelpers eventHelpers;
     private UserAccountHelpers userAccountHelpers;
     private EventList eventList;
+
+    @Nullable
+    private String viewedEventId = null;
     Context context;
     SharedPreferences sharedPreferences;
     CustomLocationManager customLocationManager;
@@ -144,7 +146,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
                 eventList.ifUserIsSubscribedToEvents(userId,
                         attendedEvents -> {
-                            subscribeEvent(attendedEvents.get(0).getId());
+                            setViewedEvent(attendedEvents.get(0).getId());
                             showBottomSheet(detailsBottomSheetFragment);
                         },
                         () -> {
@@ -162,7 +164,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
         eventList.ifUserIsSubscribedToEvents(userId,
-                events -> this.subscribeEvent(events.get(0).getId()),
+                events -> this.setViewedEvent(events.get(0).getId()),
                 null
         );
 
@@ -405,7 +407,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     public boolean onClusterItemClick(MarkerClusterItem markerClusterItem) {
         animateZoomInCamera(markerClusterItem.getPosition());
         var eventId = markerClusterItem.getEvent().getId();
-        subscribeEvent(eventId);
+        setViewedEvent(eventId);
         // TODO wait before initial data was fetched before showing bottom sheet
         showBottomSheet(detailsBottomSheetFragment);
         return true;
@@ -438,6 +440,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         clusterManager.addItem(marker);
                     });
 
+                    handleCurrentlyViewedEvent();
                     redrawClusters();
                 }
 
@@ -458,7 +461,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onError(Exception e) {
-                // TODO error handling here
                 Log.e("LoadAllEvents", e.getMessage());
                 // TODO leave current event
             }
@@ -466,61 +468,59 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    public void subscribeEvent(String eventId) {
-        unsubscribeEvent();
+    /**
+     * Set which event is currently being viewed.
+     * @param eventId The events id.
+     */
+    public void setViewedEvent(String eventId) {
+        this.viewedEventId = eventId;
+        handleCurrentlyViewedEvent();
+    }
 
-        singleEventListenerRegistration = backendHandler.subscribeEvent(eventId, new EventListener<>() {
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void onEvent(Event event) {
-                if (markerManager == null) {
-                    return;
-                }
-                var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
+    private void handleCurrentlyViewedEvent() {
+        var viewedEventOptional = eventList.getEvents().stream().filter(event -> Objects.equals(event.getId(), viewedEventId)).findFirst();
 
-                var attending = event.isUserAttending(userId);
-                var subscribedToAnyEvent = eventList.isUserAttendingAnyEvent(userId);
+        if (viewedEventOptional.isPresent()) {
+            var event = viewedEventOptional.get();
+            var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
 
-                // update details sheet
-                if (detailsBottomSheetFragment != null) {
-                    boolean isOwner = event.isUserOwner(userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null));
+            var attending = event.isUserAttending(userId);
+            var subscribedToAnyEvent = eventList.isUserAttendingAnyEvent(userId);
+            boolean isOwner = event.isUserOwner(userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null));
 
-                    detailsBottomSheetFragment.update(
-                            event,
-                            attending,
-                            subscribedToAnyEvent,
-                            isOwner,
-                            (e, a, c) -> onDetailsAttendWithdrawClicked(e, a, c),
-                            e -> onDetailsEditEventClicked(e),
-                            (e,u) -> onDetailsRemoveUserClicked(e,u)
-                    );
-                }
+            // update details sheet
+            if (detailsBottomSheetFragment != null) {
 
-                // update edit view
-                if (eventCreationBottomSheetFragment != null) {
-                    eventCreationBottomSheetFragment.update(
-                            event,
-                            data -> onEventCreationCreateClicked(data),
-                            (e, data) -> onEventCreationEditClicked(e, data)
-                    );
-                }
-
-                redrawClusters();
+                detailsBottomSheetFragment.update(
+                        event,
+                        attending,
+                        subscribedToAnyEvent,
+                        isOwner,
+                        this::onDetailsAttendWithdrawClicked,
+                        this::onDetailsEditEventClicked,
+                        this::onDetailsRemoveUserClicked
+                );
             }
 
-            @Override
-            public void onError(Exception e) {
-                Log.e("LoadSingleEvent", e.getMessage() + Log.getStackTraceString(e));
-                detailsBottomSheetFragment.dismiss();
-                setBottomButtonStyle(false, false);
+            // update edit view
+            if (eventCreationBottomSheetFragment != null) {
+                eventCreationBottomSheetFragment.update(
+                        event,
+                        this::onEventCreationCreateClicked,
+                        this::onEventCreationEditClicked
+                );
             }
-        });
+
+            // update bottom main button
+            setBottomButtonStyle(isOwner, attending);
+        } else {
+            detailsBottomSheetFragment.dismiss();
+            setBottomButtonStyle(false, false);
+        }
     }
 
     private void unsubscribeEvent() {
-        if (singleEventListenerRegistration != null) {
-            singleEventListenerRegistration.unsubscribe();
-        }
+        this.viewedEventId = null;
     }
 
     private void attendEvent(String eventId, boolean isCreator) {
