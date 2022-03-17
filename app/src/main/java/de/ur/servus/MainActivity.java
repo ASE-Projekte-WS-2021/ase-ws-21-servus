@@ -156,7 +156,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         btn_creator.setOnClickListener(v -> {
             if (onlyAllowIfAccountExists()) {
                 var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
-                eventList.ifUserIsSubscribedToEvents(userId,
+                eventList.ifUserIsAttendingEvents(userId,
                         attendedEvents -> {
                             setViewedEvent(attendedEvents.get(0).getId());
                             showBottomSheet(detailsBottomSheetFragment);
@@ -175,7 +175,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         settingsBottomSheetFragment.update(this::onUserProfileSaved);
 
         var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
-        eventList.ifUserIsSubscribedToEvents(userId,
+        eventList.ifUserIsAttendingEvents(userId,
                 events -> this.setViewedEvent(events.get(0).getId()),
                 null
         );
@@ -486,7 +486,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // style bottom button
                 var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
-                eventList.ifUserIsSubscribedToEvents(userId,
+                eventList.ifUserIsAttendingEvents(userId,
                         attendedEvents -> {
                             var event = attendedEvents.stream().filter(e -> Objects.equals(e.getId(), attendedEvents.get(0).getId())).findFirst();
                             if (event.isPresent()) {
@@ -530,7 +530,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             // update details sheet
             if (detailsBottomSheetFragment != null) {
-
                 detailsBottomSheetFragment.update(
                         event,
                         attending,

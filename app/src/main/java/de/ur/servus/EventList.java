@@ -34,7 +34,7 @@ public class EventList {
         return getEventsAttendedByUser(userId).size() > 0;
     }
 
-    public void ifUserIsSubscribedToEvents(String userId, @Nullable Consumer<List<Event>> then, @Nullable Runnable els) {
+    public void ifUserIsAttendingEvents(String userId, @Nullable Consumer<List<Event>> then, @Nullable Runnable els) {
         var attendedEvents = events.stream().filter(e -> e.isUserAttending(userId)).collect(Collectors.toList());
         var attendedAnyEvent = attendedEvents.size() > 0;
 
