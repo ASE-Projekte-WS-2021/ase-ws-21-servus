@@ -8,11 +8,13 @@ public class EventCreationData {
     public final String name;
     public final String description;
     public final String genre;
+    public final String maxAttendees;
 
-    EventCreationData(String name, String description, String genre) {
+    EventCreationData(String name, String description, String genre, String maxAttendees) {
         this.name = name;
         this.description = description;
         this.genre = genre;
+        this.maxAttendees = maxAttendees;
     }
 
 }

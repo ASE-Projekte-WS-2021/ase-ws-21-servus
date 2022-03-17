@@ -322,7 +322,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void onEventCreationEditClicked(Event event, EventCreationData inputEventData) {
-        var eventUpdate = new EventUpdateData(inputEventData.name, inputEventData.description, inputEventData.genre);
+        var eventUpdate = new EventUpdateData(inputEventData.name, inputEventData.description, inputEventData.genre, inputEventData.maxAttendees);
         backendHandler.updateEvent(event.getId(), eventUpdate.toUpdateMap(), null);
 
         //close bottomsheet

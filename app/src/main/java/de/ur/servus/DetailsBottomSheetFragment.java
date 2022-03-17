@@ -140,14 +140,29 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
         // set content
         binding.eventDetailsEventname.setText(event.getName());
-        binding.eventDetailsDescription.setText(event.getDescription());
+
+        if (event.getDescription() == null || event.getDescription().equals("")){
+            binding.eventDetailsDescriptionContainer.setVisibility(View.GONE);
+        } else {
+            binding.eventDetailsDescriptionContainer.setVisibility(View.VISIBLE);
+            binding.eventDetailsDescription.setText(event.getDescription());
+        }
+
         binding.eventDetailsGenre.setText(event.getGenre());
 
-        String totalAttendeeCount = "X";
-        binding.eventDetailsTotalAttendeeCount.setText(event.getAttendants().size() + " " + view.getContext().getResources().getString(R.string.event_details_total_attendees_count) + " " + totalAttendeeCount);
 
-        //binding.eventDetailsAttendeesContainer.setVisibility(View.VISIBLE);
-        //Log.d("TEST", String.valueOf(binding.eventDetailsTotalAttendeeCount.getText()));
+        String totalAttendeeCount;
+        if (event.getMaxAttendees() != null ){
+            if (event.getMaxAttendees().equals("0")){
+                totalAttendeeCount = "∞";
+            } else{
+                totalAttendeeCount = event.getMaxAttendees();
+            }
+        } else {
+            totalAttendeeCount = "N/A";
+        }
+        binding.eventDetailsTotalAttendeeCount.setText(event.getAttendants().size() + " " + view.getContext().getResources().getString(R.string.event_details_total_attendees_count) + " " + totalAttendeeCount);
+        binding.eventDetailsAttendeesContainer.setVisibility(View.VISIBLE);
 
         if (binding.eventDetailsAttendees.getChildCount() >= 0) {
             binding.eventDetailsAttendees.removeAllViews();
@@ -179,10 +194,14 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         // attending an event AND attending this event AND is NOT the creator => show withdraw button
         // attending an event AND NOT attending this event => show no button (for now)
         if (!attendingAnyEvent) {
-            binding.eventDetailsButton.setVisibility(View.VISIBLE);
-            binding.eventDetailsButton.setText(R.string.event_details_button_attend);
-            binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners);
-            binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
+            if(Integer.parseInt(event.getMaxAttendees()) == 0 || event.getAttendants().size() < Integer.parseInt(event.getMaxAttendees())) {
+                binding.eventDetailsButton.setVisibility(View.VISIBLE);
+                binding.eventDetailsButton.setText(R.string.event_details_button_attend);
+                binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners);
+                binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
+            } else {
+                binding.eventDetailsButton.setVisibility(View.GONE);
+            }
         } else if (attendingThisEvent) {
             binding.eventDetailsButton.setVisibility(View.VISIBLE);
             binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
