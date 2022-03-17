@@ -69,6 +69,14 @@ public class CustomLocationManager {
         locationListeners.add(this::saveLatLng);
     }
 
+    public void addLocationListener(Consumer<LatLng> listener) {
+        locationListeners.add(listener);
+    }
+
+    public void removeLocationListener(Consumer<LatLng> listener) {
+        locationListeners.remove(listener);
+    }
+
     private LocationCallback getLocationCallback() {
         return new LocationCallback() {
             @Override
@@ -200,6 +208,7 @@ public class CustomLocationManager {
     public void removeOnProviderDisabledListener(Runnable onProviderDisabledListener) {
         providerDisabledListeners.remove(onProviderDisabledListener);
     }
+
 
     public void showEnableGpsDialogIfNecessary() {
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()

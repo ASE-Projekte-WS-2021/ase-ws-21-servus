@@ -3,19 +3,23 @@ package de.ur.servus;
 import static de.ur.servus.utils.UserAccountKeys.ACCOUNT_ITEM_ID;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -40,6 +44,7 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
     private final int markerHeight;
     private final Activity activity;
     private final EventList eventList;
+    private final int userMarkerWidthHeight = 80;
 
     public CustomMarkerRenderer(Activity activity, GoogleMap map, ClusterManager<MarkerClusterItem> clusterManager, EventList eventList) {
         super(activity, map, clusterManager);
@@ -55,7 +60,7 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
         imageView.setLayoutParams(new ViewGroup.LayoutParams(markerWidth, markerHeight));
         int padding = (int) activity.getResources().getDimension(R.dimen.custom_marker_padding);
         imageView.setPadding(padding, padding, padding, padding);
-        iconGenerator.setBackground(activity.getDrawable(R.drawable.style_cluster_marker_bg));
+        iconGenerator.setBackground(AppCompatResources.getDrawable(activity, R.drawable.style_cluster_marker_bg));
         iconGenerator.setContentView(imageView);
         clusterManager.setRenderer(this);
     }
@@ -118,6 +123,15 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
         } else {
             canvas.drawText(attendeesString, x * 4.4f, y *4.1f , textPaint);
         }
+    }
+
+    public BitmapDescriptor bitmapFromVector(Context context, int id) {
+        Drawable drawable = ContextCompat.getDrawable(context, id);
+        drawable.setBounds(0, 0, userMarkerWidthHeight, userMarkerWidthHeight);
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.draw(canvas);
+        return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
     @Override

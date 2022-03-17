@@ -35,6 +35,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.maps.android.clustering.Cluster;
@@ -72,6 +74,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     Context context;
     SharedPreferences sharedPreferences;
     CustomLocationManager customLocationManager;
+
+    @Nullable
+    private Marker userMarker;
+
     @Nullable
     MarkerManager markerManager;
     CustomMarkerRenderer customMarkerRenderer;
@@ -201,6 +207,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         customLocationManager.stopListeningForLocationUpdates();
         customLocationManager.stopListeningProviderDisabled();
 
+        customLocationManager.removeLocationListener(this::moveOwnLocationMarker);
+
         // TODO unsubscribe single event
     }
 
@@ -212,10 +220,32 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         customLocationManager.startListeningProviderDisabled();
         customLocationManager.showEnableGpsDialogIfNecessary();
 
+        customLocationManager.addLocationListener(this::moveOwnLocationMarker);
+
         subscribeAllEvents();
         // TODO subscribe single event again (which event id?)
     }
 
+    //Moves the user location marker to current position
+    private void moveOwnLocationMarker(LatLng position){
+        LatLng userLocation = new LatLng(position.latitude, position.longitude);
+        if(userMarker != null) {
+            userMarker.setPosition(userLocation);
+        }
+    }
+
+    //Adds the user marker on the user's initial position
+    private void setInitialPositionMarker(){
+        customLocationManager.getLastObservedLocation(latLng -> {
+            latLng.ifPresent(lng -> {
+                if (mMap != null) {
+                    userMarker = mMap.addMarker(new MarkerOptions()
+                            .position(lng)
+                            .icon(customMarkerRenderer.bitmapFromVector(getApplicationContext(), R.drawable.user_icon_marker)));
+                }
+            });
+        });
+    }
 
     /**
      * Permission functionality
@@ -301,6 +331,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void onEventCreationCreateClicked(EventCreationData inputEventData) {
+        if(mMap != null){
+            centerCamera(mMap);
+        }
         eventHelpers.createEvent(customLocationManager, inputEventData, new EventListener<>() {
             @Override
             public void onEvent(String id) {
@@ -372,6 +405,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         markerManager = new MarkerManager(this, googleMap);
         markerManager.setClusterAlgorithm();
         customMarkerRenderer = new CustomMarkerRenderer(this, mMap, markerManager.getClusterManager(), eventList);
+        setInitialPositionMarker();
     }
 
     void animateZoomInCamera(LatLng latLng) {
