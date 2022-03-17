@@ -86,4 +86,11 @@ public class FilterBottomSheetFragment extends BottomSheetDialogFragment {
 
         // style views
     }
+
+    @Override
+    public void dismiss() {
+        if (this.isVisible()) {
+            super.dismiss();
+        }
+    }
 }

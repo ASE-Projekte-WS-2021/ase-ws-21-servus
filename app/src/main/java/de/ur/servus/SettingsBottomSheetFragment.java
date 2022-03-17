@@ -366,4 +366,11 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
 
         settingsProfilePicture.setImageBitmap(avatarEditor.loadProfilePicture());
     }
+
+    @Override
+    public void dismiss() {
+        if (this.isVisible()) {
+            super.dismiss();
+        }
+    }
 }
