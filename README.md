@@ -1,6 +1,6 @@
 # Servus
 
-**⚠️Description needs to be added⚠️**
+Servus is an informal greeting in the Bavarian language. The core functionality of our app is to enable students to get to know other students in their area through real-life events. With Servus, users can create events at their own location. The events are represented by markers on a map and other users can join these events to participate. Events can range from simple hang-outs to sporty activities or parties.
 
 ## Development Setup
 
