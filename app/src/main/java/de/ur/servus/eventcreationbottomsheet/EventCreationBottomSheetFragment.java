@@ -213,4 +213,11 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
     //used for the event creation spinner
     public void onNothingSelected(AdapterView<?> adapterView) {
     }
+
+    @Override
+    public void dismiss() {
+        if (this.isVisible()) {
+            super.dismiss();
+        }
+    }
 }

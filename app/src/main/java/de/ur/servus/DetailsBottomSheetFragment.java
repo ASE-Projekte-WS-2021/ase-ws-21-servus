@@ -302,7 +302,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         return attendeeItem;
     }
 
-    private void onAttendantClicked(UserProfile profile){
+    private void onAttendantClicked(UserProfile profile) {
         // When clicked on the data, show servus card
         ProfileCardFragment servusCard = ProfileCardFragment.newInstance(profile);
 
@@ -312,5 +312,11 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         transaction.commit();
     }
 
+    @Override
+    public void dismiss() {
+        if (this.isVisible()) {
+            super.dismiss();
+        }
+    }
 }
 
