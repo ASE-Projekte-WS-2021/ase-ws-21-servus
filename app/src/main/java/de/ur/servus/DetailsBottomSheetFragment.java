@@ -194,10 +194,14 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         // attending an event AND attending this event AND is NOT the creator => show withdraw button
         // attending an event AND NOT attending this event => show no button (for now)
         if (!attendingAnyEvent) {
-            binding.eventDetailsButton.setVisibility(View.VISIBLE);
-            binding.eventDetailsButton.setText(R.string.event_details_button_attend);
-            binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners);
-            binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
+            if(Integer.parseInt(event.getMaxAttendees()) == 0 || event.getAttendants().size() < Integer.parseInt(event.getMaxAttendees())) {
+                binding.eventDetailsButton.setVisibility(View.VISIBLE);
+                binding.eventDetailsButton.setText(R.string.event_details_button_attend);
+                binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners);
+                binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
+            } else {
+                binding.eventDetailsButton.setVisibility(View.GONE);
+            }
         } else if (attendingThisEvent) {
             binding.eventDetailsButton.setVisibility(View.VISIBLE);
             binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);

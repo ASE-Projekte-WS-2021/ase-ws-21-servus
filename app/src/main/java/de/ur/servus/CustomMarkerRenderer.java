@@ -72,7 +72,7 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
         drawOnCanvas(item, icon);
 
         // Based on MaxAttendee count, apply a greyscale to the icon - otherwise leave it pink
-        if (item.getEvent().getMaxAttendees() != null && item.getEvent().getAttendants().size() >= Integer.parseInt(item.getEvent().getMaxAttendees())) {
+        if (Integer.parseInt(item.getEvent().getMaxAttendees()) > 0 && item.getEvent().getAttendants().size() >= Integer.parseInt(item.getEvent().getMaxAttendees())) {
             Bitmap btm = toGrayscale(icon);
             markerOptions.icon(BitmapDescriptorFactory.fromBitmap(btm));
         } else {
