@@ -49,6 +49,7 @@
     <string name="event_details_button_attend">Attend to Meet-Up</string>
     <string name="event_details_button_close_event">Close Meet-Up</string>
     <string name="event_details_button_withdraw">Withdraw attendance</string>
+    <string name="event_details_button_attend_loading">Loading…</string>
     <string name="event_details_button_edit">Edit Meet-Up</string>
 
     <string name="tutorial_skip">Skip onboarding</string>
