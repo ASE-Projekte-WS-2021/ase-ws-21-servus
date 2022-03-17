@@ -36,7 +36,6 @@ public class EventHelpers {
             //get USER ID
             var profile = userAccountHelpers.getOwnProfile(avatarEditor);
 
-
             if (profile.getUserID() == null) {
                 Log.e("eventCreation", "No own user id found.");
                 return;
@@ -44,7 +43,7 @@ public class EventHelpers {
 
             var attendants = new ArrayList<Attendant>();
 
-            Event event = new Event(inputEventData.name, inputEventData.description, latLng.get(), attendants, inputEventData.genre);
+            Event event = new Event(inputEventData.name, inputEventData.description, latLng.get(), attendants, inputEventData.genre, inputEventData.maxAttendees);
 
             FirestoreBackendHandler.getInstance().createNewEvent(event, afterCreationListener);
 

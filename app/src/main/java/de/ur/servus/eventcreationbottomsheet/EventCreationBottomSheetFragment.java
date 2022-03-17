@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,6 +52,8 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
 
     @Nullable
     BottomsheetCreatorBinding binding;
+
+    private final String[] numberPickerValues = new String[] {"∞", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"};
 
     public EventCreationBottomSheetFragment() {
 
@@ -122,6 +125,10 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
         view.post(() -> view.setSelection(position));
     }
 
+    private void postSetNumberPicker(NumberPicker view, int position) {
+        view.post(() -> view.setValue(position));
+    }
+
     /*
      * This only work from or after OnViewCreate and after an initial update call
      */
@@ -132,20 +139,29 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
         }
 
         // set content
+        /* Initialize NumberPicker */
+        binding.eventCreationAttendeeCount.setWrapSelectorWheel(false);
+        binding.eventCreationAttendeeCount.setMinValue(0);
+        binding.eventCreationAttendeeCount.setMaxValue(20);
+        binding.eventCreationAttendeeCount.setDisplayedValues(numberPickerValues);
+
         if (eventToEdit != null) {
             // these post methods are necessary, because setText will not update the displayed value
             postSetText(binding.eventCreationEventname, eventToEdit.getName());
             postSetText(binding.eventCreationDescription, eventToEdit.getDescription());
             postSetSelection(binding.eventCreationGenreSpinner, genreAdapter.getPositionFromName(eventToEdit.getGenre()));
+            postSetNumberPicker(binding.eventCreationAttendeeCount, 3);
+            // TODO: Alter position for NumberPicker
         } else {
             postSetText(binding.eventCreationEventname, "");
             postSetText(binding.eventCreationDescription, "");
             postSetSelection(binding.eventCreationGenreSpinner, 0);
+            postSetNumberPicker(binding.eventCreationAttendeeCount, 0);
         }
 
         // set listeners
         binding.eventCreateButton.setOnClickListener(v -> {
-            // Required field check is i analogously to the settings bottomsheet as an array
+            // Required field check works analog to the settings bottomsheet as an array
             // in case we decide to add further mandatory fields besides one
 
             boolean[] requiredFieldFilled = {false};
@@ -167,13 +183,14 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
             if (requirementPassed) {
                 var name = binding.eventCreationEventname.getText().toString();
                 var description = binding.eventCreationDescription.getText().toString();
+                var selectedMaxAttendees = String.valueOf(binding.eventCreationAttendeeCount.getValue());
                 if (eventToEdit != null) {
                     if (onEditEventClickListener != null) {
-                        onEditEventClickListener.accept(eventToEdit, new EventCreationData(name, description, selectedGenre));
+                        onEditEventClickListener.accept(eventToEdit, new EventCreationData(name, description, selectedGenre, selectedMaxAttendees));
                     }
                 } else {
                     if (onCreateEventClickListener != null) {
-                        onCreateEventClickListener.accept(new EventCreationData(name, description, selectedGenre));
+                        onCreateEventClickListener.accept(new EventCreationData(name, description, selectedGenre, selectedMaxAttendees));
                     }
                 }
             } else {

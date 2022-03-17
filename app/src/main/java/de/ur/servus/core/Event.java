@@ -15,13 +15,15 @@ public class Event {
     private final LatLng location;
     private final String genre;
     private final List<Attendant> attendants;
+    private final String maxAttendees;
 
-    public Event(String name, String description, LatLng location, List<Attendant> attendants, String genre) {
+    public Event(String name, String description, LatLng location, List<Attendant> attendants, String genre, String maxAttendees) {
         this.name = name;
         this.description = description;
         this.location = location;
         this.attendants = attendants;
         this.genre = genre;
+        this.maxAttendees = maxAttendees;
     }
 
     public LatLng getLocation() {
@@ -38,6 +40,10 @@ public class Event {
 
     public String getGenre() {
         return genre;
+    }
+
+    public String getMaxAttendees(){
+        return maxAttendees;
     }
 
     @Nullable
