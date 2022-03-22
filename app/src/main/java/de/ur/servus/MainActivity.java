@@ -549,8 +549,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         this::onEventCreationEditClicked
                 );
             }
-
-            // update bottom main button
         } else {
             detailsBottomSheetFragment.dismiss();
         }
