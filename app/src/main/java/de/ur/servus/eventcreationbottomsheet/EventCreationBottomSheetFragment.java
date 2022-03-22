@@ -150,8 +150,7 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
             postSetText(binding.eventCreationEventname, eventToEdit.getName());
             postSetText(binding.eventCreationDescription, eventToEdit.getDescription());
             postSetSelection(binding.eventCreationGenreSpinner, genreAdapter.getPositionFromName(eventToEdit.getGenre()));
-            postSetNumberPicker(binding.eventCreationAttendeeCount, 3);
-            // TODO: Alter position for NumberPicker
+            postSetNumberPicker(binding.eventCreationAttendeeCount, Integer.parseInt(eventToEdit.getMaxAttendees()));
         } else {
             postSetText(binding.eventCreationEventname, "");
             postSetText(binding.eventCreationDescription, "");

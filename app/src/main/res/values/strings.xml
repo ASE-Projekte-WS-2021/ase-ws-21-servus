@@ -29,7 +29,7 @@
     <string name="event_creation_genre_sport">Sport</string>
     <string name="event_creation_genre_party">Party</string>
     <string name="event_creation_genre_food">Food</string>
-    <string name="event_creation_genre_activity">Others</string>
+    <string name="event_creation_genre_activity">Other</string>
     <string name="event_creation_genre_hangout">Hang-out</string>
     <string name="event_creation_button_edit">Save</string>
     <string name="event_creation_hint_label">Note:</string>

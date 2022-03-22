@@ -214,8 +214,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         customLocationManager.stopListeningProviderDisabled();
 
         customLocationManager.removeLocationListener(this::moveOwnLocationMarker);
-
-        // TODO unsubscribe single event
     }
 
     @Override
@@ -229,7 +227,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         customLocationManager.addLocationListener(this::moveOwnLocationMarker);
 
         subscribeAllEvents();
-        // TODO subscribe single event again (which event id?)
     }
 
     //Moves the user location marker to current position
@@ -242,15 +239,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Adds the user marker on the user's initial position
     private void setInitialPositionMarker(){
-        customLocationManager.getLastObservedLocation(latLng -> {
-            latLng.ifPresent(lng -> {
-                if (mMap != null) {
-                    userMarker = mMap.addMarker(new MarkerOptions()
-                            .position(lng)
-                            .icon(customMarkerRenderer.bitmapFromVector(getApplicationContext(), R.drawable.user_icon_marker)));
-                }
-            });
-        });
+        customLocationManager.getLastObservedLocation(latLng -> latLng.ifPresent(lng -> {
+            if (mMap != null) {
+                userMarker = mMap.addMarker(new MarkerOptions()
+                        .position(lng)
+                        .icon(customMarkerRenderer.bitmapFromVector(getApplicationContext(), R.drawable.user_icon_marker)));
+            }
+        }));
     }
 
     /**
@@ -349,7 +344,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onError(Exception e) {
                 Log.e("EventCreation", e.getMessage());
-                // TODO handle errors
             }
         });
 
@@ -372,10 +366,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void onDetailsEditEventClicked(Event event) {
         if (onlyAllowIfAccountExists()) {
-            /* TODO: Replace this as soon as we have a way to check if the clicked user is the creator
-             * Until then: Only allows a registered user to edit events
-             */
-
             detailsBottomSheetFragment.dismiss();
             showBottomSheet(eventCreationBottomSheetFragment);
         }
@@ -448,7 +438,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         animateZoomInCamera(markerClusterItem.getPosition());
         var eventId = markerClusterItem.getEvent().getId();
         setViewedEvent(eventId);
-        // TODO wait before initial data was fetched before showing bottom sheet
         showBottomSheet(detailsBottomSheetFragment);
         return true;
     }
@@ -502,7 +491,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onError(Exception e) {
                 Log.e("LoadAllEvents", e.getMessage());
-                // TODO leave current event
             }
 
         });
@@ -568,7 +556,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if (localProfile.getUserID() != null) {
             setBottomButtonStyle(isCreator, true);
 
-            // TODO add profile picture path
             var attendant = new Attendant(localProfile.getUserID(), isCreator, localProfile.getUserName(), localProfile.getUserGender(), localProfile.getUserBirthdate(), localProfile.getUserCourse(), "tbd");
             backendHandler.addEventAttendant(eventId, attendant,localProfile.getUserPicture())
                     .addOnSuccessListener(unused -> redrawClusters());

@@ -35,8 +35,6 @@ public class FirestoreBackendHandler implements BackendHandler {
     //Storage for folder with user pictures
     private final FirebaseStorage storage = FirebaseStorage.getInstance();
 
-    //TODO: Write Delete-function for storage folder if event gets deleted
-
     public static BackendHandler getInstance() {
         if (FirestoreBackendHandler.instance == null) {
             FirestoreBackendHandler.instance = new FirestoreBackendHandler();
