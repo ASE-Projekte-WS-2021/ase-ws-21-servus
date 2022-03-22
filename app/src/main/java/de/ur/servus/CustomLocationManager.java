@@ -113,7 +113,6 @@ public class CustomLocationManager {
     public void startListeningForLocationUpdates() {
 
         if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: User didn't give permission initially. Ask again and try this again.
             return;
         }
 
@@ -132,7 +131,6 @@ public class CustomLocationManager {
      */
     public void startListeningProviderDisabled() {
         if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: User didn't give permission initially. Ask again and try this again.
             return;
         }
 
@@ -182,7 +180,6 @@ public class CustomLocationManager {
     public void getLastObservedLocation(Consumer<Optional<LatLng>> listener) {
 
         if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Handle case, where user wont give permission. Ask again?
             return;
         }
 

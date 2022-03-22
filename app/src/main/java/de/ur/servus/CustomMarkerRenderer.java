@@ -44,7 +44,7 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
     private final int markerHeight;
     private final Activity activity;
     private final EventList eventList;
-    private final int userMarkerWidthHeight = 80;
+    private final int userMarkerWidthHeight = 144;
 
     public CustomMarkerRenderer(Activity activity, GoogleMap map, ClusterManager<MarkerClusterItem> clusterManager, EventList eventList) {
         super(activity, map, clusterManager);

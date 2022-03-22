@@ -37,6 +37,7 @@ import de.ur.servus.core.Event;
 import de.ur.servus.core.UserProfile;
 import de.ur.servus.databinding.BottomsheetParticipantAttendeeBinding;
 import de.ur.servus.databinding.BottomsheetParticipantBinding;
+import de.ur.servus.eventgenres.GenreData;
 import de.ur.servus.utils.AvatarEditor;
 import de.ur.servus.utils.TriConsumer;
 
@@ -148,7 +149,17 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
             binding.eventDetailsDescription.setText(event.getDescription());
         }
 
-        binding.eventDetailsGenre.setText(event.getGenre());
+        if (event.getGenre().equals(GenreData.allGenres[0].getName())){
+            binding.eventDetailsGenre.setText(getResources().getString(R.string.event_creation_genre_hangout));
+        } else if (event.getGenre().equals(GenreData.allGenres[1].getName())){
+            binding.eventDetailsGenre.setText(getResources().getString(R.string.event_creation_genre_food));
+        } else if (event.getGenre().equals(GenreData.allGenres[2].getName())){
+            binding.eventDetailsGenre.setText(getResources().getString(R.string.event_creation_genre_party));
+        } else if (event.getGenre().equals(GenreData.allGenres[3].getName())){
+            binding.eventDetailsGenre.setText(getResources().getString(R.string.event_creation_genre_sport));
+        } else {
+            binding.eventDetailsGenre.setText(getResources().getString(R.string.event_creation_genre_activity));
+        }
 
 
         String totalAttendeeCount;
@@ -216,7 +227,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         }
 
         if(isLoading){
-            // change button style to loading inidcator
+            // change button style to loading indicator
             binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners_loading);
             binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_pink, view.getContext().getTheme()));
             binding.eventDetailsButton.setText(R.string.event_details_button_attend_loading);
