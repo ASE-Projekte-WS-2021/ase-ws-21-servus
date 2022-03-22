@@ -19,7 +19,7 @@
 
     <string name="content_create_meetup">Erstelle ein Treffen</string>
     <string name="main_bottom_button_view_event">Aktuelles Treffen anzeigen</string>
-    <string name="main_bottom_button_view_own_event">Eigenes Treffen anzeigen</string>
+    <string name="main_bottom_button_view_own_event">Aktuelles Treffen anzeigen</string>
     <string name="active_filter_indicator">0</string>
 
     <string name="event_creation_label_eventname">Name</string>
