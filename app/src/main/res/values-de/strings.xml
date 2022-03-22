@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Servus</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="launcher_title">Servus</string>
+
+    <string name="placeholder">tbd</string>
+
+    <string name="descriptions_btn_settings">ImageView to access the settings / profile section.</string>
+    <string name="descriptions_btn_creator">Button to access the creator section.</string>
+    <string name="descriptions_btn_filter">ImageView to access the filter section.</string>
+    <string name="descriptions_btn_participant">MapMarker to access the participant section.</string>
+
+    <string name="tmp_settings">TODO - Settings / Profile Section</string>
+    <string name="tmp_creator">Create Event</string>
+    <string name="tmp_filter">TODO - Filter Section</string>
+    <string name="tmp_participant">TODO - Participant Section</string>
+
+    <string name="content_create_meetup">Erstelle ein Treffen</string>
+    <string name="main_bottom_button_view_event">Aktuelles Treffen anzeigen</string>
+    <string name="main_bottom_button_view_own_event">Eigenes Treffen anzeigen</string>
+    <string name="active_filter_indicator">0</string>
+
+    <string name="event_creation_label_eventname">Name</string>
+    <string name="event_creation_label_description">Beschreibung</string>
+    <string name="event_creation_label_genre">Was möchtest du machen?</string>
+    <string name="event_creation_label_attendee_count">Wie viele Personen dürfen teilnehmen?</string>
+    <string name="event_creation_button_create">Erstelle ein Treffen</string>
+    <string name="event_creation_genre_sport">Sport</string>
+    <string name="event_creation_genre_party">Party</string>
+    <string name="event_creation_genre_food">Essen</string>
+    <string name="event_creation_genre_activity">Sonstiges</string>
+    <string name="event_creation_genre_hangout">Treffen</string>
+    <string name="event_creation_button_edit">Speichern</string>
+    <string name="event_creation_hint_label">Hinweis:</string>
+    <string name="event_creation_hint">Bitte beachte, dass das Treffen an deinem derzeitigen Standort erstellt wird. Diese Information und dein Profil wird bei der Erstellung eines Treffens mit anderen Nutzern geteilt.</string>
+
+    <string name="event_details_label_eventname">Name</string>
+    <string name="event_details_default_eventname">%EVENTNAME%</string>
+    <string name="event_details_label_description">Beschreibung</string>
+    <string name="event_details_default_description">%DESCRIPTION%</string>
+    <string name="event_details_label_attendees">Teilnehmer</string>
+    <string name="event_details_default_attendees">% X / Y %</string>
+    <string name="event_details_label_genre">Art</string>
+    <string name="event_details_default_genre">%meetup-mode%</string>
+    <string name="event_details_label_role_creator">Ersteller</string>
+    <string name="event_details_label_role_attendee">Teilnehmer</string>
+    <string name="event_details_default_creator">%USERNAME%</string>
+    <string name="event_details_button_attend">Treffen beitreten</string>
+    <string name="event_details_button_close_event">Treffen löschen</string>
+    <string name="event_details_button_withdraw">Teilnahme zurückziehen</string>
+    <string name="event_details_button_attend_loading">Laden…</string>
+    <string name="event_details_button_edit">Treffen bearbeiten</string>
+
+    <string name="tutorial_skip">Einführung überspringen</string>
+    <string name="tutorial_next">Nächste Seite</string>
+    <string name="tutorial_prev">Vorherige Seite</string>
+    <string name="tutorial_finalize">Einführung abschließen</string>
+    <string name="tutorial_create_account">Stell dich vor</string>
+    <string name="tutorial_servus_title">Servus</string>
+    <string name="tutorial_servus_subtitle">[ˈseɐ̯vus]</string>
+    <string name="tutorial_servus_content">Servus ist ein traditioneller bayerischer Gruß. Mit unserer App kannst du \'Servus\' zu anderen Studierenden sagen. Nutze unsere app um einfach und schnell neue Leute kennenzulernen.</string>
+    <string name="tutorial_meetups_title">Treffen</string>
+    <string name="tutorial_meetups_subtitle">Erstellen oder Teilnehmen</string>
+    <string name="tutorial_meetups_content">Nimm an Treffen in deiner Region teil oder erstelle dein Eigenes. Beachte, dass du wie in der echten Welt nicht zur selben Zeit an zwei Orten sein kannst - erstelle ein Treffen oder nimm teil.</string>
+    <string name="tutorial_accounts_title">Accounts</string>
+    <string name="tutorial_accounts_subtitle">Lokal, bis sie gebraucht werden</string>
+    <string name="tutorial_accounts_content">Deine Profildaten werden für andere Nutzer unzugänglich auf deinem Gerät gespeichert bis du einem Treffen beitrittst. Mit deiner Teilnahme oder der Erstellung eines eigenen Events, wird dein Profil mit anderen Nutzern geteilt, bis das Treffen geschlossen wird.</string>
+    <string name="tutorial_location_title">&#160;Standort</string>
+    <string name="tutorial_location_subtitle">Genehmigung erforderlich.</string>
+    <string name="tutorial_location_content">Unsere App arbeitet mit den Standortsignalen jedes Benutzers. Daher bitten wir dich uns im nächsten Schritt die Erlaubnis zu erteilen, auf deinen Standort zugreifen zu dürfen</string>
+    <string name="tutorial_finalize_account_creation">Abschließen &amp; Weiter</string>
+
+    <string name="location_404">Standort konnte nicht ermittelt werden.</string>
+    <string name="network_404">Keine Netzwerk Verbindung</string>
+
+    <string name="location_404_dialog_title">GPS aktivieren</string>
+    <string name="location_404_dialog_content">Um die volle Funktionalität zu gewährleisten, muss diese App über die Standorteinstellungen deines Geräts auf deinen Standort zugreifen. Bitte stelle sicher, dass die Ortungsdienste deines Geräts aktiviert sind.</string>
+    <string name="btn_alertDialog">Go to settings</string>
+
+    <string name="permission_denied_title">&#160;Genehmigung erforderlich&#160;</string>
+    <string name="permission_denied_subtitle">Manuell einstellen.</string>
+    <string name="permission_denied_content">Sorry! Ohne die Erlaubnis auf deinen aktuellen Standort zuzugreifen, können wir dir die Vorteile dieser App nicht oder nur zum Teil anbieren: Das Erstellen von und Teilnehmen an Treffen. Wir würden uns freuen, wenn du eine Autorisierung noch einmal überdenken würdest. Danke!</string>
+    <string name="permission_denied_link">Zu den Berechtigungseinstellungen</string>
+
+    <string name="settings_profile_name_label">Wie heißt du?&#160;</string>
+    <string name="settings_profile_name">%USERNAME%</string>
+    <string name="settings_profile_name_hint">Vorname Nachname</string>
+    <string name="settings_gender_label">Was ist dein Geschlecht?&#160;</string>
+    <string name="settings_gender_hint">Geschlecht</string>
+    <string name="settings_gender">% GENDER %</string>
+    <string name="settings_age_label">Wann ist dein Geburtstag?&#160;</string>
+    <string name="settings_gender_male">Männlich</string>
+    <string name="settings_gender_female">Weiblich</string>
+    <string name="settings_gender_divers">Divers</string>
+    <string name="settings_age">% XX.YY.ZZZZ %</string>
+    <string name="settings_age_hint">Geburtsdatum</string>
+    <string name="settings_profile_picture_label">Profilbild speichern oder ändern</string>
+    <string name="settings_profile_picture_sublabel">Kicke auf das Bild!</string>
+    <string name="settings_study_course_label">Was studierst du?&#160;</string>
+    <string name="settings_study_course">% STUDY COURSE %</string>
+    <string name="settings_study_course_hint">Studiengang</string>
+    <string name="settings_profile_picture_picker">Wähle dein Profilbild aus</string>
+    <string name="settings_show_vita">Speichern &amp; Erstellen</string>
+
+    <string name="profilecard_name_label">Nutzername</string>
+    <string name="profilecard_name">Kein Benutzer gefunden</string>
+    <string name="profilecard_birthdate_label">Geburtsdatum</string>
+    <string name="profilecard_birthdate">Kein Geburtsdatum gefunden</string>
+    <string name="profilecard_course_label">Studiengang</string>
+    <string name="profilecard_course">Kein Studiengang gefunden</string>
+    <string name="profilecard_gender_label">Geschlecht</string>
+    <string name="profilecard_gender">Kein Geschlecht gefunden</string>
+    <string name="profilecard_course_404">N/A</string>
+
+    <string name="required_indicator">*</string>
+
+    <string name="toast_storage_permission_error">Bitte erteile uns die Berechtigung, auf deinen Speicher zuzugreifen, um diese Funktionalität nutzen zu können.</string>
+    <string name="toast_require_local_account">Um diese Funktionalität zu nutzen, wird ein lokaler Account benötigt.</string>
+    <string name="toast_fill_required_fields">Bitte fülle alle benötigten Felder aus.</string>
+    <string name="event_details_total_attendees">[X / Y]</string>
+    <string name="event_details_total_attendees_count">von</string>
+
+    <string name="userstate_attendee">Du nimmst gerade an einem Treffen teil.</string>
+    <string name="userstate_creator">Du veranstaltest gerade ein Treffen.</string>
+
+</resources>
