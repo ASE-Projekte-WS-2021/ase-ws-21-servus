@@ -495,7 +495,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 setBottomButtonStyle(isCreator, true);
                             }
                         },
-                        null
+                        () -> setBottomButtonStyle(false, false)
                 );
             }
 
@@ -551,10 +551,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             // update bottom main button
-            setBottomButtonStyle(isOwner, attending);
         } else {
             detailsBottomSheetFragment.dismiss();
-            setBottomButtonStyle(false, false);
         }
     }
 
@@ -566,7 +564,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         var localProfile = userAccountHelpers.getOwnProfile(avatarEditor);
 
         if (localProfile.getUserID() != null) {
-            setBottomButtonStyle(isCreator, true);
 
             // TODO add profile picture path
             var attendant = new Attendant(localProfile.getUserID(), isCreator, localProfile.getUserName(), localProfile.getUserGender(), localProfile.getUserBirthdate(), localProfile.getUserCourse(), "tbd");
@@ -580,7 +577,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void leaveEvent(String eventId) {
         var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null);
         if (userId != null) {
-            setBottomButtonStyle(false, false);
             backendHandler.removeEventAttendantById(eventId, userId)
                     .addOnSuccessListener(unused -> redrawClusters());
 
