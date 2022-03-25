@@ -14,9 +14,24 @@
                 android:id="@+id/event_creation_eventname_container"
                 style="@style/mLabelContainer">
 
-                <TextView
-                    style="@style/mLabels"
-                    android:text="@string/event_creation_label_eventname" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/mLabels"
+                        android:layout_width="wrap_content"
+                        android:text="@string/event_creation_label_eventname" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:translationY="-4dp"
+                        android:textStyle="bold"
+                        android:text="@string/required_indicator" />
+                </LinearLayout>
 
                 <EditText
                     android:id="@+id/event_creation_eventname"
@@ -59,6 +74,36 @@
                     android:dropDownSelector="@null" />
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/event_creation_attendee_count_container"
+                style="@style/mLabelContainer">
+
+                <TextView
+                    style="@style/mLabels"
+                    android:text="@string/event_creation_label_attendee_count" />
+
+                <NumberPicker
+                    android:id="@+id/event_creation_attendee_count"
+                    android:layout_marginHorizontal="16dp"
+                    style="@style/mNumberPickerStyle" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:text="@string/event_creation_hint_label"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/event_creation_hint"/>
+            </LinearLayout>
 
             <Button
                 android:id="@+id/event_create_button"

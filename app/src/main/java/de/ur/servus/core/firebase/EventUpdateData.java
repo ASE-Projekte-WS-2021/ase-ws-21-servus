@@ -12,11 +12,14 @@ public class EventUpdateData {
     public final String description;
     @Nullable
     public final String genre;
+    @Nullable
+    public final String maxAttendees;
 
-    public EventUpdateData(@Nullable String name, @Nullable String description, @Nullable String genre) {
+    public EventUpdateData(@Nullable String name, @Nullable String description, @Nullable String genre, @Nullable String maxAttendees) {
         this.name = name;
         this.description = description;
         this.genre = genre;
+        this.maxAttendees = maxAttendees;
     }
 
 
@@ -25,6 +28,7 @@ public class EventUpdateData {
         putIfNotNull(updateMap, "name", name);
         putIfNotNull(updateMap, "description", description);
         putIfNotNull(updateMap, "genre", genre);
+        putIfNotNull(updateMap, "maxAttendees", maxAttendees);
 
         return updateMap;
     }

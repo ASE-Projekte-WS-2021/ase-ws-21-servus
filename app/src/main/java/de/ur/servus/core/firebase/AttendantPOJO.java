@@ -21,7 +21,7 @@ public class AttendantPOJO implements POJO<Attendant> {
         this.userGender = attendant.getUserGender();
         this.userBirthdate = attendant.getUserBirthdate();
         this.userCourse = attendant.getUserCourse();
-        this.userPicturePath = ""; // TODO: Replace and figure out a way to store images to cloud storage and retrieve url
+        this.userPicturePath = "";
     }
 
     public boolean isCreator() {

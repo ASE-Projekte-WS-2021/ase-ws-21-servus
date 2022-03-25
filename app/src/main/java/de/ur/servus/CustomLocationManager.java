@@ -69,6 +69,14 @@ public class CustomLocationManager {
         locationListeners.add(this::saveLatLng);
     }
 
+    public void addLocationListener(Consumer<LatLng> listener) {
+        locationListeners.add(listener);
+    }
+
+    public void removeLocationListener(Consumer<LatLng> listener) {
+        locationListeners.remove(listener);
+    }
+
     private LocationCallback getLocationCallback() {
         return new LocationCallback() {
             @Override
@@ -105,7 +113,6 @@ public class CustomLocationManager {
     public void startListeningForLocationUpdates() {
 
         if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: User didn't give permission initially. Ask again and try this again.
             return;
         }
 
@@ -124,7 +131,6 @@ public class CustomLocationManager {
      */
     public void startListeningProviderDisabled() {
         if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: User didn't give permission initially. Ask again and try this again.
             return;
         }
 
@@ -174,7 +180,6 @@ public class CustomLocationManager {
     public void getLastObservedLocation(Consumer<Optional<LatLng>> listener) {
 
         if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Handle case, where user wont give permission. Ask again?
             return;
         }
 
@@ -200,6 +205,7 @@ public class CustomLocationManager {
     public void removeOnProviderDisabledListener(Runnable onProviderDisabledListener) {
         providerDisabledListeners.remove(onProviderDisabledListener);
     }
+
 
     public void showEnableGpsDialogIfNecessary() {
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()

@@ -5,7 +5,6 @@ import static de.ur.servus.utils.UserAccountKeys.ACCOUNT_EXISTS;
 import static de.ur.servus.utils.UserAccountKeys.ACCOUNT_ITEM_ID;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -20,6 +19,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -36,6 +36,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.maps.android.clustering.Cluster;
@@ -67,9 +69,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private EventHelpers eventHelpers;
     private UserAccountHelpers userAccountHelpers;
     private EventList eventList;
+
+    @Nullable
+    private String viewedEventId = null;
     Context context;
     SharedPreferences sharedPreferences;
     CustomLocationManager customLocationManager;
+
+    @Nullable
+    private Marker userMarker;
+
     @Nullable
     MarkerManager markerManager;
     CustomMarkerRenderer customMarkerRenderer;
@@ -94,6 +103,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     Button btn_creator;
     ShapeableImageView btn_filter;
     LinearLayout error_message;
+    LinearLayout userstate_container;
+    TextView userstate;
 
 
     /**
@@ -114,6 +125,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         userAccountHelpers = new UserAccountHelpers(this);
 
         userAccountHelpers.saveNewUserIdIfNotExisting();
+
+        userstate_container = findViewById(R.id.userstate_container);
+        userstate = findViewById(R.id.userstate);
 
         // when GPS is turned off, ask to turn it on. Starting to listen needs to be done in onCreate
         customLocationManager.addOnProviderDisabledListener(customLocationManager::showEnableGpsDialogIfNecessary);
@@ -142,9 +156,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         btn_creator.setOnClickListener(v -> {
             if (onlyAllowIfAccountExists()) {
                 var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
-                eventList.ifUserIsSubscribedToEvents(userId,
+                eventList.ifUserIsAttendingEvents(userId,
                         attendedEvents -> {
-                            subscribeEvent(attendedEvents.get(0).getId());
+                            setViewedEvent(attendedEvents.get(0).getId());
                             showBottomSheet(detailsBottomSheetFragment);
                         },
                         () -> {
@@ -161,8 +175,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         settingsBottomSheetFragment.update(this::onUserProfileSaved);
 
         var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
-        eventList.ifUserIsSubscribedToEvents(userId,
-                events -> this.subscribeEvent(events.get(0).getId()),
+        eventList.ifUserIsAttendingEvents(userId,
+                events -> this.setViewedEvent(events.get(0).getId()),
                 null
         );
 
@@ -199,7 +213,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         customLocationManager.stopListeningForLocationUpdates();
         customLocationManager.stopListeningProviderDisabled();
 
-        // TODO unsubscribe single event
+        customLocationManager.removeLocationListener(this::moveOwnLocationMarker);
     }
 
     @Override
@@ -210,10 +224,29 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         customLocationManager.startListeningProviderDisabled();
         customLocationManager.showEnableGpsDialogIfNecessary();
 
+        customLocationManager.addLocationListener(this::moveOwnLocationMarker);
+
         subscribeAllEvents();
-        // TODO subscribe single event again (which event id?)
     }
 
+    //Moves the user location marker to current position
+    private void moveOwnLocationMarker(LatLng position){
+        LatLng userLocation = new LatLng(position.latitude, position.longitude);
+        if(userMarker != null) {
+            userMarker.setPosition(userLocation);
+        }
+    }
+
+    //Adds the user marker on the user's initial position
+    private void setInitialPositionMarker(){
+        customLocationManager.getLastObservedLocation(latLng -> latLng.ifPresent(lng -> {
+            if (mMap != null) {
+                userMarker = mMap.addMarker(new MarkerOptions()
+                        .position(lng)
+                        .icon(customMarkerRenderer.bitmapFromVector(getApplicationContext(), R.drawable.user_icon_marker)));
+            }
+        }));
+    }
 
     /**
      * Permission functionality
@@ -299,6 +332,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void onEventCreationCreateClicked(EventCreationData inputEventData) {
+        if(mMap != null){
+            centerCamera(mMap);
+        }
         eventHelpers.createEvent(customLocationManager, inputEventData, new EventListener<>() {
             @Override
             public void onEvent(String id) {
@@ -308,7 +344,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onError(Exception e) {
                 Log.e("EventCreation", e.getMessage());
-                // TODO handle errors
             }
         });
 
@@ -320,7 +355,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void onEventCreationEditClicked(Event event, EventCreationData inputEventData) {
-        var eventUpdate = new EventUpdateData(inputEventData.name, inputEventData.description, inputEventData.genre);
+        var eventUpdate = new EventUpdateData(inputEventData.name, inputEventData.description, inputEventData.genre, inputEventData.maxAttendees);
         backendHandler.updateEvent(event.getId(), eventUpdate.toUpdateMap(), null);
 
         //close bottomsheet
@@ -331,10 +366,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void onDetailsEditEventClicked(Event event) {
         if (onlyAllowIfAccountExists()) {
-            /* TODO: Replace this as soon as we have a way to check if the clicked user is the creator
-             * Until then: Only allows a registered user to edit events
-             */
-
             detailsBottomSheetFragment.dismiss();
             showBottomSheet(eventCreationBottomSheetFragment);
         }
@@ -370,6 +401,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         markerManager = new MarkerManager(this, googleMap);
         markerManager.setClusterAlgorithm();
         customMarkerRenderer = new CustomMarkerRenderer(this, mMap, markerManager.getClusterManager(), eventList);
+        setInitialPositionMarker();
     }
 
     void animateZoomInCamera(LatLng latLng) {
@@ -405,8 +437,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     public boolean onClusterItemClick(MarkerClusterItem markerClusterItem) {
         animateZoomInCamera(markerClusterItem.getPosition());
         var eventId = markerClusterItem.getEvent().getId();
-        subscribeEvent(eventId);
-        // TODO wait before initial data was fetched before showing bottom sheet
+        setViewedEvent(eventId);
         showBottomSheet(detailsBottomSheetFragment);
         return true;
     }
@@ -438,12 +469,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         clusterManager.addItem(marker);
                     });
 
+                    handleCurrentlyViewedEvent();
                     redrawClusters();
                 }
 
                 // style bottom button
                 var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
-                eventList.ifUserIsSubscribedToEvents(userId,
+                eventList.ifUserIsAttendingEvents(userId,
                         attendedEvents -> {
                             var event = attendedEvents.stream().filter(e -> Objects.equals(e.getId(), attendedEvents.get(0).getId())).findFirst();
                             if (event.isPresent()) {
@@ -452,84 +484,73 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 setBottomButtonStyle(isCreator, true);
                             }
                         },
-                        null
+                        () -> setBottomButtonStyle(false, false)
                 );
             }
 
             @Override
             public void onError(Exception e) {
-                // TODO error handling here
                 Log.e("LoadAllEvents", e.getMessage());
-                // TODO leave current event
             }
 
         });
     }
 
-    public void subscribeEvent(String eventId) {
-        unsubscribeEvent();
+    /**
+     * Set which event is currently being viewed.
+     * @param eventId The events id.
+     */
+    public void setViewedEvent(String eventId) {
+        this.viewedEventId = eventId;
+        handleCurrentlyViewedEvent();
+    }
 
-        singleEventListenerRegistration = backendHandler.subscribeEvent(eventId, new EventListener<>() {
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void onEvent(Event event) {
-                if (markerManager == null) {
-                    return;
-                }
-                var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
+    private void handleCurrentlyViewedEvent() {
+        var viewedEventOptional = eventList.getEvents().stream().filter(event -> Objects.equals(event.getId(), viewedEventId)).findFirst();
 
-                var attending = event.isUserAttending(userId);
-                var subscribedToAnyEvent = eventList.isUserAttendingAnyEvent(userId);
+        if (viewedEventOptional.isPresent()) {
+            var event = viewedEventOptional.get();
+            var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, "");
 
-                // update details sheet
-                if (detailsBottomSheetFragment != null) {
-                    boolean isOwner = event.isUserOwner(userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null));
+            var attending = event.isUserAttending(userId);
+            var subscribedToAnyEvent = eventList.isUserAttendingAnyEvent(userId);
+            boolean isOwner = event.isUserOwner(userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null));
 
-                    detailsBottomSheetFragment.update(
-                            event,
-                            attending,
-                            subscribedToAnyEvent,
-                            isOwner,
-                            (e, a, c) -> onDetailsAttendWithdrawClicked(e, a, c),
-                            e -> onDetailsEditEventClicked(e),
-                            (e,u) -> onDetailsRemoveUserClicked(e,u)
-                    );
-                }
-
-                // update edit view
-                if (eventCreationBottomSheetFragment != null) {
-                    eventCreationBottomSheetFragment.update(
-                            event,
-                            data -> onEventCreationCreateClicked(data),
-                            (e, data) -> onEventCreationEditClicked(e, data)
-                    );
-                }
-
-                redrawClusters();
+            // update details sheet
+            if (detailsBottomSheetFragment != null) {
+                detailsBottomSheetFragment.update(
+                        event,
+                        attending,
+                        subscribedToAnyEvent,
+                        isOwner,
+                        this::onDetailsAttendWithdrawClicked,
+                        this::onDetailsEditEventClicked,
+                        this::onDetailsRemoveUserClicked
+                );
             }
 
-            @Override
-            public void onError(Exception e) {
-                Log.e("LoadSingleEvent", e.getMessage() + Log.getStackTraceString(e));
-                detailsBottomSheetFragment.dismiss();
-                setBottomButtonStyle(false, false);
+            // update edit view
+            if (eventCreationBottomSheetFragment != null) {
+                eventCreationBottomSheetFragment.update(
+                        event,
+                        this::onEventCreationCreateClicked,
+                        this::onEventCreationEditClicked
+                );
             }
-        });
+        } else {
+            detailsBottomSheetFragment.dismiss();
+        }
     }
 
     private void unsubscribeEvent() {
-        if (singleEventListenerRegistration != null) {
-            singleEventListenerRegistration.unsubscribe();
-        }
+        this.viewedEventId = null;
     }
 
     private void attendEvent(String eventId, boolean isCreator) {
         var localProfile = userAccountHelpers.getOwnProfile(avatarEditor);
 
         if (localProfile.getUserID() != null) {
-            setBottomButtonStyle(isCreator, true);
 
-            // TODO add profile picture path
             var attendant = new Attendant(localProfile.getUserID(), isCreator, localProfile.getUserName(), localProfile.getUserGender(), localProfile.getUserBirthdate(), localProfile.getUserCourse(), "tbd");
             backendHandler.addEventAttendant(eventId, attendant,localProfile.getUserPicture())
                     .addOnSuccessListener(unused -> redrawClusters());
@@ -541,7 +562,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void leaveEvent(String eventId) {
         var userId = userAccountHelpers.readStringValue(ACCOUNT_ITEM_ID, null);
         if (userId != null) {
-            setBottomButtonStyle(false, false);
             backendHandler.removeEventAttendantById(eventId, userId)
                     .addOnSuccessListener(unused -> redrawClusters());
 
@@ -578,14 +598,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             btn_creator.setText(R.string.main_bottom_button_view_own_event);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_pink, getTheme()));
+
+            userstate_container.setVisibility(View.VISIBLE);
+            userstate.setText(getResources().getString(R.string.userstate_creator));
         } else if (isAttending) {
             btn_creator.setText(R.string.main_bottom_button_view_event);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_pink, getTheme()));
+
+            userstate_container.setVisibility(View.VISIBLE);
+            userstate.setText(getResources().getString(R.string.userstate_attendee));
         } else {
             btn_creator.setText(R.string.content_create_meetup);
             btn_creator.setBackgroundResource(R.drawable.style_btn_roundedcorners);
             btn_creator.setTextColor(getResources().getColor(R.color.servus_white, getTheme()));
+
+            userstate_container.setVisibility(View.GONE);
         }
     }
 

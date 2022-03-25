@@ -14,8 +14,8 @@ import androidx.annotation.NonNull;
 import de.ur.servus.R;
 
 public class EventGenreAdapter extends BaseAdapter {
-    private Context context;
-    private Genre[] genres;
+    private final Context context;
+    private final Genre[] genres;
 
     public EventGenreAdapter(Context context, @NonNull Genre[] genres) {
         this.context = context;
@@ -45,7 +45,19 @@ public class EventGenreAdapter extends BaseAdapter {
         TextView name = rootView.findViewById(R.id.event_spinner_genreName);
         ImageView image = rootView.findViewById(R.id.spinnerImage);
 
-        name.setText(genres[i].getName());
+        // Style visual name representation, not the actual genre name (for multilingualism)
+        if (genres[i].getName().equals(GenreData.allGenres[0].getName())){
+            name.setText(context.getResources().getString(R.string.event_creation_genre_hangout));
+        } else if (genres[i].getName().equals(GenreData.allGenres[1].getName())){
+            name.setText(context.getResources().getString(R.string.event_creation_genre_food));
+        } else if (genres[i].getName().equals(GenreData.allGenres[2].getName())){
+            name.setText(context.getResources().getString(R.string.event_creation_genre_party));
+        } else if (genres[i].getName().equals(GenreData.allGenres[3].getName())){
+            name.setText(context.getResources().getString(R.string.event_creation_genre_sport));
+        } else {
+            name.setText(context.getResources().getString(R.string.event_creation_genre_activity));
+        }
+        
         image.setImageResource(genres[i].getImage());
 
         return rootView;

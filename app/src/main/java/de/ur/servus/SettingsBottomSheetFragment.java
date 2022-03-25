@@ -196,6 +196,8 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
                 if (onProfileSavedListener != null) {
                     onProfileSavedListener.accept(ownProfile);
                 }
+
+                this.dismiss();
             }
         });
 
@@ -363,5 +365,12 @@ public class SettingsBottomSheetFragment extends BottomSheetDialogFragment imple
         course.setText(userAccountHelpers.readStringValue(UserAccountKeys.ACCOUNT_ITEM_COURSE, ""));
 
         settingsProfilePicture.setImageBitmap(avatarEditor.loadProfilePicture());
+    }
+
+    @Override
+    public void dismiss() {
+        if (this.isVisible()) {
+            super.dismiss();
+        }
     }
 }

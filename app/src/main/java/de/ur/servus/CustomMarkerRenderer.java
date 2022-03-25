@@ -3,17 +3,23 @@ package de.ur.servus;
 import static de.ur.servus.utils.UserAccountKeys.ACCOUNT_ITEM_ID;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -38,6 +44,7 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
     private final int markerHeight;
     private final Activity activity;
     private final EventList eventList;
+    private final int userMarkerWidthHeight = 144;
 
     public CustomMarkerRenderer(Activity activity, GoogleMap map, ClusterManager<MarkerClusterItem> clusterManager, EventList eventList) {
         super(activity, map, clusterManager);
@@ -53,7 +60,7 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
         imageView.setLayoutParams(new ViewGroup.LayoutParams(markerWidth, markerHeight));
         int padding = (int) activity.getResources().getDimension(R.dimen.custom_marker_padding);
         imageView.setPadding(padding, padding, padding, padding);
-        iconGenerator.setBackground(activity.getDrawable(R.drawable.style_cluster_marker_bg));
+        iconGenerator.setBackground(AppCompatResources.getDrawable(activity, R.drawable.style_cluster_marker_bg));
         iconGenerator.setContentView(imageView);
         clusterManager.setRenderer(this);
     }
@@ -68,7 +75,14 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
         imageView.setBackgroundResource(item.getGenrePicture());
         Bitmap icon = iconGenerator.makeIcon();
         drawOnCanvas(item, icon);
-        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
+
+        // Based on MaxAttendee count, apply a greyscale to the icon - otherwise leave it pink
+        if (Integer.parseInt(item.getEvent().getMaxAttendees()) > 0 && item.getEvent().getAttendants().size() >= Integer.parseInt(item.getEvent().getMaxAttendees())) {
+            Bitmap btm = toGrayscale(icon);
+            markerOptions.icon(BitmapDescriptorFactory.fromBitmap(btm));
+        } else {
+            markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
+        }
     }
 
     @Override
@@ -82,17 +96,21 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
 
     private void drawOnCanvas (MarkerClusterItem item, Bitmap icon){
         int numberOfAttendees = item.getEvent().getAttendants().size();
+
         //Create a canvas to draw the circle to display the number of attendees on the icon
         Canvas canvas = new Canvas(icon);
+
         //Paint for the circle
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
         //Paint for the text
         Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(ContextCompat.getColor(activity.getApplicationContext(), R.color.white));
+
         textPaint.setTextSize(35);
         textPaint.setColor(ContextCompat.getColor(activity.getApplicationContext(), R.color.white));
         paint.setColor(ContextCompat.getColor(activity.getApplicationContext(), R.color.servus_blue));
         canvas.drawCircle(canvas.getWidth() - 30,canvas.getHeight() - 30,30,paint);
+
         //Saves the number of attendees as String so that the length can be determined to position the number in the center of the circle
         String attendeesString = String.valueOf(numberOfAttendees);
         Rect bounds = new Rect();
@@ -105,6 +123,15 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
         } else {
             canvas.drawText(attendeesString, x * 4.4f, y *4.1f , textPaint);
         }
+    }
+
+    public BitmapDescriptor bitmapFromVector(Context context, int id) {
+        Drawable drawable = ContextCompat.getDrawable(context, id);
+        drawable.setBounds(0, 0, userMarkerWidthHeight, userMarkerWidthHeight);
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.draw(canvas);
+        return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
     @Override
@@ -148,5 +175,22 @@ public class CustomMarkerRenderer extends DefaultClusterRenderer<MarkerClusterIt
         }
 
         return 1f;
+    }
+
+    public Bitmap toGrayscale(Bitmap bmpOriginal)
+    {
+        int width, height;
+        height = bmpOriginal.getHeight();
+        width = bmpOriginal.getWidth();
+
+        Bitmap bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bmpGrayscale);
+        Paint paint = new Paint();
+        ColorMatrix cm = new ColorMatrix();
+        cm.setSaturation(0);
+        ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
+        paint.setColorFilter(f);
+        c.drawBitmap(bmpOriginal, 0, 0, paint);
+        return bmpGrayscale;
     }
 }

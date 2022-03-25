@@ -10,8 +10,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -50,6 +52,8 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
 
     @Nullable
     BottomsheetCreatorBinding binding;
+
+    private final String[] numberPickerValues = new String[] {"∞", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"};
 
     public EventCreationBottomSheetFragment() {
 
@@ -121,6 +125,10 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
         view.post(() -> view.setSelection(position));
     }
 
+    private void postSetNumberPicker(NumberPicker view, int position) {
+        view.post(() -> view.setValue(position));
+    }
+
     /*
      * This only work from or after OnViewCreate and after an initial update call
      */
@@ -131,29 +139,61 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
         }
 
         // set content
+        /* Initialize NumberPicker */
+        binding.eventCreationAttendeeCount.setWrapSelectorWheel(false);
+        binding.eventCreationAttendeeCount.setMinValue(0);
+        binding.eventCreationAttendeeCount.setMaxValue(20);
+        binding.eventCreationAttendeeCount.setDisplayedValues(numberPickerValues);
+
         if (eventToEdit != null) {
             // these post methods are necessary, because setText will not update the displayed value
             postSetText(binding.eventCreationEventname, eventToEdit.getName());
             postSetText(binding.eventCreationDescription, eventToEdit.getDescription());
             postSetSelection(binding.eventCreationGenreSpinner, genreAdapter.getPositionFromName(eventToEdit.getGenre()));
+            postSetNumberPicker(binding.eventCreationAttendeeCount, Integer.parseInt(eventToEdit.getMaxAttendees()));
         } else {
             postSetText(binding.eventCreationEventname, "");
             postSetText(binding.eventCreationDescription, "");
             postSetSelection(binding.eventCreationGenreSpinner, 0);
+            postSetNumberPicker(binding.eventCreationAttendeeCount, 0);
         }
 
         // set listeners
         binding.eventCreateButton.setOnClickListener(v -> {
-            var name = binding.eventCreationEventname.getText().toString();
-            var description = binding.eventCreationDescription.getText().toString();
-            if (eventToEdit != null) {
-                if (onEditEventClickListener != null) {
-                    onEditEventClickListener.accept(eventToEdit, new EventCreationData(name, description, selectedGenre));
+            // Required field check works analog to the settings bottomsheet as an array
+            // in case we decide to add further mandatory fields besides one
+
+            boolean[] requiredFieldFilled = {false};
+            boolean requirementPassed = false;
+
+            if (binding.eventCreationEventname.getText().toString()  != null && !binding.eventCreationEventname.getText().toString().equals("")){
+                requiredFieldFilled[0] = true;
+            }
+
+            for (boolean b : requiredFieldFilled) {
+                if (b) {
+                    requirementPassed = true;
+                } else {
+                    requirementPassed = false;
+                    break;
+                }
+            }
+
+            if (requirementPassed) {
+                var name = binding.eventCreationEventname.getText().toString();
+                var description = binding.eventCreationDescription.getText().toString();
+                var selectedMaxAttendees = String.valueOf(binding.eventCreationAttendeeCount.getValue());
+                if (eventToEdit != null) {
+                    if (onEditEventClickListener != null) {
+                        onEditEventClickListener.accept(eventToEdit, new EventCreationData(name, description, selectedGenre, selectedMaxAttendees));
+                    }
+                } else {
+                    if (onCreateEventClickListener != null) {
+                        onCreateEventClickListener.accept(new EventCreationData(name, description, selectedGenre, selectedMaxAttendees));
+                    }
                 }
             } else {
-                if (onCreateEventClickListener != null) {
-                    onCreateEventClickListener.accept(new EventCreationData(name, description, selectedGenre));
-                }
+                Toast.makeText(activity, getResources().getString(R.string.toast_fill_required_fields), Toast.LENGTH_LONG).show();
             }
         });
 
@@ -171,5 +211,12 @@ public class EventCreationBottomSheetFragment extends BottomSheetDialogFragment 
     @Override
     //used for the event creation spinner
     public void onNothingSelected(AdapterView<?> adapterView) {
+    }
+
+    @Override
+    public void dismiss() {
+        if (this.isVisible()) {
+            super.dismiss();
+        }
     }
 }

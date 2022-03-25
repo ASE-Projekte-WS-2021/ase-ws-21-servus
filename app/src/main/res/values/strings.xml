@@ -17,20 +17,23 @@
     <string name="tmp_participant">TODO - Participant Section</string>
 
     <string name="content_create_meetup">Create a Meet-Up</string>
-    <string name="main_bottom_button_view_event">View Meet-Up</string>
-    <string name="main_bottom_button_view_own_event">View Meet-Up</string>
+    <string name="main_bottom_button_view_event">View your current event</string>
+    <string name="main_bottom_button_view_own_event">View your current event</string>
     <string name="active_filter_indicator">0</string>
 
     <string name="event_creation_label_eventname">Name</string>
     <string name="event_creation_label_description">Description</string>
     <string name="event_creation_label_genre">What do you want to do?</string>
-    <string name="event_creation_button_create">Create</string>
+    <string name="event_creation_label_attendee_count">How many people are allowed to attend?</string>
+    <string name="event_creation_button_create">Create your own Meet-Up</string>
     <string name="event_creation_genre_sport">Sport</string>
     <string name="event_creation_genre_party">Party</string>
     <string name="event_creation_genre_food">Food</string>
-    <string name="event_creation_genre_activity">Activity</string>
+    <string name="event_creation_genre_activity">Other</string>
     <string name="event_creation_genre_hangout">Hang-out</string>
     <string name="event_creation_button_edit">Save</string>
+    <string name="event_creation_hint_label">Note:</string>
+    <string name="event_creation_hint">Please note that the event will be created at your current location. This information, as well as your profile data, will be shared with other users when creating the Meet-Up.</string>
 
     <string name="event_details_label_eventname">Name</string>
     <string name="event_details_default_eventname">%EVENTNAME%</string>
@@ -46,6 +49,7 @@
     <string name="event_details_button_attend">Attend to Meet-Up</string>
     <string name="event_details_button_close_event">Close Meet-Up</string>
     <string name="event_details_button_withdraw">Withdraw attendance</string>
+    <string name="event_details_button_attend_loading">Loading…</string>
     <string name="event_details_button_edit">Edit Meet-Up</string>
 
     <string name="tutorial_skip">Skip onboarding</string>
@@ -55,16 +59,16 @@
     <string name="tutorial_create_account">Introduce yourself</string>
     <string name="tutorial_servus_title">Servus</string>
     <string name="tutorial_servus_subtitle">[ˈseɐ̯vus]</string>
-    <string name="tutorial_servus_content">Traditional, rather intimate greeting in the Bavarian language area. Can be used as a greeting as well as a farewell.</string>
+    <string name="tutorial_servus_content">Servus is a traditional greeting in the Bavarian language. With our app you can say \'servus\' to other students. Use our app to meet new people - simple and fast.</string>
     <string name="tutorial_meetups_title">Meetups</string>
     <string name="tutorial_meetups_subtitle">Create or participate.</string>
-    <string name="tutorial_meetups_content">It\'s all about getting in touch with new people! Feel free to participate at any meetup you discover and maybe consider creating your own meetup some time. It\'s a lot of fun!</string>
+    <string name="tutorial_meetups_content">Participate at any meetup you discover or create your own meetup. Be aware, just like in the real world, you can\'t be in two places at once - either create or participate.</string>
     <string name="tutorial_accounts_title">Accounts</string>
     <string name="tutorial_accounts_subtitle">Locally until you need it.</string>
-    <string name="tutorial_accounts_content">Your created account remains locally on your own device until you create or participate at a meetup. Then, just for the remaining duration of the event, your data will be shared with the community and deleted afterwords.</string>
+    <string name="tutorial_accounts_content">Your profile data stays on your phone until you attend an event. Your profile data is only visible to other users until the event is deleted.</string>
     <string name="tutorial_location_title">&#160;Location</string>
     <string name="tutorial_location_subtitle">Permission required.</string>
-    <string name="tutorial_location_content">Unfortunately, as this service works with the location signals of every user, we will ask you from time to time to grant permission for us to access your devices location services.</string>
+    <string name="tutorial_location_content">This service works with the location signals of every user, we will ask you to grant us the permission to access your device\'s location services.</string>
     <string name="tutorial_finalize_account_creation">Finish &amp; continue</string>
 
     <string name="location_404">No location found</string>
@@ -97,7 +101,7 @@
     <string name="settings_study_course">% STUDY COURSE %</string>
     <string name="settings_study_course_hint">Course of study</string>
     <string name="settings_profile_picture_picker">Select your profile picture</string>
-    <string name="settings_show_vita">Save &amp; Preview</string>
+    <string name="settings_show_vita">Save profile</string>
 
     <string name="profilecard_name_label">Username</string>
     <string name="profilecard_name">No user found</string>
@@ -116,4 +120,8 @@
     <string name="toast_fill_required_fields">Please fill in all required fields.</string>
     <string name="event_details_total_attendees">[X / Y]</string>
     <string name="event_details_total_attendees_count">out of</string>
+
+    <string name="userstate_attendee">You are participating in an event.</string>
+    <string name="userstate_creator">You are hosting an event.</string>
+
 </resources>

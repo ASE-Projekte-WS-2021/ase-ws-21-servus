@@ -37,6 +37,7 @@ import de.ur.servus.core.Event;
 import de.ur.servus.core.UserProfile;
 import de.ur.servus.databinding.BottomsheetParticipantAttendeeBinding;
 import de.ur.servus.databinding.BottomsheetParticipantBinding;
+import de.ur.servus.eventgenres.GenreData;
 import de.ur.servus.utils.AvatarEditor;
 import de.ur.servus.utils.TriConsumer;
 
@@ -67,6 +68,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
     private boolean attendingThisEvent = false;
     private boolean attendingAnyEvent = false;
+    private boolean isLoading = false;
     private boolean isCreator = false;
 
     public DetailsBottomSheetFragment() {
@@ -97,6 +99,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         this.event = event;
         this.attendingThisEvent = attendingThisEvent;
         this.attendingAnyEvent = attendingAnyEvent;
+        this.isLoading = false;
         this.isCreator = isCreator;
         this.onClickAttendWithdrawListener = onClickAttendWithdrawListener;
         this.onClickEditEventListener = onClickEditEventListener;
@@ -138,14 +141,39 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
 
         // set content
         binding.eventDetailsEventname.setText(event.getName());
-        binding.eventDetailsDescription.setText(event.getDescription());
-        binding.eventDetailsGenre.setText(event.getGenre());
 
-        String totalAttendeeCount = "X";
+        if (event.getDescription() == null || event.getDescription().equals("")){
+            binding.eventDetailsDescriptionContainer.setVisibility(View.GONE);
+        } else {
+            binding.eventDetailsDescriptionContainer.setVisibility(View.VISIBLE);
+            binding.eventDetailsDescription.setText(event.getDescription());
+        }
+
+        if (event.getGenre().equals(GenreData.allGenres[0].getName())){
+            binding.eventDetailsGenre.setText(getResources().getString(R.string.event_creation_genre_hangout));
+        } else if (event.getGenre().equals(GenreData.allGenres[1].getName())){
+            binding.eventDetailsGenre.setText(getResources().getString(R.string.event_creation_genre_food));
+        } else if (event.getGenre().equals(GenreData.allGenres[2].getName())){
+            binding.eventDetailsGenre.setText(getResources().getString(R.string.event_creation_genre_party));
+        } else if (event.getGenre().equals(GenreData.allGenres[3].getName())){
+            binding.eventDetailsGenre.setText(getResources().getString(R.string.event_creation_genre_sport));
+        } else {
+            binding.eventDetailsGenre.setText(getResources().getString(R.string.event_creation_genre_activity));
+        }
+
+
+        String totalAttendeeCount;
+        if (event.getMaxAttendees() != null ){
+            if (event.getMaxAttendees().equals("0")){
+                totalAttendeeCount = "∞";
+            } else{
+                totalAttendeeCount = event.getMaxAttendees();
+            }
+        } else {
+            totalAttendeeCount = "N/A";
+        }
         binding.eventDetailsTotalAttendeeCount.setText(event.getAttendants().size() + " " + view.getContext().getResources().getString(R.string.event_details_total_attendees_count) + " " + totalAttendeeCount);
-
-        //binding.eventDetailsAttendeesContainer.setVisibility(View.VISIBLE);
-        //Log.d("TEST", String.valueOf(binding.eventDetailsTotalAttendeeCount.getText()));
+        binding.eventDetailsAttendeesContainer.setVisibility(View.VISIBLE);
 
         if (binding.eventDetailsAttendees.getChildCount() >= 0) {
             binding.eventDetailsAttendees.removeAllViews();
@@ -159,6 +187,8 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         // set listeners
         binding.eventDetailsButton.setOnClickListener(v -> {
             if (onClickAttendWithdrawListener != null) {
+                this.isLoading = true;
+                tryUpdateView();
                 onClickAttendWithdrawListener.accept(event, attendingThisEvent, isCreator);
             }
         });
@@ -175,10 +205,14 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         // attending an event AND attending this event AND is NOT the creator => show withdraw button
         // attending an event AND NOT attending this event => show no button (for now)
         if (!attendingAnyEvent) {
-            binding.eventDetailsButton.setVisibility(View.VISIBLE);
-            binding.eventDetailsButton.setText(R.string.event_details_button_attend);
-            binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners);
-            binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
+            if(Integer.parseInt(event.getMaxAttendees()) == 0 || event.getAttendants().size() < Integer.parseInt(event.getMaxAttendees())) {
+                binding.eventDetailsButton.setVisibility(View.VISIBLE);
+                binding.eventDetailsButton.setText(R.string.event_details_button_attend);
+                binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners);
+                binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_white, view.getContext().getTheme()));
+            } else {
+                binding.eventDetailsButton.setVisibility(View.GONE);
+            }
         } else if (attendingThisEvent) {
             binding.eventDetailsButton.setVisibility(View.VISIBLE);
             binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners_clicked);
@@ -190,6 +224,14 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
             }
         } else {
             binding.eventDetailsButton.setVisibility(View.GONE);
+        }
+
+        if(isLoading){
+            // change button style to loading indicator
+            binding.eventDetailsButton.setBackgroundResource(R.drawable.style_btn_roundedcorners_loading);
+            binding.eventDetailsButton.setTextColor(view.getContext().getResources().getColor(R.color.servus_pink, view.getContext().getTheme()));
+            binding.eventDetailsButton.setText(R.string.event_details_button_attend_loading);
+            binding.eventDetailsButton.setOnClickListener(null);
         }
 
         binding.eventDetailsButtonEdit.setVisibility(isCreator ? View.VISIBLE : View.GONE);
@@ -230,13 +272,11 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         attendeeBinding.eventDetailsAttendeeDataContainer.setOnClickListener(v -> onAttendantClicked(attendeeProfile));
 
         if (attendant.getUserPicturePath() != null && !attendant.getUserPicturePath().equals("")) {
-            //TODO: Load Image from Firebase
-
             try {
                 URL url = new URL(attendant.getUserPicturePath());
                 Glide.with(this)
                         .load(url)
-                        .addListener(new RequestListener<Drawable>() {
+                        .addListener(new RequestListener<>() {
                             @Override
                             public boolean onLoadFailed(@androidx.annotation.Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
                                 return false;
@@ -273,7 +313,7 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         return attendeeItem;
     }
 
-    private void onAttendantClicked(UserProfile profile){
+    private void onAttendantClicked(UserProfile profile) {
         // When clicked on the data, show servus card
         ProfileCardFragment servusCard = ProfileCardFragment.newInstance(profile);
 
@@ -283,5 +323,11 @@ public class DetailsBottomSheetFragment extends BottomSheetDialogFragment {
         transaction.commit();
     }
 
+    @Override
+    public void dismiss() {
+        if (this.isVisible()) {
+            super.dismiss();
+        }
+    }
 }
 

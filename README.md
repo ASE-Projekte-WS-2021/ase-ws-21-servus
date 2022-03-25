@@ -1,6 +1,10 @@
+
 # Servus
 
-**⚠️Description needs to be added⚠️**
+<img src="https://github.com/ASE-Projekte-WS-2021/ase-ws-21-servus/blob/develop/app/src/main/ic_launcher-playstore.png?raw=true" style="border-radius: 12px; height: 4rem;" />
+Servus is an informal greeting in the Bavarian language. The core functionality of our app is to enable German- and English-speaking students to get to know other students in their area through real-life events. With Servus, users can create events at their own location. The events are represented by markers on a map, and other users can join these events to participate. Events can range from simple hang-outs to sporty activities or parties.
+
+For further information like our target audience, additional functionalities and unique selling propositions view our [App Presentation](https://docs.google.com/presentation/d/1ZVOGwrLfBCtfPwkJsKihA0lLbh0UIbWA0A1cBrZbMGQ/).
 
 ## Development Setup
 
@@ -8,7 +12,7 @@
     - If another version was installed previously and the environment variable is corrected, you may need to restart
     - https://www.oracle.com/java/technologies/downloads/#jdk17-windows 
  2. Setup git hooks by executing the `setup_githooks` scripts in `tools`
- 3. Copy the `.env.template` file, rename it to `.env` and fill in all necessary data 
+ 3. Copy the `.env.template` file, rename it to `.env` and fill in all necessary data (you will need a google maps API key)
 
 ## Git Hooks
 
@@ -39,3 +43,12 @@ If a version tag (e.g. v1) was added, it will be released on the github project.
 3. Work on your branch
 4. After your done developing, remerge `develop` into your branch to avoid merge conflicts
 5. Create a Pull Request to merge your branch into `develop`. After the quality checks suceeded and it is reviewed it can be merged.
+
+## Contributors
+
+The individual team members did not have fixed areas of responsibility. Everybody worked in many areas, yet thematic focuses have emerged over time.
+
+Arne Tiedemann (Design, User Flow, Profiles)
+Benedikt Strasser (Architecture, Firebase, Events)
+Michelle Lanzinger (Map, Map Components, Translation)
+Matthias Zerniekel (Firebase, Profiles, Events)
